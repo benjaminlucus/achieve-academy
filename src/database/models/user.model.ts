@@ -1,4 +1,7 @@
-const UserSchema = new mongoose.Schema({
+import mongoose, { Schema, models } from "mongoose";
+import { IUser } from "../../../types";
+
+const UserSchema = new Schema<IUser>({
   name: { type: String, required: true },
   email: { type: String, unique: true, required: true },
   password: { type: String, required: true },
@@ -23,3 +26,7 @@ const UserSchema = new mongoose.Schema({
 
   createdAt: { type: Date, default: Date.now }
 });
+
+const User = models.User || mongoose.model<IUser>("User", UserSchema);
+
+export default User;

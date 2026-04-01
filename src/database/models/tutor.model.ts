@@ -1,6 +1,9 @@
-const TutorProfileSchema = new mongoose.Schema({
+import mongoose, { Schema, models } from "mongoose";
+import { ITutorProfile } from "../../../types";
+
+const TutorProfileSchema = new Schema<ITutorProfile>({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
@@ -32,3 +35,7 @@ const TutorProfileSchema = new mongoose.Schema({
 
   createdAt: { type: Date, default: Date.now }
 });
+
+const TutorProfile = models.TutorProfile || mongoose.model<ITutorProfile>("TutorProfile", TutorProfileSchema);
+
+export default TutorProfile;
