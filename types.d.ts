@@ -1,9 +1,9 @@
 import mongoose, { Document } from "mongoose";
 
 export interface IUser extends Document {
+  clerkId: string;
   name: string;
   email: string;
-  password: string;
   role: "student" | "tutor" | "admin";
   status: "active" | "blocked";
   profileImage?: string;

@@ -2,9 +2,14 @@ import mongoose, { Schema, models } from "mongoose";
 import { IUser } from "../../../types";
 
 const UserSchema = new Schema<IUser>({
-  name: { type: String, required: true },
-  email: { type: String, unique: true, required: true },
-  password: { type: String, required: true },
+ clerkId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+
+  name: String,
+  email: String,
 
   role: {
     type: String,
@@ -19,10 +24,9 @@ const UserSchema = new Schema<IUser>({
   },
 
   profileImage: String,
+
   country: String,
   timezone: String,
-
-  lastLogin: Date,
 
   createdAt: { type: Date, default: Date.now }
 });
