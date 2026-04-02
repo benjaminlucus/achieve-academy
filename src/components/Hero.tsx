@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative pt-32 pb-20 overflow-hidden bg-off-white border-y-2">
+    <section className="relative pt-32 pb-20 overflow-hidden bg-off-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="flex flex-col gap-8 max-w-2xl">
@@ -25,17 +25,17 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
               <Show when="signed-out">
                 <SignUpButton mode="modal">
-                  <button className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-off-white bg-dark-navy hover:bg-steel-blue transition-all shadow-xl shadow-dark-navy/20">
+                  <button className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-off-white bg-dark-navy hover:bg-coral transition-colors border-2 border-dark-navy hover:border-coral rounded-sm">
                     Start Learning Today
                   </button>
                 </SignUpButton>
               </Show>
               <Show when="signed-in">
-                <Link href="/dashboard" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-off-white bg-dark-navy rounded-2xl hover:bg-steel-blue transition-all shadow-xl shadow-dark-navy/20">
+                <Link href="/dashboard" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-off-white bg-dark-navy hover:bg-coral transition-colors border-2 border-dark-navy hover:border-coral rounded-sm text-center">
                   Go to Dashboard
                 </Link>
               </Show>
-              <button className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-dark-navy bg-white border-2 border-off-white rounded-2xl hover:border-steel-blue/30 transition-all">
+              <button className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-dark-navy bg-transparent border-2 border-dark-navy hover:bg-dark-navy hover:text-off-white transition-colors rounded-sm">
                 How it works
               </button>
             </div>
@@ -49,7 +49,7 @@ export default function Hero() {
                       alt="User avatar"
                       width={40}
                       height={40}
-                    className="grayscale"
+                      className="grayscale"
                     />
                   </div>
                 ))}
