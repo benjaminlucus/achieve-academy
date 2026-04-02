@@ -6,4 +6,4 @@ const AllTutors = () => {
   )
 }
 
-export default AllTutors;
+export default AllTutors

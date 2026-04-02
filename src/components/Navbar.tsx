@@ -45,7 +45,7 @@ export default function Navbar() {
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button className="px-5 py-2.5 text-sm font-medium text-off-white bg-dark-navy rounded-full hover:bg-steel-blue transition-all shadow-lg shadow-dark-navy/10">
+                <button className="px-6 py-2 text-sm font-bold text-off-white bg-dark-navy hover:bg-coral transition-colors rounded-sm">
                   Get Started
                 </button>
               </SignUpButton>
