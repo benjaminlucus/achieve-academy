@@ -20,9 +20,7 @@ const TutorRequestSchema = new Schema<ITutorRequest>({
     enum: ["pending", "assigned", "rejected"],
     default: "pending"
   },
-
-  createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 const TutorRequest = models.TutorRequest || mongoose.model<ITutorRequest>("TutorRequest", TutorRequestSchema);
 

@@ -28,8 +28,8 @@ const UserSchema = new Schema<IUser>({
   country: String,
   timezone: String,
 
-  createdAt: { type: Date, default: Date.now }
-});
+  lastLogin: Date,
+}, { timestamps: true });
 
 const User = models.User || mongoose.model<IUser>("User", UserSchema);
 

@@ -22,7 +22,7 @@ const PaymentSchema = new Schema<IPayment>({
 
   amount: { type: Number, required: true },
 
-  commission: { type: Number, required: true },
+  commission: { type: Number, required: true, default: 20 },
   tutorEarning: { type: Number, required: true },
 
   monthNumber: { type: Number, required: true },
@@ -37,9 +37,7 @@ const PaymentSchema = new Schema<IPayment>({
   transactionId: String,
 
   paidAt: Date,
-
-  createdAt: { type: Date, default: Date.now }
-});
+}, {timestamps: true});
 
 const Payment = models.Payment || mongoose.model<IPayment>("Payment", PaymentSchema);
 

@@ -7,16 +7,12 @@ const StudentProfileSchema = new Schema<IStudentProfile>({
     ref: "User",
     required: true
   },
+  description: String,
+  whichClass: String,
 
-  gradeLevel: String,
-  interests: [String],
-
-  preferredSubjects: [String],
-
+  subjects: [String],
   learningGoals: String,
-
-  createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 const StudentProfile = models.StudentProfile || mongoose.model<IStudentProfile>("StudentProfile", StudentProfileSchema);
 

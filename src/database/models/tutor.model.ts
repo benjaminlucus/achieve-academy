@@ -1,5 +1,6 @@
 import mongoose, { Schema, models } from "mongoose";
 import { ITutorProfile } from "../../../types";
+import { time } from "node:console";
 
 const TutorProfileSchema = new Schema<ITutorProfile>({
   user: {
@@ -17,7 +18,7 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
   hourlyRate: Number,
   monthlyRate: Number,
 
-  bio: String,
+  description: String,
 
   languages: [String],
 
@@ -27,14 +28,12 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
   availability: [
     {
       day: String,
-      slots: [String]
+      time: [String]
     }
-  ],
+  ], // { day: "Monday", time: ["10AM", "2PM"] }
 
   isVerified: { type: Boolean, default: false },
-
-  createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 const TutorProfile = models.TutorProfile || mongoose.model<ITutorProfile>("TutorProfile", TutorProfileSchema);
 

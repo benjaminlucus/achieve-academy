@@ -29,7 +29,7 @@ const SessionSchema = new Schema<ISession>({
     default: "active"
   },
 
-  price: Number,
+  rate: Number,
 
   monthsCompleted: { type: Number, default: 0 },
 

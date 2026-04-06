@@ -37,7 +37,7 @@ export interface ISession extends Document {
   endDate: Date;
   durationType: "monthly";
   status: "active" | "completed" | "cancelled";
-  price: number;
+  rate: number;
   monthsCompleted: number;
   lastPaymentDate?: Date;
   createdAt: Date;
@@ -45,11 +45,12 @@ export interface ISession extends Document {
 
 export interface IStudentProfile extends Document {
   user: mongoose.Types.ObjectId;
-  gradeLevel: string;
+  whichClass: string;
   interests: string[];
-  preferredSubjects: string[];
+  subjects: string[];
   learningGoals: string;
   createdAt: Date;
+  description: string;
 }
 
 export interface ITutorProfile extends Document {
@@ -60,13 +61,13 @@ export interface ITutorProfile extends Document {
   education: string;
   hourlyRate: number;
   monthlyRate: number;
-  bio: string;
+  description: string;
   languages: string[];
   rating: number;
   totalStudents: number;
   availability: {
     day: string;
-    slots: string[];
+    time: string[];
   }[];
   isVerified: boolean;
   createdAt: Date;

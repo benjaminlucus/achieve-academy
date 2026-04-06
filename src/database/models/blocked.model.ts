@@ -1,7 +1,7 @@
 import mongoose, { Schema, models } from "mongoose";
 import { IUserFlag } from "../../../types";
 
-const UserFlagSchema = new Schema<IUserFlag>({
+const UserBlockSchema = new Schema<IUserFlag>({
   user: {
     type: Schema.Types.ObjectId,
     ref: "User"
@@ -15,10 +15,8 @@ const UserFlagSchema = new Schema<IUserFlag>({
   },
 
   count: { type: Number, default: 1 },
+}, { timestamps: true });
 
-  createdAt: { type: Date, default: Date.now }
-});
+const UserBlock = models.UserBlock || mongoose.model<IUserFlag>("UserBlock", UserBlockSchema);
 
-const UserFlag = models.UserFlag || mongoose.model<IUserFlag>("UserFlag", UserFlagSchema);
-
-export default UserFlag;
+export default UserBlock;
