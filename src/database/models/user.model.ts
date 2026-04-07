@@ -24,6 +24,10 @@ const UserSchema = new Schema<IUser>({
   },
 
   profileImage: String,
+  isOnboarded: {
+    type: Boolean,
+    default: false
+  },
 
   country: String,
   timezone: String,

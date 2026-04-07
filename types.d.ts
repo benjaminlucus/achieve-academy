@@ -10,7 +10,7 @@ export interface IUser extends Document {
   country?: string;
   timezone?: string;
   lastLogin?: Date;
-  createdAt: Date;
+  isOnboarded?: boolean;
 }
 
 export interface IUserFlag extends Document {
