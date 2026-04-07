@@ -25,6 +25,7 @@ export async function POST(req: Request) {
         country: body.country,
         timezone: body.timezone,
         lastLogin: new Date(),
+        isOboarded: true,
       },
       { upsert: true, new: true }
     );

@@ -21,16 +21,9 @@ export async function getCurrentUser() {
       return null;
     }
 
-    return {
-      success: true,
-      data: JSON.parse(JSON.stringify(databaseUser)),
-      status: 200
-    };
+    return JSON.parse(JSON.stringify(databaseUser))
   } catch (error) {
     console.error("Error fetching current user:", error);
-    return {
-      success: false,
-      status: 500
-    };
+    return null;
   }
 }

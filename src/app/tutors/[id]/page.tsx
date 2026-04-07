@@ -1,3 +1,5 @@
+
+// Public. Faced by users.
 import React from "react";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";

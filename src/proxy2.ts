@@ -11,7 +11,7 @@ const isPublicRoute = createRouteMatcher([
   '/tutors', 
   '/sign-in(.*)', 
   '/sign-up(.*)',
-  '/api(.*)' // CRITICAL: Don't block the API route
+  '/api/onboarding' // CRITICAL: Don't block the API route
 ]);
 
 // 2. The Onboarding Page
