@@ -47,7 +47,7 @@ const OnboardingForm = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
+console.log("Onboarding API Response:", res);
       if (res.ok) {
         router.push('/dashboard');
       }

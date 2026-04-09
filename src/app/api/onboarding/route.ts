@@ -5,6 +5,7 @@ import StudentProfile from "@/database/models/student.model";
 import TutorProfile from "@/database/models/tutor.model";
 
 import { connectDB } from "@/database/connect";
+import { getCurrentUser } from "@/lib/utils";
 export async function POST(req: Request) {
   try {
     await connectDB();
@@ -18,14 +19,14 @@ export async function POST(req: Request) {
       { clerkId: user.id },
       {
         clerkId: user.id,
-        name: `${user.username} ${user.lastName}`,
+        name: `${user.username || user.firstName} ${user.lastName || ''}`,
         email: user.emailAddresses[0].emailAddress,
         profileImage: user.imageUrl,
         role: body.role,
         country: body.country,
         timezone: body.timezone,
         lastLogin: new Date(),
-        isOboarded: true,
+        isOnboarded: true,
       },
       { upsert: true, new: true }
     );
@@ -50,7 +51,9 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ success: true });
+    console.log("Onboarding successful for user:", newUser);
+
+    return NextResponse.json({ success: true, message: "Onboarding completed successfully", user: newUser });
   } catch (error) {
     console.error("Onboarding API Error:", error);
     return new NextResponse("Internal Error", { status: 500 });

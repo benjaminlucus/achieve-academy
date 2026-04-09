@@ -7,11 +7,11 @@ const isPublicRoute = createRouteMatcher([
   '/', 
   '/contact', 
   '/about', 
-  '/students', 
-  '/tutors', 
+  '/students(.*)', 
+  '/tutors(.*)', 
   '/sign-in(.*)', 
   '/sign-up(.*)',
-  '/api(.*)' // CRITICAL: Don't block the API route
+  '/api(.*)'
 ]);
 
 // 2. The Onboarding Page
