@@ -19,7 +19,7 @@ export default async function StudentsPage({
     .populate({
       path: "user",
       model: User,
-      select: "name email profileImage status country",
+      select: "_id name email profileImage status country",
     })
     .lean();
 

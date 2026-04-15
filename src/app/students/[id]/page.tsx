@@ -1,122 +1,170 @@
+"use client";
+
 import React from "react";
-import { connectDB } from "@/database/connect";
-import User from "@/database/models/user.model";
-import StudentProfile from "@/database/models/student.model";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { BookOpen, GraduationCap, Mail, MapPin, Target, History } from "lucide-react";
-import { notFound } from "next/navigation";
+import {
+  BookOpen, GraduationCap, Mail, MapPin,
+  Clock, Calendar, CheckCircle, ChevronRight,
+  LayoutDashboard, Search, Settings, LogOut, CreditCard, Bell, History
+} from "lucide-react";
+import Link from "next/link";
 
-export default async function StudentProfilePage({ params }: { params: { id: string } }) {
-  await connectDB();
+export default function StudentProfileView({ params }: { params: { id: string } }) {
 
-  // The ID in the URL is the USER ID, let's find the student profile by user ID
-  const student = await StudentProfile.findOne({ user: params.id })
-    .populate({
-      path: "user",
-      model: User,
-    })
-    .lean();
+  const [studentData, setStudentData] = React.useState({
+    name: "",
+    email: "",
+    status: "inactive",
+    whichClass: "",
+    learningGoals: "",
+    subjects: [],
+    location: "",
+    stats: {
+      hoursLearned: 0,
+      activeCourses: 0,
+      completedSessions: 0
+    },
+    history: [
+      { id: "", tutor: "", subject: "", date: "", status: "" },
+    ]
+  });
 
-  if (!student) {
-    return notFound();
+  const getStudentData = async () => {
+
+    try {
+      const res = await fetch(`/api/students/${params.id}`,
+        {
+          cache: "no-store",
+        }
+      );
+
+      console.log("API Response student data:", res);
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch student data: ${res.statusText}`);
+      }
+
+      const studentData = await res.json();
+      setStudentData(studentData);
+    } catch (error) {
+      console.error("Error fetching student data:", error);
+      return null;
+    }
   }
 
-  const studentData = student as any;
+  React.useEffect(() => {
+    getStudentData();
+  }, [params.id]);
 
   return (
-    <div className="bg-off-white min-h-screen pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
-        
-        {/* Profile Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <DashboardCard className="lg:col-span-2">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="w-24 h-24 bg-coral text-off-white flex items-center justify-center text-3xl font-bold border-2 border-dark-navy shrink-0">
-                {studentData.user?.name?.charAt(0) || "S"}
-              </div>
-              <div className="flex-grow w-full">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-3xl font-extrabold text-dark-navy tracking-tight uppercase">
-                      {studentData.user?.name}
-                    </h1>
-                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest mt-1">
-                      {studentData.whichClass || "Student"}
-                    </p>
-                  </div>
-                  <StatusBadge status={studentData.user?.status || "active"} />
-                </div>
-                
-                <div className="mt-6 flex flex-col gap-4">
-                  <div>
-                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest mb-1">Learning Goals</p>
-                    <p className="text-dark-navy font-medium leading-relaxed italic">
-                      "{studentData.learningGoals || "No specific goals listed."}"
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest mb-1">Interested Subjects</p>
-                    <div className="flex flex-wrap gap-2">
-                      {(studentData.subjects || []).map((sub: string) => (
-                        <span key={sub} className="px-2 py-1 bg-off-white border-2 border-dark-navy/10 text-[10px] font-bold uppercase text-steel-blue">
-                          {sub}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </DashboardCard>
+    <div className="bg-off-white min-h-screen pt-24 pb-12 px-6">
+      <div className="max-w-4xl mx-auto flex flex-col gap-8">
 
-          {/* Quick Info */}
-          <DashboardCard title="Student Info" className="h-fit">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 text-dark-navy">
-                <Mail size={18} className="text-coral" />
-                <span className="text-sm font-bold truncate">{studentData.user?.email}</span>
-              </div>
-              {studentData.user?.country && (
-                <div className="flex items-center gap-3 text-dark-navy">
-                  <MapPin size={18} className="text-coral" />
-                  <span className="text-sm font-bold">{studentData.user.country}</span>
+        {/* Profile Header Card */}
+        <div className="bg-white border border-dark-navy/10 rounded-2xl p-8 shadow-sm">
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
+            <div className="w-32 h-32 bg-coral rounded-2xl flex items-center justify-center text-off-white text-4xl font-bold border-4 border-white shadow-md overflow-hidden">
+              {studentData.name.charAt(0)}
+            </div>
+
+            <div className="flex-grow">
+              <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-dark-navy uppercase tracking-tight mb-1">{studentData.name}</h1>
+                  <p className="text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em]">{studentData.whichClass}</p>
                 </div>
-              )}
-              <div className="mt-4 pt-4 border-t-2 border-dark-navy/10">
-                <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-2">Academic Level</p>
-                <div className="flex items-center gap-2">
-                  <GraduationCap size={20} className="text-coral" />
-                  <span className="font-extrabold text-dark-navy">{studentData.whichClass}</span>
+                <StatusBadge status={studentData.status} />
+              </div>
+
+              <div className="mt-6">
+                <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-2">Learning Goals</p>
+                <p className="text-dark-navy font-medium text-sm leading-relaxed max-w-2xl italic border-l-2 border-coral/30 pl-4">
+                  "{studentData.learningGoals}"
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-dark-navy/5">
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-1">Hours Learned</span>
+                  <p className="text-xl font-bold text-dark-navy">{studentData.stats.hoursLearned}</p>
+                </div>
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-1">Courses</span>
+                  <p className="text-xl font-bold text-dark-navy">{studentData.stats.activeCourses}</p>
+                </div>
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-1">Sessions</span>
+                  <p className="text-xl font-bold text-dark-navy">{studentData.stats.completedSessions}</p>
                 </div>
               </div>
             </div>
-          </DashboardCard>
+          </div>
         </div>
 
-        {/* Detailed Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <DashboardCard title="About Me">
-            <p className="text-steel-blue font-medium leading-relaxed">
-              {studentData.description || "The student hasn't provided a detailed description yet."}
-            </p>
-          </DashboardCard>
-
-          <DashboardCard title="Study Interests">
-            <div className="flex flex-wrap gap-3">
-              {(studentData.subjects || []).length > 0 ? (
-                studentData.subjects.map((sub: string) => (
-                  <div key={sub} className="flex items-center gap-2 px-4 py-2 bg-off-white border-2 border-dark-navy">
-                    <BookOpen size={14} className="text-coral" />
-                    <span className="font-bold text-xs uppercase tracking-widest text-dark-navy">{sub}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-steel-blue italic text-sm">No specific interests listed.</p>
-              )}
+        {/* Detailed Info Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Interests & Subjects */}
+          <div className="bg-white border border-dark-navy/10 rounded-2xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+              <BookOpen className="text-coral" size={20} /> Subjects of Interest
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {studentData.subjects.map(sub => (
+                <div key={sub} className="flex items-center gap-2 px-3 py-2 bg-off-white border border-dark-navy/5 rounded-lg">
+                  <div className="w-1.5 h-1.5 bg-coral rounded-full" />
+                  <span className="text-xs font-bold text-dark-navy uppercase tracking-wider">{sub}</span>
+                </div>
+              ))}
             </div>
-          </DashboardCard>
+          </div>
+
+          {/* Location & Contact */}
+          <div className="bg-white border border-dark-navy/10 rounded-2xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+              <MapPin className="text-coral" size={20} /> Student Information
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2 border-b border-dark-navy/5">
+                <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">Location</span>
+                <span className="text-sm font-bold text-dark-navy">{studentData.location}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-dark-navy/5">
+                <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">Email</span>
+                <span className="text-sm font-bold text-dark-navy">{studentData.email}</span>
+              </div>
+              <div className="pt-4">
+                <button className="w-full py-3 border-2 border-dark-navy text-dark-navy text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-dark-navy hover:text-off-white transition-all">
+                  Contact Student
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Learning History Section */}
+        <div className="bg-white border border-dark-navy/10 rounded-2xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+            <History className="text-coral" size={20} /> Recent Learning History
+          </h3>
+          <div className="space-y-4">
+            {studentData.history.map(item => (
+              <div key={item.id} className="flex items-center justify-between p-4 bg-off-white rounded-xl border border-dark-navy/5">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-dark-navy/10">
+                    <History size={18} className="text-coral" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-dark-navy uppercase">{item.tutor}</p>
+                    <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">{item.subject} • {item.date}</p>
+                  </div>
+                </div>
+                <StatusBadge status={item.status} />
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );

@@ -33,20 +33,20 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.next();
     }
 
-    const user = await getCurrentUser();
+    // const user = await getCurrentUser();
     
-    // Check if onboarding is actually finished
-    const hasFinishedOnboarding = user?.role === "student" || user?.role === "tutor" || user?.isOnboarded;
+    // // Check if onboarding is actually finished
+    // const hasFinishedOnboarding = user?.role === "student" || user?.role === "tutor" || user?.role === "admin" || user?.isOnboarded;
 
-    // REDIRECT A: Not onboarded and trying to go to /dashboard or other private areas
-    if (!hasFinishedOnboarding && !isOnboardingRoute(req)) {
-      return NextResponse.redirect(new URL("/onboarding", req.url));
-    }
+    // // REDIRECT A: Not onboarded and trying to go to /dashboard or other private areas
+    // if (!hasFinishedOnboarding && !isOnboardingRoute(req)) {
+    //   return NextResponse.redirect(new URL("/onboarding", req.url));
+    // }
 
-    // REDIRECT B: Already onboarded but trying to go back to /onboarding
-    if (hasFinishedOnboarding && isOnboardingRoute(req)) {
-      return NextResponse.redirect(new URL("/dashboard", req.url)); // or your main landing page
-    }
+    // // REDIRECT B: Already onboarded but trying to go back to /onboarding
+    // if (hasFinishedOnboarding && isOnboardingRoute(req)) {
+    //   return NextResponse.redirect(new URL("/dashboard", req.url)); // or your main landing page
+    // }
   }
 
   return NextResponse.next();

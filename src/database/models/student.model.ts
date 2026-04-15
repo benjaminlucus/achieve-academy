@@ -12,6 +12,8 @@ const StudentProfileSchema = new Schema<IStudentProfile>({
 
   subjects: [String],
   learningGoals: String,
+
+  isVerified: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const StudentProfile = models.StudentProfile || mongoose.model<IStudentProfile>("StudentProfile", StudentProfileSchema);

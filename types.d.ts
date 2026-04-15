@@ -41,6 +41,7 @@ export interface ISession extends Document {
   monthsCompleted: number;
   lastPaymentDate?: Date;
   createdAt: Date;
+  subject: string;
 }
 
 export interface IStudentProfile extends Document {
@@ -51,6 +52,7 @@ export interface IStudentProfile extends Document {
   learningGoals: string;
   createdAt: Date;
   description: string;
+  isVerified: boolean;
 }
 
 export interface ITutorProfile extends Document {

@@ -23,6 +23,11 @@ const SessionSchema = new Schema<ISession>({
     default: "monthly"
   },
 
+  subject: {
+    type: String,
+    required: true
+  },
+
   status: {
     type: String,
     enum: ["active", "completed", "cancelled"],

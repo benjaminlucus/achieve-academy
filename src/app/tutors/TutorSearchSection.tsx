@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { SearchBar } from "@/components/SearchBar";
 import Link from "next/link";
-import { BookOpen, Clock, DollarSign, Star, ChevronRight } from "lucide-react";
+import { BookOpen, Clock, DollarSign, Star, ChevronRight, GraduationCap, MapPin } from "lucide-react";
 
 export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("Subject (All)");
 
-  // Get unique subjects from all tutors
   const allSubjects = Array.from(new Set(initialTutors.flatMap(t => t.subjects || []))).sort();
 
   const filteredTutors = initialTutors.filter((tutor) => {
@@ -24,92 +22,111 @@ export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) 
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row gap-4 mb-8 bg-white p-4 border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)]">
-        <div className="relative flex-1">
+      {/* Professional Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 p-6 bg-white border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)]">
+        <div className="flex-1">
+          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Search Tutors</label>
           <input 
             type="text" 
-            placeholder="Search by name or subject..."
-            className="w-full px-4 py-2 bg-off-white border-2 border-dark-navy text-dark-navy font-bold focus:outline-none focus:ring-0"
+            placeholder="Type name or subject..."
+            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy focus:outline-none transition-all"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select 
-          className="px-4 py-2 bg-off-white border-2 border-dark-navy text-dark-navy font-bold outline-none"
-          value={selectedSubject}
-          onChange={(e) => setSelectedSubject(e.target.value)}
-        >
-          <option>Subject (All)</option>
-          {allSubjects.map(sub => (
-            <option key={sub} value={sub}>{sub}</option>
-          ))}
-        </select>
+        <div className="md:w-64">
+          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Filter by Subject</label>
+          <select 
+            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy outline-none"
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+          >
+            <option>Subject (All)</option>
+            {allSubjects.map(sub => (
+              <option key={sub} value={sub}>{sub}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
+      {/* Tutors Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredTutors.length > 0 ? (
           filteredTutors.map((tutor) => (
-            <div key={tutor._id} className="bg-white border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)] hover:shadow-[6px_6px_0px_0px_rgba(43,65,98,1)] transition-all flex flex-col group">
-              <div className="p-6 flex-grow">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-16 h-16 bg-dark-navy text-off-white flex items-center justify-center text-xl font-bold border-2 border-dark-navy">
-                    {tutor.user?.name?.charAt(0) || "T"}
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="bg-off-white text-dark-navy border-2 border-dark-navy px-3 py-1 text-xs font-extrabold uppercase tracking-wider">
-                      ${tutor.hourlyRate || 0}/hr
-                    </span>
-                    <div className="flex items-center gap-1 mt-2 text-dark-navy">
-                      <Star size={12} fill="currentColor" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">{tutor.rating || "New"}</span>
-                    </div>
+            <div key={tutor._id} className="bg-white border-2 border-dark-navy shadow-[8px_8px_0px_0px_rgba(43,65,98,1)] hover:shadow-[12px_12px_0px_0px_rgba(255,111,97,1)] transition-all flex flex-col group">
+              {/* Card Header: Photo & Essential Info */}
+              <div className="p-8 pb-0 flex gap-6">
+                <div className="relative">
+                  <div className="w-20 h-20 bg-dark-navy border-2 border-dark-navy flex items-center justify-center overflow-hidden shadow-[4px_4px_0px_0px_rgba(255,111,97,1)]">
+                    {tutor.user?.profileImage ? (
+                      <img src={tutor.user.profileImage} alt={tutor.user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-3xl font-bold text-off-white uppercase">{tutor.user?.name?.charAt(0) || "T"}</span>
+                    )}
                   </div>
                 </div>
-
-                <h3 className="text-xl font-extrabold text-dark-navy mb-2 uppercase tracking-tight group-hover:text-coral transition-colors">
-                  {tutor.user?.name || "Tutor Name"}
-                </h3>
-                <p className="text-steel-blue text-sm font-medium mb-4 line-clamp-2">
-                  {tutor.description || "No description available."}
-                </p>
                 
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {(tutor.subjects || []).slice(0, 3).map((tag: string) => (
-                    <span key={tag} className="text-[10px] uppercase tracking-widest font-bold bg-off-white border-2 border-dark-navy/10 text-steel-blue px-2 py-1">
-                      {tag}
-                    </span>
-                  ))}
-                  {tutor.subjects?.length > 3 && (
-                    <span className="text-[10px] uppercase tracking-widest font-bold bg-off-white border-2 border-dark-navy/10 text-steel-blue px-2 py-1">
-                      +{tutor.subjects.length - 3}
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <div className="flex items-center gap-2 text-dark-navy">
-                    <Clock size={14} className="text-coral" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{tutor.experienceYears || 0} Years Exp.</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-dark-navy">
-                    <BookOpen size={14} className="text-coral" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{tutor.totalStudents || 0} Students</span>
+                <div className="flex-grow flex flex-col justify-center">
+                  <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight group-hover:text-coral transition-colors">
+                    {tutor.user?.name || "Expert Tutor"}
+                  </h3>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Star size={14} className="text-coral fill-coral" />
+                    <span className="text-xs font-black text-dark-navy uppercase tracking-widest">{tutor.rating || "New"}</span>
+                    <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest ml-2">• Verified</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-auto border-t-2 border-dark-navy p-4 bg-off-white flex justify-end">
+              {/* Bio & Details */}
+              <div className="p-8 pt-6 flex-grow">
+                <div className="mb-6">
+                  <p className="text-steel-blue text-xs font-bold uppercase tracking-widest mb-2 underline decoration-coral decoration-2 underline-offset-4">Biography</p>
+                  <p className="text-dark-navy text-sm font-medium leading-relaxed line-clamp-3">
+                    {tutor.description || "Highly qualified professional dedicated to delivering academic excellence and practical knowledge to every student."}
+                  </p>
+                </div>
+
+                {/* Professional Info Grid */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-off-white p-3 border-2 border-dark-navy/10 flex flex-col">
+                    <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest mb-1">Hourly Rate</span>
+                    <span className="text-lg font-black text-dark-navy">${tutor.hourlyRate || 0}<span className="text-[10px] font-bold">/hr</span></span>
+                  </div>
+                  <div className="bg-off-white p-3 border-2 border-dark-navy/10 flex flex-col">
+                    <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest mb-1">Experience</span>
+                    <span className="text-lg font-black text-dark-navy">{tutor.experienceYears || 0}<span className="text-[10px] font-bold"> Yrs</span></span>
+                  </div>
+                </div>
+
+                {/* Expertise Tags */}
+                <div className="flex flex-wrap gap-2">
+                  {(tutor.subjects || []).slice(0, 3).map((tag: string) => (
+                    <span key={tag} className="px-3 py-1 bg-dark-navy text-off-white text-[9px] font-black uppercase tracking-[0.1em]">
+                      {tag}
+                    </span>
+                  ))}
+                  {tutor.subjects?.length > 3 && (
+                    <span className="px-3 py-1 bg-coral text-off-white text-[9px] font-black uppercase tracking-[0.1em]">
+                      +{tutor.subjects.length - 3} More
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer Action */}
+              <div className="mt-auto border-t-2 border-dark-navy p-6 bg-off-white/30">
                 <Link 
                   href={`/tutors/${tutor.user?._id || tutor._id}`}
-                  className="flex items-center gap-2 bg-dark-navy text-off-white px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-coral transition-colors border-2 border-dark-navy"
+                  className="w-full py-4 bg-dark-navy text-off-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-coral transition-all active:translate-y-1"
                 >
-                  View Profile <ChevronRight size={14} />
+                  View Full Profile <ChevronRight size={16} />
                 </Link>
               </div>
             </div>
           ))
         ) : (
-          <div className="col-span-full py-12 text-center bg-white border-2 border-dashed border-dark-navy/20">
-            <p className="text-steel-blue font-bold italic uppercase tracking-widest">No tutors found matching your search.</p>
+          <div className="col-span-full py-24 text-center bg-white border-4 border-dashed border-dark-navy/10">
+            <p className="text-steel-blue font-black text-lg uppercase tracking-[0.3em]">No Tutors Found</p>
           </div>
         )}
       </div>

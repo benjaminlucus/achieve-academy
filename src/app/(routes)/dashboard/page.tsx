@@ -9,12 +9,20 @@ export default async function Dashboard() {
     return redirect("/onboarding");
   }
 
+  if (user.role !== "admin") {
+    return redirect("/admin");
+  }
+
   if (user.role === "tutor") {
     return redirect(`/tutors/${user._id}`);
   }
 
   if (user.role === "student") {
     return redirect(`/students/${user._id}`);
+  }
+
+  if (user.role === "admin") {
+    return redirect("/admin");
   }
 
   return redirect("/onboarding");

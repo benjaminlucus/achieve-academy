@@ -20,7 +20,7 @@ export default async function TutorsPage({
     .populate({
       path: "user",
       model: User,
-      select: "name email profileImage status",
+      select: "_id name email profileImage status",
     })
     .lean();
 

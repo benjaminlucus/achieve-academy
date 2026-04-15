@@ -2,13 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { BookOpen, GraduationCap, MapPin, ChevronRight } from "lucide-react";
+import { BookOpen, GraduationCap, MapPin, ChevronRight, Target, User } from "lucide-react";
 
 export function StudentSearchSection({ initialStudents }: { initialStudents: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("Class (All)");
 
-  // Get unique classes
   const allClasses = Array.from(new Set(initialStudents.map(s => s.whichClass))).filter(Boolean).sort();
 
   const filteredStudents = initialStudents.filter((student) => {
@@ -23,74 +22,109 @@ export function StudentSearchSection({ initialStudents }: { initialStudents: any
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row gap-4 mb-8 bg-white p-4 border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)]">
-        <div className="relative flex-1">
+      {/* Professional Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 p-6 bg-white border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)]">
+        <div className="flex-1">
+          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Search Students</label>
           <input 
             type="text" 
-            placeholder="Search by name or subject..."
-            className="w-full px-4 py-2 bg-off-white border-2 border-dark-navy text-dark-navy font-bold focus:outline-none focus:ring-0"
+            placeholder="Search by name or interests..."
+            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy focus:outline-none transition-all"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select 
-          className="px-4 py-2 bg-off-white border-2 border-dark-navy text-dark-navy font-bold outline-none"
-          value={selectedClass}
-          onChange={(e) => setSelectedClass(e.target.value)}
-        >
-          <option>Class (All)</option>
-          {allClasses.map(cls => (
-            <option key={cls} value={cls}>{cls}</option>
-          ))}
-        </select>
+        <div className="md:w-64">
+          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Academic Level</label>
+          <select 
+            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy outline-none"
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+          >
+            <option>Class (All)</option>
+            {allClasses.map(cls => (
+              <option key={cls} value={cls}>{cls}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
+      {/* Students Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {filteredStudents.length > 0 ? (
           filteredStudents.map((student) => (
-            <div key={student._id} className="bg-white border-2 border-dark-navy p-6 shadow-[4px_4px_0px_0px_rgba(43,65,98,1)] hover:shadow-[6px_6px_0px_0px_rgba(43,65,98,1)] transition-all flex flex-col text-center group">
-              <div className="w-20 h-20 bg-dark-navy text-off-white flex items-center justify-center text-3xl font-bold border-2 border-dark-navy mx-auto mb-4 overflow-hidden">
-                {student.user?.profileImage ? (
-                  <img src={student.user.profileImage} alt="avatar" className="w-full h-full object-cover" />
-                ) : (
-                  student.user?.name?.charAt(0) || "S"
-                )}
-              </div>
-              
-              <span className="text-[10px] font-bold text-coral uppercase tracking-widest mb-1">
-                {student.whichClass || "Student"}
-              </span>
-              
-              <h3 className="text-lg font-extrabold text-dark-navy mb-2 uppercase tracking-tight group-hover:text-coral transition-colors">
-                {student.user?.name || "Student Name"}
-              </h3>
-              
-              <p className="text-steel-blue text-xs font-medium italic mb-4 line-clamp-2">
-                "{student.description || student.learningGoals || "I want to excel in my studies."}"
-              </p>
-              
-              <div className="space-y-3 mb-6 flex-grow">
-                <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-steel-blue uppercase tracking-widest">
-                  <BookOpen className="w-3 h-3 text-coral" /> 
-                  <span className="truncate">{(student.subjects || []).join(", ") || "No subjects"}</span>
+            <div key={student._id} className="bg-white border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)] hover:shadow-[8px_8px_0px_0px_rgba(255,111,97,1)] transition-all flex flex-col group">
+              {/* Card Top: Class Badge & Avatar */}
+              <div className="p-6 pb-0 flex flex-col items-center text-center">
+                <div className="w-full flex justify-end mb-2">
+                  <span className="px-3 py-1 bg-coral text-off-white text-[9px] font-black uppercase tracking-widest border-2 border-dark-navy shadow-[2px_2px_0px_0px_rgba(43,65,98,1)]">
+                    Class {student.whichClass || "N/A"}
+                  </span>
                 </div>
-                {student.user?.country && (
-                  <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-steel-blue uppercase tracking-widest">
-                    <MapPin className="w-3 h-3 text-coral" /> {student.user.country}
-                  </div>
-                )}
+                
+                <div className="w-20 h-20 bg-dark-navy border-2 border-dark-navy flex items-center justify-center overflow-hidden mb-4 shadow-[4px_4px_0px_0px_rgba(255,111,97,1)]">
+                  {student.user?.profileImage ? (
+                    <img src={student.user.profileImage} alt={student.user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-3xl font-bold text-off-white uppercase">{student.user?.name?.charAt(0) || "S"}</span>
+                  )}
+                </div>
+                
+                <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight group-hover:text-coral transition-colors">
+                  {student.user?.name || "Student Name"}
+                </h3>
               </div>
               
-              <Link 
-                href={`/students/${student.user?._id || student._id}`}
-                className="w-full py-2 bg-dark-navy text-off-white text-[10px] font-bold uppercase tracking-widest hover:bg-coral transition-colors border-2 border-dark-navy flex items-center justify-center gap-2"
-              >
-                View Profile <ChevronRight size={12} />
-              </Link>
+              {/* Card Body: Goals & Interests */}
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target size={14} className="text-coral" />
+                    <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest">Learning Goals</span>
+                  </div>
+                  <p className="text-dark-navy text-xs font-medium leading-relaxed line-clamp-3 italic bg-off-white p-3 border border-dark-navy/10 rounded">
+                    "{student.description || student.learningGoals || "Looking for an expert to help me master my subjects."}"
+                  </p>
+                </div>
+                
+                <div className="mt-auto space-y-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest">Interests</span>
+                    <div className="flex flex-wrap gap-1">
+                      {(student.subjects || []).slice(0, 2).map((sub: string) => (
+                        <span key={sub} className="px-2 py-0.5 bg-dark-navy text-off-white text-[8px] font-black uppercase tracking-wider">
+                          {sub}
+                        </span>
+                      ))}
+                      {student.subjects?.length > 2 && (
+                        <span className="px-2 py-0.5 bg-off-white border border-dark-navy text-dark-navy text-[8px] font-black uppercase tracking-wider">
+                          +{student.subjects.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {student.user?.country && (
+                    <div className="flex items-center gap-2 text-[9px] font-black text-steel-blue uppercase tracking-widest">
+                      <MapPin size={12} className="text-coral shrink-0" /> {student.user.country}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Footer Action */}
+              <div className="p-4 pt-0">
+                <Link 
+                  href={`/students/${student.user?._id || student._id}`}
+                  className="w-full py-3 bg-dark-navy text-off-white text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-coral transition-all active:translate-y-0.5"
+                >
+                  View Profile <ChevronRight size={14} />
+                </Link>
+              </div>
             </div>
           ))
         ) : (
-          <div className="col-span-full py-12 text-center bg-white border-2 border-dashed border-dark-navy/20">
-            <p className="text-steel-blue font-bold italic uppercase tracking-widest">No students found matching your search.</p>
+          <div className="col-span-full py-20 text-center bg-white border-4 border-dashed border-dark-navy/10">
+            <p className="text-steel-blue font-black text-lg uppercase tracking-[0.3em]">No Students Found</p>
           </div>
         )}
       </div>
