@@ -9,16 +9,8 @@ import {
   UserCog,
   Eye
 } from "lucide-react";
-import { getCurrentUser } from "@/lib/utils";
+import { getCurrentUser, getTotalUserCount, getTotalUsers } from "@/lib/utils";
 import { redirect } from "next/navigation";
-
-const allUsers = [
-  { id: "1", name: "Alex Rivera", email: "alex.r@example.com", role: "Student", status: "Active", joined: "Mar 10, 2024" },
-  { id: "2", name: "Sarah Jenkins", email: "sarah.j@example.com", role: "Tutor", status: "Active", joined: "Mar 08, 2024" },
-  { id: "3", name: "Maya Chen", email: "maya.c@example.com", role: "Student", status: "Active", joined: "Mar 05, 2024" },
-  { id: "4", name: "Jordan Smith", email: "jordan.s@example.com", role: "Tutor", status: "Banned", joined: "Feb 28, 2024" },
-  { id: "5", name: "David Wilson", email: "david.w@example.com", role: "Admin", status: "Active", joined: "Jan 15, 2024" },
-];
 
 export default async function UsersPage() {
   const user = await getCurrentUser();
@@ -26,6 +18,9 @@ export default async function UsersPage() {
   if (!user || user.role !== "admin") {
     return redirect("/admin");
   }
+
+  const allUsers = await getTotalUsers();
+  const totalCount = await getTotalUserCount();
 
   return (
     <div className="space-y-6 pb-12">
@@ -77,7 +72,7 @@ export default async function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {allUsers.map((user) => (
+              {allUsers.map((user: any) => (
                 <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -92,9 +87,9 @@ export default async function UsersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${
-                      user.role === 'Tutor' 
+                      user.role.toLocaleLowerCase() === 'tutor' 
                         ? 'bg-blue-50 text-blue-600 border-blue-100' 
-                        : user.role === 'Admin'
+                        : user.role.toLocaleLowerCase() === 'admin'
                         ? 'bg-orange-50 text-orange-600 border-orange-100'
                         : 'bg-purple-50 text-purple-600 border-purple-100'
                     }`}>
@@ -106,11 +101,11 @@ export default async function UsersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${
-                      user.status === 'Active' 
+                      user.status.toLocaleLowerCase() === "active"
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
                         : 'bg-rose-50 text-rose-600 border-rose-100'
                     }`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                       <span className="text-[10px] font-black uppercase">{user.status}</span>
                     </div>
                   </td>
@@ -135,7 +130,7 @@ export default async function UsersPage() {
         
         {/* Pagination */}
         <div className="p-6 border-t border-gray-50 flex items-center justify-between bg-gray-50/10">
-           <span className="text-xs font-medium text-gray-500">Showing 1 to 5 of 2,420 entries</span>
+           <span className="text-xs font-medium text-gray-500">Showing 1 to 5 of {totalCount} entries</span>
            <div className="flex items-center gap-2">
               <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-black uppercase tracking-widest text-gray-400 cursor-not-allowed">Prev</button>
               <button className="px-4 py-2 bg-dark-navy text-white rounded-lg text-xs font-black uppercase tracking-widest shadow-sm">Next</button>

@@ -6,6 +6,8 @@ import { SignInButton, SignUpButton, Show, UserButton, useUser } from "@clerk/ne
 
 export default function Navbar() {
   const { user } = useUser();
+
+  
   return (
     <nav className="fixed top-0 z-50 w-full bg-off-white/80 backdrop-blur-md border-b border-steel-blue/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,6 +26,11 @@ export default function Navbar() {
           </div>
           
           <div className="hidden md:flex items-center gap-8">
+            {user && (
+              <Link href="/dashboard" className="text-sm font-medium text-steel-blue hover:text-dark-navy transition-colors">
+                Dashboard
+              </Link>
+            )}
             <Link href="#features" className="text-sm font-medium text-steel-blue hover:text-dark-navy transition-colors">
               Features
             </Link>

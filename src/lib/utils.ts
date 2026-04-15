@@ -27,3 +27,29 @@ export async function getCurrentUser() {
     return null;
   }
 }
+
+export async function getTotalUserCount() {
+  try {
+    await connectDB();
+    const count = await User.countDocuments();
+    return count;
+  } catch (error) {
+    console.error("Error fetching total user count:", error);
+    return 0;
+  }
+
+}
+
+export async function getTotalUsers() {
+  try {
+
+    const data = await fetch(`${process.env.NEXT_URL}/api/admin/users`, {
+      cache: "no-store"
+    }).then(res => res.json());
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    return null;
+  }
+}
