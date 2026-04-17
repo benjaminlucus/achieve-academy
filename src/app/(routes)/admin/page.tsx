@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Users,
   GraduationCap,
@@ -14,8 +13,9 @@ import {
   UserPlus
 } from "lucide-react";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/utils";
+import { getCurrentUser, getTotalPayments } from "@/lib/utils";
 import { redirect } from "next/navigation";
+
 
 // Mock Recent Users
 const recentUsers = [
@@ -23,13 +23,6 @@ const recentUsers = [
   { id: "2", name: "Sarah Jenkins", email: "sarah.j@example.com", role: "Tutor", status: "Pending", joined: "5 hours ago" },
   { id: "3", name: "Maya Chen", email: "maya.c@example.com", role: "Student", status: "Active", joined: "1 day ago" },
   { id: "4", name: "Jordan Smith", email: "jordan.s@example.com", role: "Tutor", status: "Approved", joined: "2 days ago" },
-];
-
-// Mock Recent Payments
-const recentPayments = [
-  { id: "P1", user: "Alex Rivera", amount: "$150.00", commission: "$15.00", status: "Paid", date: "Mar 15, 2024" },
-  { id: "P2", user: "Maya Chen", amount: "$80.00", commission: "$8.00", status: "Processing", date: "Mar 14, 2024" },
-  { id: "P3", user: "Alex Rivera", amount: "$120.00", commission: "$12.00", status: "Paid", date: "Mar 12, 2024" },
 ];
 
 export default async function AdminDashboard() {
@@ -61,6 +54,10 @@ export default async function AdminDashboard() {
     { label: "Total Revenue", value: data.totalRevenue, growth: "+22.4%", isPositive: true, icon: DollarSign, color: "bg-amber-50 text-amber-600 border-amber-100" },
     { label: "Total Sessions", value: data.totalSessions, growth: "-2.5%", isPositive: false, icon: Calendar, color: "bg-rose-50 text-rose-600 border-rose-100" },
   ];
+
+  const recentPayments = await getTotalPayments();
+  const paymentsArray = recentPayments.payments.slice(0, 4);
+
   return (
     <div className="space-y-8 pb-12">
 
@@ -108,6 +105,7 @@ export default async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
+
                 {recentUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
                     <td className="px-6 py-4">
@@ -167,31 +165,34 @@ export default async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {recentPayments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
-                          <DollarSign size={16} />
+                {paymentsArray.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-sm font-medium text-gray-500">No payments found.</p>
+                  </div>) : (paymentsArray.map((payment: any) => (
+                    <tr key={payment.id} className="hover:bg-gray-50/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                            <DollarSign size={16} />
+                          </div>
+                          <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{payment.user}</p>
                         </div>
-                        <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{payment.user}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-black text-gray-900">{payment.amount}</p>
-                      <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Comm: {payment.commission}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md border ${payment.status === 'Paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
-                        }`}>
-                        {payment.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-tight">{payment.date}</p>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-black text-gray-900">{payment.amount}</p>
+                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Comm: {payment.commission}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md border ${payment.status === 'Paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                          }`}>
+                          {payment.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-tight">{payment.date}</p>
+                      </td>
+                    </tr>)
+                  ))}
               </tbody>
             </table>
           </div>

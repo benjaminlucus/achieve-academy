@@ -53,3 +53,17 @@ export async function getTotalUsers() {
     return null;
   }
 }
+
+export async function getTotalPayments() {
+  try {
+
+    const data = await fetch(`${process.env.NEXT_URL}/api/admin/payments`, {
+      cache: "no-store"
+    }).then(res => res.json());
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching payments data:", error);
+    return null;
+  }
+}

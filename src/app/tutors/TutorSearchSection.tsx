@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { BookOpen, Clock, DollarSign, Star, ChevronRight, GraduationCap, MapPin } from "lucide-react";
 
+import { SearchBar } from "@/components/SearchBar";
+
 export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState("Subject (All)");
+  const [selectedSubject, setSelectedSubject] = useState("");
 
   const allSubjects = Array.from(new Set(initialTutors.flatMap(t => t.subjects || []))).sort();
 
@@ -15,7 +17,7 @@ export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) 
     const subjectMatch = (tutor.subjects || []).some((s: string) => 
       s.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const filterMatch = selectedSubject === "Subject (All)" || (tutor.subjects || []).includes(selectedSubject);
+    const filterMatch = !selectedSubject || (tutor.subjects || []).includes(selectedSubject);
 
     return (nameMatch || subjectMatch) && filterMatch;
   });
@@ -23,30 +25,13 @@ export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) 
   return (
     <div className="flex flex-col gap-8">
       {/* Professional Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4 p-6 bg-white border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)]">
-        <div className="flex-1">
-          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Search Tutors</label>
-          <input 
-            type="text" 
-            placeholder="Type name or subject..."
-            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy focus:outline-none transition-all"
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="md:w-64">
-          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Filter by Subject</label>
-          <select 
-            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy outline-none"
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-          >
-            <option>Subject (All)</option>
-            {allSubjects.map(sub => (
-              <option key={sub} value={sub}>{sub}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <SearchBar 
+        placeholder="Type name or subject..."
+        onSearchChange={(val) => setSearchTerm(val)}
+        onStatusChange={(val) => setSelectedSubject(val)}
+        statusOptions={allSubjects}
+        defaultStatusLabel="Subject (All)"
+      />
 
       {/* Tutors Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

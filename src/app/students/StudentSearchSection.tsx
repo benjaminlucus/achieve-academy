@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { BookOpen, GraduationCap, MapPin, ChevronRight, Target, User } from "lucide-react";
 
+import { SearchBar } from "@/components/SearchBar";
+
 export function StudentSearchSection({ initialStudents }: { initialStudents: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedClass, setSelectedClass] = useState("Class (All)");
+  const [selectedClass, setSelectedClass] = useState("");
 
   const allClasses = Array.from(new Set(initialStudents.map(s => s.whichClass))).filter(Boolean).sort();
 
@@ -15,7 +17,7 @@ export function StudentSearchSection({ initialStudents }: { initialStudents: any
     const subjectMatch = (student.subjects || []).some((s: string) => 
       s.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const filterMatch = selectedClass === "Class (All)" || student.whichClass === selectedClass;
+    const filterMatch = !selectedClass || student.whichClass === selectedClass;
 
     return (nameMatch || subjectMatch) && filterMatch;
   });
@@ -23,30 +25,13 @@ export function StudentSearchSection({ initialStudents }: { initialStudents: any
   return (
     <div className="flex flex-col gap-8">
       {/* Professional Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4 p-6 bg-white border-2 border-dark-navy shadow-[4px_4px_0px_0px_rgba(43,65,98,1)]">
-        <div className="flex-1">
-          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Search Students</label>
-          <input 
-            type="text" 
-            placeholder="Search by name or interests..."
-            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy focus:outline-none transition-all"
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="md:w-64">
-          <label className="block text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mb-2">Academic Level</label>
-          <select 
-            className="w-full px-4 py-3 bg-off-white border-2 border-dark-navy font-bold text-dark-navy outline-none"
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-          >
-            <option>Class (All)</option>
-            {allClasses.map(cls => (
-              <option key={cls} value={cls}>{cls}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <SearchBar 
+        placeholder="Search by name or interests..."
+        onSearchChange={(val) => setSearchTerm(val)}
+        onStatusChange={(val) => setSelectedClass(val)}
+        statusOptions={allClasses}
+        defaultStatusLabel="Class (All)"
+      />
 
       {/* Students Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

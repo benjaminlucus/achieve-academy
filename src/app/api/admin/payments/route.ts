@@ -32,9 +32,9 @@ export async function GET(req: any) {
         const formattedPayments = payments.map(p => ({
             id: p._id,
             user: p.student?.name,
-            amount: p.amount,
-            commission: p.commission,
-            tutorEarning: p.tutorEarning,
+            amount: `$${p.amount}`,
+            commission: `$${p.commission}`,
+            tutorEarning: `$${p.tutorEarning}`,
             status: p.status,
             date: p.createdAt
         }));
