@@ -54,6 +54,20 @@ export async function getTotalUsers() {
   }
 }
 
+export async function getAllTutors() {
+  try {
+
+    const data = await fetch(`${process.env.NEXT_URL}/api/admin/tutors`, {
+      cache: "no-store"
+    }).then(res => res.json());
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching tutor data:", error);
+    return null;
+  }
+}
+
 export async function getTotalPayments() {
   try {
 
@@ -67,3 +81,4 @@ export async function getTotalPayments() {
     return null;
   }
 }
+

@@ -1,53 +1,20 @@
 import React from "react";
-import { getCurrentUser } from "@/lib/utils";
+import { getAllTutors, getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import TutorsTableClient from "./TutorsTableClient";
 
-const pendingTutors = [
-  { 
-    id: "1", 
-    name: "Sarah Jenkins", 
-    email: "sarah.j@example.com", 
-    subjects: ["Physics", "Mathematics"], 
-    country: "United Kingdom", 
-    timezone: "GMT+0", 
-    experience: "8 Years", 
-    education: "Ph.D. in Theoretical Physics",
-    status: "Pending" 
-  },
-  { 
-    id: "2", 
-    name: "James Wilson", 
-    email: "james.w@example.com", 
-    subjects: ["English Literature", "History"], 
-    country: "Canada", 
-    timezone: "GMT-5", 
-    experience: "5 Years", 
-    education: "Master's in Literature",
-    status: "Pending" 
-  },
-  { 
-    id: "3", 
-    name: "Elena Rodriguez", 
-    email: "elena.r@example.com", 
-    subjects: ["Spanish", "World History"], 
-    country: "Spain", 
-    timezone: "GMT+1", 
-    experience: "12 Years", 
-    education: "BA in Education",
-    status: "Approved" 
-  },
-];
-
 export default async function TutorsApprovalPage() {
+  const pendingTutors = await getAllTutors();
+
   const user = await getCurrentUser();
 
   if (!user || user.role !== "admin") {
     return redirect("/admin");
   }
 
-  const pendingCount = pendingTutors.filter(t => t.status === "Pending").length;
+  const pendingCount = pendingTutors.filter((t: { status: string }) => t.status === "Pending").length;
 
+  
   return (
     <div className="space-y-6 pb-12">
       {/* Page Header */}

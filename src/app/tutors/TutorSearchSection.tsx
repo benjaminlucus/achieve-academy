@@ -27,10 +27,9 @@ export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) 
       {/* Professional Search & Filter */}
       <SearchBar 
         placeholder="Type name or subject..."
-        onSearchChange={(val) => setSearchTerm(val)}
-        onStatusChange={(val) => setSelectedSubject(val)}
-        statusOptions={allSubjects}
-        defaultStatusLabel="Subject (All)"
+        onSearch={(val: any) => setSearchTerm(val)}
+        allStatuses={allSubjects}
+        initialStatus="Subject (All)"
       />
 
       {/* Tutors Grid */}

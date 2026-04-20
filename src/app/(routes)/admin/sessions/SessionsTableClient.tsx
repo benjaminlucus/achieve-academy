@@ -42,7 +42,7 @@ export default function SessionsTableClient({ initialSessions }: { initialSessio
       {/* Filters & Search */}
       <SearchBar 
         placeholder="Search sessions..."
-        allStatuses={["All Status", "Scheduled", "Completed", "Cancelled"]}
+        allStatuses={["All Status", "Active", "Completed", "Cancelled"]}
         onSearch={(data) => {
           setSearchTerm(data.search);
           setSelectedStatus(data.status);
@@ -64,6 +64,13 @@ export default function SessionsTableClient({ initialSessions }: { initialSessio
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
+              {filteredSessions.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-sm font-medium text-gray-500">
+                    No sessions found
+                  </td>
+                </tr>
+              )}
               {filteredSessions.map((session) => (
                 <tr key={session.id} className="hover:bg-gray-50/30 transition-colors group">
                   <td className="px-6 py-4">

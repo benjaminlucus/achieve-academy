@@ -100,6 +100,15 @@ export default function PaymentsTableClient({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
+              {filteredPayments.length === 0 && (
+                <div>
+                    <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-sm font-medium text-gray-500">
+                      No payments found
+                    </td>
+                    </tr>
+                </div>
+              )}
               {filteredPayments.map((payment) => (
                 <tr key={payment.id} className="hover:bg-gray-50/30 transition-colors group">
                   <td className="px-6 py-4">

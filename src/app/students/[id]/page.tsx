@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Search, Settings, LogOut, CreditCard, Bell, History
 } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 export default function StudentProfileView({ params }: { params: { id: string } }) {
 
@@ -30,10 +31,12 @@ export default function StudentProfileView({ params }: { params: { id: string } 
     ]
   });
 
+  const { id } = useParams<{ id: string }>();
+
   const getStudentData = async () => {
 
     try {
-      const res = await fetch(`/api/students/${params.id}`,
+      const res = await fetch(`/api/students/${id}`,
         {
           cache: "no-store",
         }
@@ -55,7 +58,7 @@ export default function StudentProfileView({ params }: { params: { id: string } 
 
   React.useEffect(() => {
     getStudentData();
-  }, [params.id]);
+  }, [id]);
 
   return (
     <div className="bg-off-white min-h-screen pt-24 pb-12 px-6">

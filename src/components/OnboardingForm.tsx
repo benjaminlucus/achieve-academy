@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, GraduationCap, BookOpen, Globe, Clock, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { allCountries, allTimezones } from '@/lib/constants';
 
 const OnboardingForm = () => {
 
@@ -116,12 +117,14 @@ const OnboardingForm = () => {
                   <label className="block text-sm font-semibold mb-1">Country</label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-3 w-4 h-4 text-[#70869d]" />
-                    <input
-                      type="text"
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1e3a5f] outline-none"
-                      placeholder="e.g. United Kingdom"
+                    <select
                       onChange={(e) => updateFields({ country: e.target.value })}
-                    />
+                      className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-dark-navy/10 text-sm font-bold text-gray-700 transition-all appearance-none"
+                    >
+                      {allCountries.map((country) => (
+                        <option value={country.toLowerCase()}>{country.toUpperCase()}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div>
@@ -132,10 +135,9 @@ const OnboardingForm = () => {
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1e3a5f] outline-none appearance-none"
                       onChange={(e) => updateFields({ timezone: e.target.value })}
                     >
-                      <option value="">Select Timezone</option>
-                      <option value="GMT">GMT (London)</option>
-                      <option value="EST">EST (New York)</option>
-                      <option value="PKT">PKT (Pakistan)</option>
+                      {allTimezones.map((timezone) => (
+                        <option value={timezone.toLowerCase()}>{timezone.toUpperCase()}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

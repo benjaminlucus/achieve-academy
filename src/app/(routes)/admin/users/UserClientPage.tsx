@@ -9,11 +9,13 @@ import {
     Mail,
     ShieldAlert,
     UserCog,
-    Eye
+    Eye,
+    X
 } from "lucide-react";
 import { SearchBar } from '@/components/SearchBar';
 import { ITEMS_PER_PAGE } from '@/lib/constants';
 import AllUsersTable from './AllUsersTable';
+import { CreateUserDialog } from './CreateUserDialog';
 
 const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number }) => {
     const [filters, setFilters] = useState({
@@ -21,6 +23,7 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
         status: "All Status",
     });
     const [page, setPage] = useState(1);
+    const [open, setOpen] = useState(false);
 
     const filteredUsers = users.filter((user) => {
         const matchesSearch =
@@ -50,10 +53,19 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                     <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">User Management</h2>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">Manage all platform members</p>
                 </div>
-                <button className="flex items-center gap-2 px-6 py-3 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all shadow-sm">
+                <button onClick={() => setOpen(true)} className="flex items-center gap-2 px-6 py-3 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all shadow-sm">
                     <UserPlus size={16} /> Add New User
                 </button>
             </div>
+
+            {/* 2. Create User Dialog */}
+            <CreateUserDialog 
+                isOpen={open} 
+                onClose={() => setOpen(false)} 
+                onSuccess={() => {
+                    setOpen(false);
+                }} 
+            />
 
             {/* Filters & Search */}
 
@@ -89,9 +101,7 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {filteredUsers.length === 0 && (
-                                <div className="text-center py-12">
                                     <p className="text-sm font-medium text-gray-500">No users found matching for your search {filters.search}.</p>
-                                </div>
                             )}
                             {paginatedUsers.map((user: any) => (
                                 <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">

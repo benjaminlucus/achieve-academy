@@ -5,7 +5,12 @@ export interface IUser extends Document {
   name: string;
   email: string;
   role: "student" | "tutor" | "admin";
-  status: "active" | "blocked";
+  status: "applied" 
+       | "reviewing"
+       | "interview_scheduled"
+       | "interviewed"
+       | "approved"
+       | "blocked";
   profileImage?: string;
   country?: string;
   timezone?: string;

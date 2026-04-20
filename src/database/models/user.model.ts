@@ -2,7 +2,7 @@ import mongoose, { Schema, models } from "mongoose";
 import { IUser } from "../../../types";
 
 const UserSchema = new Schema<IUser>({
- clerkId: {
+  clerkId: {
     type: String,
     required: true,
     unique: true
@@ -19,8 +19,8 @@ const UserSchema = new Schema<IUser>({
 
   status: {
     type: String,
-    enum: ["active", "blocked"],
-    default: "active"
+    enum: ["applied", "reviewing", "interview_scheduled", "interviewed", "approved", "blocked"],
+    default: "applied"
   },
 
   profileImage: String,

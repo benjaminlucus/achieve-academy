@@ -1,3 +1,5 @@
+// Completed this page.
+
 import {
   Users,
   GraduationCap,
@@ -7,23 +9,11 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownRight,
-  Search,
-  Filter,
   MoreVertical,
-  UserPlus
 } from "lucide-react";
 import Link from "next/link";
-import { getCurrentUser, getTotalPayments } from "@/lib/utils";
+import { getCurrentUser, getTotalPayments, getTotalUsers } from "@/lib/utils";
 import { redirect } from "next/navigation";
-
-
-// Mock Recent Users
-const recentUsers = [
-  { id: "1", name: "Alex Rivera", email: "alex.r@example.com", role: "Student", status: "Active", joined: "2 hours ago" },
-  { id: "2", name: "Sarah Jenkins", email: "sarah.j@example.com", role: "Tutor", status: "Pending", joined: "5 hours ago" },
-  { id: "3", name: "Maya Chen", email: "maya.c@example.com", role: "Student", status: "Active", joined: "1 day ago" },
-  { id: "4", name: "Jordan Smith", email: "jordan.s@example.com", role: "Tutor", status: "Approved", joined: "2 days ago" },
-];
 
 export default async function AdminDashboard() {
   const user = await getCurrentUser();
@@ -55,6 +45,8 @@ export default async function AdminDashboard() {
     { label: "Total Sessions", value: data.totalSessions, growth: "-2.5%", isPositive: false, icon: Calendar, color: "bg-rose-50 text-rose-600 border-rose-100" },
   ];
 
+
+  const recentUsers = (await getTotalUsers()).slice(0, 4)
   const recentPayments = await getTotalPayments();
   const paymentsArray = recentPayments.payments.slice(0, 4);
 
@@ -106,7 +98,7 @@ export default async function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-50">
 
-                {recentUsers.map((user) => (
+                {recentUsers.map((user: any) => (
                   <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
