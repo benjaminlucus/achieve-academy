@@ -56,18 +56,19 @@ export default async function AdminDashboard() {
       {/* Overview Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 rounded-xl border ${stat.color} transition-colors group-hover:bg-white`}>
-                <stat.icon size={20} />
+          <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-gray-50/50 rounded-bl-full -mr-4 -mt-4 transition-all group-hover:bg-coral/5" />
+            <div className="flex items-center justify-between mb-4 relative">
+              <div className={`p-3 rounded-2xl border ${stat.color} transition-colors group-hover:bg-white shadow-sm`}>
+                <stat.icon size={22} />
               </div>
-              <div className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest ${stat.isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <div className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest ${stat.isPositive ? 'text-emerald-500' : 'text-rose-500'} bg-white px-2 py-1 rounded-full border border-gray-50 shadow-sm`}>
                 {stat.isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                 {stat.growth}
               </div>
             </div>
-            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">{stat.label}</h3>
-            <p className="text-2xl font-black text-gray-900 tracking-tight">{stat.value}</p>
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1 relative">{stat.label}</h3>
+            <p className="text-2xl font-black text-gray-900 tracking-tight relative">{stat.value}</p>
           </div>
         ))}
       </div>

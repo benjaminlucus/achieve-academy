@@ -6,18 +6,20 @@ import { BookOpen, GraduationCap, MapPin, ChevronRight, Target, User } from "luc
 
 import { SearchBar } from "@/components/SearchBar";
 
-export function StudentSearchSection({ initialStudents }: { initialStudents: any[] }) {
+export function StudentSearchSection({ initialStudents = [] }: { initialStudents: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
 
-  const allClasses = Array.from(new Set(initialStudents.map(s => s.whichClass))).filter(Boolean).sort();
+  const allClasses = Array.from(new Set((initialStudents || []).map(s => s.gradeLevel || s.whichClass))).filter(Boolean).sort();
 
-  const filteredStudents = initialStudents.filter((student) => {
+  const filteredStudents = (initialStudents || []).filter((student) => {
+    const subjects = student.preferredSubjects || student.subjects || [];
+    const grade = student.gradeLevel || student.whichClass || "";
     const nameMatch = student.user?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const subjectMatch = (student.subjects || []).some((s: string) => 
+    const subjectMatch = subjects.some((s: string) => 
       s.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const filterMatch = !selectedClass || student.whichClass === selectedClass;
+    const filterMatch = !selectedClass || grade === selectedClass;
 
     return (nameMatch || subjectMatch) && filterMatch;
   });
@@ -27,10 +29,12 @@ export function StudentSearchSection({ initialStudents }: { initialStudents: any
       {/* Professional Search & Filter */}
       <SearchBar 
         placeholder="Search by name or interests..."
-        onSearchChange={(val) => setSearchTerm(val)}
-        onStatusChange={(val) => setSelectedClass(val)}
-        statusOptions={allClasses}
-        defaultStatusLabel="Class (All)"
+        onSearch={(data) => {
+          setSearchTerm(data.search);
+          setSelectedClass(data.status === "Class (All)" ? "" : data.status);
+        }}
+        allStatuses={["Class (All)", ...allClasses]}
+        initialStatus="Class (All)"
       />
 
       {/* Students Grid */}
@@ -42,7 +46,7 @@ export function StudentSearchSection({ initialStudents }: { initialStudents: any
               <div className="p-6 pb-0 flex flex-col items-center text-center">
                 <div className="w-full flex justify-end mb-2">
                   <span className="px-3 py-1 bg-coral text-off-white text-[9px] font-black uppercase tracking-widest border-2 border-dark-navy shadow-[2px_2px_0px_0px_rgba(43,65,98,1)]">
-                    Class {student.whichClass || "N/A"}
+                    {student.gradeLevel || student.whichClass || "N/A"}
                   </span>
                 </div>
                 
@@ -67,7 +71,7 @@ export function StudentSearchSection({ initialStudents }: { initialStudents: any
                     <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest">Learning Goals</span>
                   </div>
                   <p className="text-dark-navy text-xs font-medium leading-relaxed line-clamp-3 italic bg-off-white p-3 border border-dark-navy/10 rounded">
-                    "{student.description || student.learningGoals || "Looking for an expert to help me master my subjects."}"
+                    "{student.learningGoals || "Looking for an expert to help me master my subjects."}"
                   </p>
                 </div>
                 
@@ -75,14 +79,14 @@ export function StudentSearchSection({ initialStudents }: { initialStudents: any
                   <div className="flex flex-col gap-1">
                     <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest">Interests</span>
                     <div className="flex flex-wrap gap-1">
-                      {(student.subjects || []).slice(0, 2).map((sub: string) => (
+                      {(student.preferredSubjects || student.subjects || []).slice(0, 2).map((sub: string) => (
                         <span key={sub} className="px-2 py-0.5 bg-dark-navy text-off-white text-[8px] font-black uppercase tracking-wider">
                           {sub}
                         </span>
                       ))}
-                      {student.subjects?.length > 2 && (
+                      {(student.preferredSubjects || student.subjects)?.length > 2 && (
                         <span className="px-2 py-0.5 bg-off-white border border-dark-navy text-dark-navy text-[8px] font-black uppercase tracking-wider">
-                          +{student.subjects.length - 2}
+                          +{(student.preferredSubjects || student.subjects).length - 2}
                         </span>
                       )}
                     </div>

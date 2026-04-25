@@ -6,18 +6,19 @@ import { BookOpen, Clock, DollarSign, Star, ChevronRight, GraduationCap, MapPin 
 
 import { SearchBar } from "@/components/SearchBar";
 
-export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) {
+export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
 
-  const allSubjects = Array.from(new Set(initialTutors.flatMap(t => t.subjects || []))).sort();
+  const allSubjects = Array.from(new Set((initialTutors || []).flatMap(t => t.subjects || []))).sort();
 
-  const filteredTutors = initialTutors.filter((tutor) => {
+  const filteredTutors = (initialTutors || []).filter((tutor) => {
     const nameMatch = tutor.user?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const subjectMatch = (tutor.subjects || []).some((s: string) => 
+    const subjects = tutor.subjects || [];
+    const subjectMatch = subjects.some((s: string) => 
       s.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const filterMatch = !selectedSubject || (tutor.subjects || []).includes(selectedSubject);
+    const filterMatch = !selectedSubject || subjects.includes(selectedSubject);
 
     return (nameMatch || subjectMatch) && filterMatch;
   });
@@ -27,8 +28,11 @@ export function TutorSearchSection({ initialTutors }: { initialTutors: any[] }) 
       {/* Professional Search & Filter */}
       <SearchBar 
         placeholder="Type name or subject..."
-        onSearch={(val: any) => setSearchTerm(val)}
-        allStatuses={allSubjects}
+        onSearch={(data) => {
+          setSearchTerm(data.search);
+          setSelectedSubject(data.status === "Subject (All)" ? "" : data.status);
+        }}
+        allStatuses={["Subject (All)", ...allSubjects]}
         initialStatus="Subject (All)"
       />
 

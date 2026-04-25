@@ -61,7 +61,7 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
 
 
   const updateStatus = async (userId: string, status: string) => {
-    await fetch(`/api/users/${userId}/status`, {
+    await fetch(`/api/admin/users/${userId}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
     });

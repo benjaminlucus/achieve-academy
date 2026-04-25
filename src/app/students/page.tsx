@@ -3,6 +3,7 @@ import User from "@/database/models/user.model";
 import StudentProfile from "@/database/models/student.model";
 import Link from "next/link";
 import { BookOpen, GraduationCap, MapPin } from "lucide-react";
+import { StudentSearchSection } from "./StudentSearchSection";
 
 export default async function StudentsPage({
   searchParams,
@@ -24,15 +25,18 @@ export default async function StudentsPage({
     .lean();
 
   // Filter logic
-  const filteredStudents = (students as any[]).filter((s) => {
+  const filteredStudents = (students || []).filter((s: any) => {
     if (!s.user || s.user.status === "blocked") return false;
     
+    const subjects = s.preferredSubjects || s.subjects || [];
+    const name = s.user.name || "";
+    
     const matchesQuery = !query || 
-      s.user.name.toLowerCase().includes(query.toLowerCase()) ||
-      s.subjects.some((sub: string) => sub.toLowerCase().includes(query.toLowerCase()));
+      name.toLowerCase().includes(query.toLowerCase()) ||
+      subjects.some((sub: string) => sub.toLowerCase().includes(query.toLowerCase()));
     
     const matchesClass = classFilter === "Class (All)" || 
-      s.whichClass === classFilter;
+      s.gradeLevel === classFilter || s.whichClass === classFilter;
 
     return matchesQuery && matchesClass;
   });
@@ -52,6 +56,3 @@ export default async function StudentsPage({
     </div>
   );
 }
-
-// Client component for interactivity
-import { StudentSearchSection } from "./StudentSearchSection";

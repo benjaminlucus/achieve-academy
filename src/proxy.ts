@@ -7,46 +7,70 @@ const isPublicRoute = createRouteMatcher([
   '/', 
   '/contact', 
   '/about', 
-  '/students(.*)', 
-  '/tutors(.*)', 
   '/sign-in(.*)', 
   '/sign-up(.*)',
   '/api(.*)'
 ]);
 
+// Specifically match public profiles but NOT dashboards
+const isPublicProfileRoute = createRouteMatcher([
+  '/students/:id',
+  '/tutors/:id'
+]);
+
+const isDashboardRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/students/:id/dashboard(.*)',
+  '/tutors/:id/dashboard(.*)'
+]);
+
 // 2. The Onboarding Page
 const isOnboardingRoute = createRouteMatcher(['/onboarding']);
 
+const isAdminRoute = createRouteMatcher(['/admin(.*)', '/api/admin(.*)']);
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
+  const url = new URL(req.url);
 
   // PASS 1: If not logged in and trying to access a private route
-  if (!userId && !isPublicRoute(req)) {
+  if (!userId && !isPublicRoute(req) && !isPublicProfileRoute(req)) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
   // PASS 2: If logged in
   if (userId) {
-    // If they are on a public route (like Home or Contact), just let them through
-    // This allows them to "explore" without being forced to onboard immediately.
-    if (isPublicRoute(req)) {
-      return NextResponse.next();
+    const user = await getCurrentUser();
+    
+    // Security: Only 'admin' role can access admin routes
+    if (isAdminRoute(req) && user?.role !== 'admin') {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    // const user = await getCurrentUser();
-    
-    // // Check if onboarding is actually finished
-    // const hasFinishedOnboarding = user?.role === "student" || user?.role === "tutor" || user?.role === "admin" || user?.isOnboarded;
+    const hasFinishedOnboarding = user?.role === "student" || user?.role === "tutor" || user?.role === "admin" || user?.isOnboarded;
 
-    // // REDIRECT A: Not onboarded and trying to go to /dashboard or other private areas
-    // if (!hasFinishedOnboarding && !isOnboardingRoute(req)) {
-    //   return NextResponse.redirect(new URL("/onboarding", req.url));
-    // }
+    // REDIRECT A: Not onboarded and trying to go to dashboard or other private areas
+    // Note: Admins bypass this if they are already marked as admin in DB
+    if (!hasFinishedOnboarding && !isOnboardingRoute(req) && !isPublicRoute(req) && !isPublicProfileRoute(req)) {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
 
-    // // REDIRECT B: Already onboarded but trying to go back to /onboarding
-    // if (hasFinishedOnboarding && isOnboardingRoute(req)) {
-    //   return NextResponse.redirect(new URL("/dashboard", req.url)); // or your main landing page
-    // }
+    // REDIRECT B: Already onboarded but trying to go back to /onboarding
+    if (hasFinishedOnboarding && isOnboardingRoute(req)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // ACCESS CONTROL: Private Dashboards
+    if (isDashboardRoute(req)) {
+      const pathSegments = url.pathname.split('/');
+      if (pathSegments.length >= 4 && pathSegments[3] === 'dashboard') {
+        const profileId = pathSegments[2];
+        // Allow the user themselves OR an admin to see the private dashboard
+        if (user?._id.toString() !== profileId && user?.role !== 'admin') {
+          return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
+      }
+    }
   }
 
   return NextResponse.next();

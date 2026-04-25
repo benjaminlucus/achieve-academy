@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
-import StudentProfile from "@/database/models/student.model";
+import TutorProfile from "@/database/models/tutor.model";
 import Session from "@/database/models/session.model";
 import React from "react";
 
@@ -8,56 +8,63 @@ export async function GET(req: any, { params }: any) {
     try {
         await connectDB();
 
-        const studentId = React.use(params.id); // Extract student ID from URL parameters
+        const { id: tutorId } = await params;
 
-        const student = await StudentProfile.findOne({ user: studentId })
+        const tutor = await TutorProfile.findOne({ user: tutorId })
             .populate("user");
-        const sessions = await Session.find({ student: studentId })
-            .populate("tutor", "name")
-            .sort({ createdAt: -1 }); // // Find al students from database with matching id. It replaces the tutor ID with actual tutor data (only name here). Latest sessions come first
 
+        if (!tutor) {
+            return NextResponse.json({ error: "Tutor not found" }, { status: 404 });
+        }
 
-        const completedSessions = sessions.filter(s => s.status === "completed"); // Keep only sessions where status = "completed"
+        const sessions = await Session.find({ tutor: tutorId })
+            .populate("student", "name")
+            .sort({ createdAt: -1 });
 
-        // Reduces through each value in the array of completed sessions and sums up the hours learned. It calculates hours by taking the difference between endDate and startDate, converting from milliseconds to hours, and adding it to the total (Time taken for previous sessions). The final result is the total hours learned across all completed sessions.
-        const hoursLearned = completedSessions.reduce((total, s: any) => {
-            // (endDate - startDate) / 3600000
-            const hours = (new Date(s.endDate).getTime() - new Date(s.startDate).getTime()) / 3600000; // miliseconds to hours
+        const completedSessions = sessions.filter(s => s.status === "completed");
+
+        const hoursTaught = completedSessions.reduce((total, s: any) => {
+            const hours = (new Date(s.endDate).getTime() - new Date(s.startDate).getTime()) / 3600000;
             return total + hours;
         }, 0);
 
-        const activeCourses = [...new Set(sessions.map(s => s.subject))].length; // Creates a new Set (which only keeps unique values) from the array of subjects extracted from all sessions. Then it converts that Set back to an array and gets its length, which represents the number of unique subjects (active courses) the student has had sessions in.
+        const activeStudents = [...new Set(sessions.map(s => s.student?._id.toString()))].length;
 
-        // 4. Format history
         const history = sessions.map(s => ({
             id: s._id,
-            tutor: s.tutor?.name,
+            student: s.student?.name,
             subject: s.subject,
             date: s.startDate,
             status: s.status
         }));
 
-        const studentData = {
-            name: student.user.name,
-            email: student.user.email,
-            status: student.user.status,
-            whichClass: student.whichClass,
-            learningGoals: student.learningGoals,
-            subjects: student.subjects,
-            location: `${student.user.country}`,
+        const tutorData = {
+            clerkId: tutor.user.clerkId,
+            name: tutor.user.name,
+            email: tutor.user.email,
+            status: tutor.user.status,
+            subjects: tutor.subjects,
+            experienceYears: tutor.experienceYears,
+            education: tutor.education,
+            hourlyRate: tutor.hourlyRate,
+            bio: tutor.bio,
+            isVerified: tutor.isVerified,
+            location: tutor.user.country || "Not specified",
+            profileImage: tutor.user.profileImage,
 
             stats: {
-                hoursLearned: Math.round(hoursLearned),
-                activeCourses,
-                completedSessions: completedSessions.length
+                hoursTaught: Math.round(hoursTaught),
+                totalStudents: activeStudents,
+                rating: tutor.rating || 0
             },
 
+            availability: tutor.availability || [],
             history
         };
 
-        return NextResponse.json(studentData);
+        return NextResponse.json(tutorData);
     } catch (error) {
-        console.error("Error fetching students:", error);
-        return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
+        console.error("Error fetching tutor:", error);
+        return NextResponse.json({ error: "Failed to fetch tutor" }, { status: 500 });
     }
 };

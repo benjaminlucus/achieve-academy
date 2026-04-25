@@ -8,14 +8,18 @@ export async function GET(req: any, { params }: any) {
   try {
     await connectDB();
 
-    const studentId = React.use(params.id); // Extract student ID from URL parameters
+    const { id: studentId } = await params;
 
     const student = await StudentProfile.findOne({ user: studentId })
       .populate("user");
+
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
+
     const sessions = await Session.find({ student: studentId })
       .populate("tutor", "name")
-      .sort({ createdAt: -1 }); // // Find al students from database with matching id. It replaces the tutor ID with actual tutor data (only name here). Latest sessions come first
-
+      .sort({ createdAt: -1 });
 
     const completedSessions = sessions.filter(s => s.status === "completed"); // Keep only sessions where status = "completed"
 
@@ -38,6 +42,7 @@ export async function GET(req: any, { params }: any) {
     }));
 
     const studentData = {
+      clerkId: student.user.clerkId,
       name: student.user.name,
       email: student.user.email,
       status: student.user.status,

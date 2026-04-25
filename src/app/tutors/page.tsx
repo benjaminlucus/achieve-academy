@@ -4,6 +4,7 @@ import TutorProfile from "@/database/models/tutor.model";
 import { SearchBar } from "@/components/SearchBar";
 import Link from "next/link";
 import { BookOpen, Clock, DollarSign, Star } from "lucide-react";
+import { TutorSearchSection } from "./TutorSearchSection";
 
 export default async function TutorsPage({
   searchParams,
@@ -55,6 +56,3 @@ export default async function TutorsPage({
     </div>
   );
 }
-
-// Client component for interactivity
-import { TutorSearchSection } from "./TutorSearchSection";
