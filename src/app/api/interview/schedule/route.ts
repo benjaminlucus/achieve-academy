@@ -22,6 +22,6 @@ export async function POST(req: Request) {
         return NextResponse.json(interview);
     } catch (error) {
         console.error("Error while schedulling the interview:", error);
-        return null;
+        return NextResponse.json({ error: "Something went wrong" }, { status: 400 });
     }
 }
