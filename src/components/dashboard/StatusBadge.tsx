@@ -6,10 +6,8 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge = ({ status, className = "" }: StatusBadgeProps) => {
-  const normalizedStatus = status.toLowerCase();
-  
-  const getStatusStyles = () => {
-    switch (normalizedStatus) {
+  const getStatusStyles = (status: string) => {
+    switch (status.toLowerCase()) {
       case "active":
       case "paid":
       case "completed":
@@ -17,11 +15,10 @@ export const StatusBadge = ({ status, className = "" }: StatusBadgeProps) => {
       case "pending":
       case "assigned":
         return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      case "blocked":
-      case "failed":
-      case "cancelled":
       case "inactive":
       case "rejected":
+      case "blocked":
+      case "cancelled":
         return "bg-red-100 text-red-700 border-red-200";
       default:
         return "bg-gray-100 text-gray-700 border-gray-200";
@@ -29,7 +26,7 @@ export const StatusBadge = ({ status, className = "" }: StatusBadgeProps) => {
   };
 
   return (
-    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border-2 ${getStatusStyles()} ${className}`}>
+    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border rounded-sm ${getStatusStyles(status)} ${className}`}>
       {status}
     </span>
   );

@@ -5,6 +5,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "./globals.css";
+import { getCurrentUser } from "@/lib/utils";
+import { redirect } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +37,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-full flex flex-col bg-off-white font-sans text-dark-navy">
-        <ClerkProvider>
+        <ClerkProvider afterSignOutUrl="/">
           <Navbar />
           <main className="flex-grow">
             {children}

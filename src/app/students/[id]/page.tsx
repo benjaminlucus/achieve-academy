@@ -1,217 +1,212 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { User, BookOpen, GraduationCap, DollarSign, Users, Calendar, Clock, Edit2, CheckCircle, CreditCard, History } from "lucide-react";
+import {
+  BookOpen, GraduationCap, Mail, MapPin,
+  Clock, Calendar, CheckCircle, ChevronRight,
+  LayoutDashboard, Search, Settings, LogOut, CreditCard, Bell, History,
+  TrendingUp, Award
+} from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
 
-// This would normally be a server component fetching from MongoDB
-export default function StudentDashboard({ params }: { params: { id: string } }) {
-  // Mock data for demonstration
-  const studentData = {
-    id: params.id,
-    name: "Alex Rivera",
-    email: "alex.r@example.com",
-    role: "student",
-    status: "active",
-    profile: {
-      learningGoals: "Mastering AP Physics and improving Calculus scores for college applications.",
-      preferredSubjects: ["Physics", "Mathematics"],
-      gradeLevel: "12th Grade",
-    },
-    tutor: {
-      id: "t1",
-      name: "Dr. Sarah Jenkins",
-      subject: "Physics & Calculus",
-      rate: 180, // Monthly rate
-      avatar: "S",
-    },
-    activeSession: {
-      id: "ses1",
-      startDate: "2024-03-01",
-      endDate: "2024-03-31",
-      status: "active",
-      paymentStatus: "paid",
-    },
-    history: [
-      { id: "h1", tutor: "Dr. Sarah Jenkins", date: "Feb 2024", status: "completed" },
-      { id: "h2", tutor: "Dr. Sarah Jenkins", date: "Jan 2024", status: "completed" },
-    ]
-  };
+export default function StudentProfileView() {
+  const { id } = useParams<{ id: string }>();
+  const { user: clerkUser } = useUser();
+  const [studentData, setStudentData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (studentData.status === "blocked") {
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const res = await fetch(`/api/students/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setStudentData(data);
+        }
+      } catch (error) {
+        console.error("Error fetching student data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudentData();
+  }, [id]);
+
+  const isOwner = clerkUser?.publicMetadata?.databaseId === id || studentData?.clerkId === clerkUser?.id;
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-off-white p-6">
-        <DashboardCard className="max-w-md w-full text-center border-red-500">
-          <h2 className="text-2xl font-bold text-red-600 mb-2">Account Blocked</h2>
-          <p className="text-steel-blue">Your account has been restricted. Please contact support for more information.</p>
-        </DashboardCard>
+      <div className="min-h-screen bg-off-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-dark-navy"></div>
+      </div>
+    );
+  }
+
+  if (!studentData) {
+    return (
+      <div className="min-h-screen bg-off-white flex items-center justify-center">
+        <p className="text-steel-blue font-bold">Student not found.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-off-white min-h-screen pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
-        
-        {/* Profile Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <DashboardCard className="lg:col-span-2">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="w-24 h-24 bg-coral text-off-white flex items-center justify-center text-3xl font-bold border-2 border-dark-navy">
-                {studentData.name.charAt(0)}
-              </div>
-              <div className="flex-grow w-full">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-3xl font-extrabold text-dark-navy tracking-tight">{studentData.name}</h1>
-                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest mt-1">{studentData.profile.gradeLevel}</p>
-                  </div>
-                  <StatusBadge status={studentData.status} />
-                </div>
-                
-                <div className="mt-6 flex flex-col gap-4">
-                  <div>
-                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest mb-1">Learning Goals</p>
-                    <p className="text-dark-navy font-medium leading-relaxed">{studentData.profile.learningGoals}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest mb-1">Preferred Subjects</p>
-                    <div className="flex flex-wrap gap-2">
-                      {studentData.profile.preferredSubjects.map(sub => (
-                        <span key={sub} className="px-2 py-1 bg-off-white border-2 border-dark-navy/10 text-[10px] font-bold uppercase text-steel-blue">
-                          {sub}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </DashboardCard>
+    <div className="bg-off-white min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto space-y-8">
 
-          {/* Quick Actions */}
-          <DashboardCard title="Account Actions" className="h-fit">
-            <div className="flex flex-col gap-3">
-              <button className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-dark-navy text-off-white font-bold hover:bg-coral transition-colors border-2 border-dark-navy">
-                <Edit2 size={16} /> Update Profile
-              </button>
-              <button className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dark-navy text-dark-navy font-bold hover:bg-dark-navy hover:text-off-white transition-colors">
-                <BookOpen size={16} /> Find New Tutor
-              </button>
-            </div>
-          </DashboardCard>
-        </div>
-
-        {/* Assigned Tutor & Active Session */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Profile Header Card */}
+        <div className="bg-white border border-dark-navy/10 rounded-3xl p-6 md:p-10 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-coral/5 rounded-bl-full -mr-10 -mt-10" />
           
-          {/* Assigned Tutor Card */}
-          <DashboardCard title="My Tutor">
-            <div className="flex flex-col gap-6 pt-2">
-              <div className="flex items-center gap-4 p-4 bg-off-white border-2 border-dark-navy/5">
-                <div className="w-12 h-12 bg-dark-navy text-off-white flex items-center justify-center font-bold">
-                  {studentData.tutor.avatar}
-                </div>
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start relative">
+            <div className="w-32 h-32 bg-coral rounded-2xl flex items-center justify-center text-off-white text-4xl font-bold border-4 border-white shadow-lg overflow-hidden shrink-0">
+              {studentData.profileImage ? (
+                <Image src={studentData.profileImage} alt={studentData.name} width={128} height={128} className="object-cover w-full h-full" />
+              ) : (
+                studentData.name.charAt(0)
+              )}
+            </div>
+
+            <div className="flex-grow w-full text-center md:text-left">
+              <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-4">
                 <div>
-                  <p className="font-bold text-dark-navy">{studentData.tutor.name}</p>
-                  <p className="text-xs font-bold text-steel-blue uppercase">{studentData.tutor.subject}</p>
+                  <h1 className="text-3xl font-bold text-dark-navy uppercase tracking-tight mb-1">{studentData.name}</h1>
+                  <p className="text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em]">{studentData.whichClass}</p>
+                </div>
+                <StatusBadge status={studentData.status} />
+              </div>
+
+              <div className="mt-6 bg-off-white p-4 rounded-2xl border border-dark-navy/5 inline-block w-full md:w-auto text-left">
+                <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <TrendingUp size={12} className="text-coral" /> Learning Goals
+                </p>
+                <p className="text-dark-navy font-medium text-sm leading-relaxed italic">
+                  "{studentData.learningGoals}"
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-dark-navy/5">
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-1">Hours Learned</span>
+                  <p className="text-xl font-bold text-dark-navy">{studentData.stats.hoursLearned}h</p>
+                </div>
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-1">Courses</span>
+                  <p className="text-xl font-bold text-dark-navy">{studentData.stats.activeCourses}</p>
+                </div>
+                <div className="flex flex-col items-center md:items-start">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-1">Sessions</span>
+                  <p className="text-xl font-bold text-dark-navy">{studentData.stats.completedSessions}</p>
                 </div>
               </div>
-              
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-steel-blue font-bold uppercase tracking-wider text-[10px]">Monthly Rate</span>
-                  <span className="text-dark-navy font-extrabold">${studentData.tutor.rate}/mo</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Info Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Interests & History */}
+          <div className="md:col-span-2 space-y-8">
+            <div className="bg-white border border-dark-navy/10 rounded-3xl p-8 shadow-sm">
+              <h3 className="text-lg font-bold text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+                <BookOpen className="text-coral" size={20} /> Subjects of Interest
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {studentData.subjects && studentData.subjects.length > 0 ? (
+                  studentData.subjects.map((sub: string) => (
+                    <div key={sub} className="flex items-center gap-2 px-4 py-2 bg-off-white border border-dark-navy/5 rounded-xl hover:border-coral/30 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-coral rounded-full" />
+                      <span className="text-xs font-bold text-dark-navy uppercase tracking-wider">{sub}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-steel-blue italic">No subjects selected yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white border border-dark-navy/10 rounded-3xl p-8 shadow-sm">
+              <h3 className="text-lg font-bold text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+                <History className="text-coral" size={20} /> Learning History
+              </h3>
+              <div className="space-y-4">
+                {studentData.history && studentData.history.length > 0 ? (
+                  studentData.history.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 bg-off-white rounded-2xl border border-dark-navy/5 hover:border-dark-navy/20 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-dark-navy/10">
+                          <Award size={18} className="text-coral" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-dark-navy uppercase">{item.tutor}</p>
+                          <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">
+                            {item.subject} • {new Date(item.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <StatusBadge status={item.status} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-steel-blue font-medium italic">No sessions attended yet.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar Info */}
+          <div className="space-y-8">
+            <div className="bg-white border border-dark-navy/10 rounded-3xl p-8 shadow-sm">
+              <h3 className="text-lg font-bold text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
+                <MapPin className="text-coral" size={20} /> Information
+              </h3>
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1 py-3 border-b border-dark-navy/5">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">Location</span>
+                  <span className="text-sm font-bold text-dark-navy">{studentData.location || "Not specified"}</span>
                 </div>
-                <button className="w-full py-2 border-2 border-dark-navy text-dark-navy text-xs font-bold hover:bg-dark-navy hover:text-off-white transition-colors uppercase tracking-widest">
-                  View Tutor Profile
+                <div className="flex flex-col gap-1 py-3 border-b border-dark-navy/5">
+                  <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">Email</span>
+                  <span className="text-sm font-bold text-dark-navy truncate">{studentData.email}</span>
+                </div>
+                <button className="mt-4 w-full py-4 bg-dark-navy text-off-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-lg hover:shadow-coral/20">
+                  {isOwner ? "Update Profile" : "Contact Student"}
                 </button>
               </div>
             </div>
-          </DashboardCard>
 
-          {/* Active Session & Payment */}
-          <DashboardCard title="Active Session" className="lg:col-span-2">
-            {studentData.activeSession ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-coral text-off-white">
-                      <Calendar size={20} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-steel-blue uppercase tracking-widest">Session Period</p>
-                      <p className="text-lg font-extrabold text-dark-navy mt-1">
-                        {studentData.activeSession.startDate} to {studentData.activeSession.endDate}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-steel-blue text-off-white">
-                      <Clock size={20} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-steel-blue uppercase tracking-widest">Current Status</p>
-                      <StatusBadge status={studentData.activeSession.status} className="mt-1" />
-                    </div>
-                  </div>
+            {isOwner && (
+              <Link 
+                href={`/students/${id}/dashboard`}
+                className="block w-full py-4 bg-coral text-white text-center text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-dark-navy transition-all shadow-lg"
+              >
+                Go to Private Dashboard
+              </Link>
+            )}
+
+            <div className="bg-coral rounded-3xl p-8 text-off-white shadow-xl">
+              <h3 className="text-lg font-bold uppercase tracking-tight mb-4">Quick Stats</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Global Rank</span>
+                  <span className="text-xl font-bold">#1,204</span>
                 </div>
-
-                <div className="bg-dark-navy p-6 flex flex-col justify-between border-2 border-dark-navy">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">Payment Status</p>
-                      <StatusBadge status={studentData.activeSession.paymentStatus} className="mt-1" />
-                    </div>
-                    <CreditCard className="text-off-white/20" size={32} />
-                  </div>
-                  
-                  <div className="mt-8 flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">Due Amount</p>
-                      <p className="text-2xl font-extrabold text-off-white">${studentData.tutor.rate}</p>
-                    </div>
-                    {studentData.activeSession.paymentStatus !== "paid" && (
-                      <button className="px-6 py-2 bg-coral text-off-white font-bold text-sm hover:bg-rose transition-colors uppercase tracking-widest">
-                        Pay Now
-                      </button>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Points</span>
+                  <span className="text-xl font-bold">450 XP</span>
                 </div>
               </div>
-            ) : (
-              <div className="py-12 text-center">
-                <p className="text-steel-blue font-bold italic">No active session at the moment.</p>
-                <button className="mt-4 px-8 py-3 bg-dark-navy text-off-white font-bold hover:bg-coral transition-colors">
-                  Browse Tutors
-                </button>
-              </div>
-            )}
-          </DashboardCard>
-        </div>
-
-        {/* History Section */}
-        <DashboardCard title="Learning History">
-          <div className="flex flex-col gap-4 mt-2">
-            {studentData.history.length > 0 ? (
-              studentData.history.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-off-white border-2 border-dark-navy/5">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-steel-blue/10 text-steel-blue">
-                      <History size={18} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-dark-navy">{item.tutor}</p>
-                      <p className="text-xs font-bold text-steel-blue uppercase">{item.date}</p>
-                    </div>
-                  </div>
-                  <StatusBadge status={item.status} />
-                </div>
-              ))
-            ) : (
-              <p className="text-center py-8 text-steel-blue italic">No session history yet.</p>
-            )}
+            </div>
           </div>
-        </DashboardCard>
+        </div>
 
       </div>
     </div>

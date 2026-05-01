@@ -5,12 +5,17 @@ export interface IUser extends Document {
   name: string;
   email: string;
   role: "student" | "tutor" | "admin";
-  status: "active" | "blocked";
+  status: "applied" 
+       | "reviewing"
+       | "interview_scheduled"
+       | "interviewed"
+       | "approved"
+       | "blocked";
   profileImage?: string;
   country?: string;
   timezone?: string;
   lastLogin?: Date;
-  createdAt: Date;
+  isOnboarded?: boolean;
 }
 
 export interface IUserFlag extends Document {
@@ -37,19 +42,22 @@ export interface ISession extends Document {
   endDate: Date;
   durationType: "monthly";
   status: "active" | "completed" | "cancelled";
-  price: number;
+  rate: number;
   monthsCompleted: number;
   lastPaymentDate?: Date;
   createdAt: Date;
+  subject: string;
 }
 
 export interface IStudentProfile extends Document {
   user: mongoose.Types.ObjectId;
-  gradeLevel: string;
+  whichClass: string;
   interests: string[];
-  preferredSubjects: string[];
+  subjects: string[];
   learningGoals: string;
   createdAt: Date;
+  description: string;
+  isVerified: boolean;
 }
 
 export interface ITutorProfile extends Document {
@@ -60,13 +68,13 @@ export interface ITutorProfile extends Document {
   education: string;
   hourlyRate: number;
   monthlyRate: number;
-  bio: string;
+  description: string;
   languages: string[];
   rating: number;
   totalStudents: number;
   availability: {
     day: string;
-    slots: string[];
+    time: string[];
   }[];
   isVerified: boolean;
   createdAt: Date;

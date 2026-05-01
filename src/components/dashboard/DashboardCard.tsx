@@ -1,26 +1,20 @@
 import React from "react";
 
 interface DashboardCardProps {
-  title?: string;
   children: React.ReactNode;
+  title?: string;
   className?: string;
-  footer?: React.ReactNode;
 }
 
-export const DashboardCard = ({ title, children, className = "", footer }: DashboardCardProps) => {
+export const DashboardCard = ({ children, title, className = "" }: DashboardCardProps) => {
   return (
-    <div className={`bg-white border-2 border-dark-navy p-6 flex flex-col gap-4 ${className}`}>
+    <div className={`bg-white border-2 border-dark-navy p-6 shadow-[4px_4px_0px_0px_rgba(43,65,98,1)] ${className}`}>
       {title && (
-        <h3 className="text-sm font-bold uppercase tracking-widest text-steel-blue border-b-2 border-dark-navy/5 pb-2">
+        <h3 className="text-xl font-bold text-dark-navy mb-6 pb-2 border-b-2 border-dark-navy/10 uppercase tracking-tight">
           {title}
         </h3>
       )}
-      <div className="flex-grow">{children}</div>
-      {footer && (
-        <div className="mt-4 pt-4 border-t-2 border-dark-navy/5 flex justify-end">
-          {footer}
-        </div>
-      )}
+      {children}
     </div>
   );
 };
