@@ -80,7 +80,7 @@ export default function Navbar() {
                   <span className="hidden sm:inline text-sm font-medium text-steel-blue">
                     Welcome back! {user?.firstName}
                   </span>
-                  <UserButton afterSignOutUrl="/" />
+                  <UserButton />
                 </div>
               </Show>
             </ClerkLoaded>
