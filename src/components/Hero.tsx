@@ -2,6 +2,8 @@ import Image from "next/image";
 import { SignUpButton, Show } from "@clerk/nextjs";
 import Link from "next/link";
 
+const AVATAR_COUNT = [1, 2, 3, 4];
+
 export default function Hero() {
   return (
     <section className="relative pt-32 pb-20 overflow-hidden bg-off-white">
@@ -42,7 +44,7 @@ export default function Hero() {
             
             <div className="flex items-center gap-6 pt-6">
               <div className="flex -space-x-3 overflow-hidden">
-                {Array.from({ length: 4 }).map((_, i) => (
+                {(AVATAR_COUNT as any[]).map((i) => (
                   <div key={i} className="inline-block h-10 w-10 rounded-full ring-4 ring-off-white bg-steel-blue/20">
                     <Image
                       src={`https://i.pravatar.cc/100?u=${i + 1}`}
