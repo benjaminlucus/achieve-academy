@@ -14,6 +14,8 @@ import {
 import { getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 const settingSections = [
   { icon: ShieldCheck, title: "Platform Security", description: "Admin roles, permissions, and audit logs" },
   { icon: Globe, title: "General Settings", description: "Global site settings, localization, and branding" },

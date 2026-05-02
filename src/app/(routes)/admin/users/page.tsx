@@ -13,6 +13,8 @@ import { getCurrentUser, getTotalUserCount, getTotalUsers } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import UserClient from "./UserClientPage";
 
+export const dynamic = "force-dynamic";
+
 export default async function UsersPage() {
   const user = await getCurrentUser();
 

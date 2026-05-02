@@ -12,8 +12,10 @@ import {
   MoreVertical,
 } from "lucide-react";
 import Link from "next/link";
-import { getCurrentUser, getTotalPayments, getTotalUsers } from "@/lib/utils";
+import { getCurrentUser, getTotalPayments, getTotalUsers, getAdminStatistics } from "@/lib/utils";
 import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const user = await getCurrentUser();
@@ -31,11 +33,7 @@ export default async function AdminDashboard() {
     return redirect("/onboarding");
   }
 
-  const res = await fetch(`${process.env.NEXT_URL}/api/admin/statistics`, {
-    cache: "no-store"
-  });
-
-  const data = await res.json();
+  const data = await getAdminStatistics();
 
   const stats = [
     { label: "Total Users", value: data.totalUsers, growth: "+12.5%", isPositive: true, icon: Users, color: "bg-blue-50 text-blue-600 border-blue-100" },
@@ -52,6 +50,22 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-8 pb-12">
+
+        <div className="bg-white p-8 rounded-3xl border-2 border-dark-navy shadow-[8px_8px_0px_0px_rgba(43,65,98,1)] flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+          <div className="space-y-2 text-center md:text-left">
+            <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Tutor Payout Management</h2>
+            <p className="text-xs font-bold text-steel-blue uppercase tracking-widest">Process pending tutor earnings via Payoneer</p>
+          </div>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="bg-off-white px-6 py-4 rounded-2xl border border-dark-navy/10 flex-grow text-center">
+              <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Pending Payouts</p>
+              <p className="text-2xl font-black text-coral">$1,240.00</p>
+            </div>
+            <button className="px-8 py-4 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-xl hover:shadow-coral/20">
+              Bulk Payout
+            </button>
+          </div>
+        </div>
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">

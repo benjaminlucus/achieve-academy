@@ -1,28 +1,18 @@
 import React from "react";
-import { getCurrentUser } from "@/lib/utils";
+import { getAllSessions, getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import SessionsTableClient from "./SessionsTableClient";
 
-export default async function SessionsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminSessionsPage() {
   const user = await getCurrentUser();
 
   if (!user || user.role !== "admin") {
     return redirect("/admin");
   }
 
-  let allSessions = [];
-  try {
-    const res = await fetch(`${process.env.NEXT_URL}/api/admin/sessions`, {
-      cache: "no-store",
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      allSessions = data.sessions || [];
-    }
-  } catch (error) {
-    console.error("Error fetching sessions in page:", error);
-  }
+  const allSessions = await getAllSessions();
 
   return (
     <div className="space-y-6 pb-12">
