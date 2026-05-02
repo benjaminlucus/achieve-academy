@@ -16,21 +16,21 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+const REVENUE_DATA = [40, 60, 45, 70, 55, 90, 65, 80, 50, 85, 95, 75];
+const SESSIONS_DATA = [60, 80, 40, 100];
+const SUBJECTS_DATA = [
+  { name: "Mathematics", value: 85, color: "bg-dark-navy" },
+  { name: "Physics", value: 65, color: "bg-coral" },
+  { name: "English", value: 45, color: "bg-dark-navy" },
+  { name: "Computer Science", value: 35, color: "bg-dark-navy" },
+];
+
 export default async function AnalyticsPage() {
   const user = await getCurrentUser();
 
   if (!user || user.role !== "admin") {
     return redirect("/admin");
   }
-
-  const revenueData: number[] = [40, 60, 45, 70, 55, 90, 65, 80, 50, 85, 95, 75];
-  const sessionsData: number[] = [60, 80, 40, 100];
-  const subjectsData = [
-    { name: "Mathematics", value: 85, color: "bg-dark-navy" },
-    { name: "Physics", value: 65, color: "bg-coral" },
-    { name: "English", value: 45, color: "bg-dark-navy" },
-    { name: "Computer Science", value: 35, color: "bg-dark-navy" },
-  ];
 
   return (
     <div className="space-y-8 pb-12">
@@ -64,7 +64,7 @@ export default async function AnalyticsPage() {
              <LineChart className="text-gray-300" size={24} />
           </div>
           <div className="flex-grow flex items-end gap-2">
-             {revenueData.map((h: number, i: number) => (
+             {(REVENUE_DATA as any[]).map((h, i) => (
                <div key={i} className="flex-1 bg-gray-50 hover:bg-coral/20 transition-colors rounded-t-lg group relative" style={{ height: `${h}%` }}>
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-dark-navy text-white text-[8px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
                     ${h * 10}
@@ -89,7 +89,7 @@ export default async function AnalyticsPage() {
              <BarChart3 className="text-gray-300" size={24} />
           </div>
           <div className="flex-grow flex items-end gap-4 px-4">
-             {sessionsData.map((h, i) => (
+             {(SESSIONS_DATA as any[]).map((h, i) => (
                <div key={i} className="flex-1 bg-dark-navy/5 hover:bg-dark-navy/10 transition-colors rounded-xl flex flex-col items-center justify-end group relative" style={{ height: `${h}%` }}>
                   <div className={`w-full rounded-xl transition-all ${i === 3 ? 'bg-coral shadow-lg' : 'bg-dark-navy'}`} style={{ height: `${h}%` }}></div>
                   <div className="absolute -top-8 bg-gray-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
@@ -134,7 +134,7 @@ export default async function AnalyticsPage() {
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-80">
            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-8">Popular Subjects</h3>
            <div className="space-y-6 flex-grow overflow-y-auto pr-2">
-              {subjectsData.map((sub, i) => (
+              {(SUBJECTS_DATA as any[]).map((sub, i) => (
                 <div key={i} className="space-y-2">
                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                       <span className="text-gray-600">{sub.name}</span>
