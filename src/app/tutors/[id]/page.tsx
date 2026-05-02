@@ -13,12 +13,19 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
+import { X, Check } from "lucide-react";
 
 export default function TutorProfileView() {
   const { id } = useParams<{ id: string }>();
   const { user: clerkUser } = useUser();
   const [tutorData, setTutorData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Booking Modal State
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [isBookingInProgress, setIsBookingInProgress] = useState(false);
 
   useEffect(() => {
     const fetchTutorData = async () => {
@@ -39,9 +46,22 @@ export default function TutorProfileView() {
   }, [id]);
 
   const isOwner = clerkUser?.publicMetadata?.databaseId === id || tutorData?.clerkId === clerkUser?.id;
-  // Actually, since the ID in URL is the database _id, we should check against that.
-  // We can add the databaseId to clerk metadata during onboarding or fetch it.
-  // For now, let's assume we can compare.
+
+  const handleBooking = async () => {
+    if (!selectedDay || !selectedTime) {
+      alert("Please select a day and time slot.");
+      return;
+    }
+
+    setIsBookingInProgress(true);
+    
+    // Simulation of Payoneer Payment Request
+    setTimeout(() => {
+      alert(`Booking request sent for ${selectedDay} at ${selectedTime}. Redirecting to Payment...`);
+      setIsBookingInProgress(false);
+      setIsBookingModalOpen(false);
+    }, 1500);
+  };
 
   if (isLoading) {
     return (
@@ -229,7 +249,10 @@ export default function TutorProfileView() {
                   <p className="text-xs text-steel-blue italic">No availability set.</p>
                 )}
               </div>
-              <button className="mt-8 w-full py-4 bg-dark-navy text-off-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-lg hover:shadow-coral/20 group">
+              <button 
+                onClick={() => !isOwner && setIsBookingModalOpen(true)}
+                className="mt-8 w-full py-4 bg-dark-navy text-off-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-lg hover:shadow-coral/20 group"
+              >
                 <span className="flex items-center justify-center gap-2">
                   {isOwner ? "Update Availability" : "Book a Session"} <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </span>
@@ -260,6 +283,82 @@ export default function TutorProfileView() {
             </div>
           </div>
         </div>
+
+        {/* Booking Modal */}
+        {isBookingModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark-navy/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-dark-navy/10 animate-in zoom-in-95 duration-200">
+              <div className="p-6 border-b border-dark-navy/5 flex justify-between items-center">
+                <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight">Book a Session</h3>
+                <button onClick={() => setIsBookingModalOpen(false)} className="text-steel-blue hover:text-coral transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="p-8 space-y-8">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest block">1. Select a Day</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {tutorData.availability?.map((item: any) => (
+                      <button
+                        key={item.day}
+                        onClick={() => {
+                          setSelectedDay(item.day);
+                          setSelectedTime(null);
+                        }}
+                        className={`p-3 text-[10px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
+                          selectedDay === item.day 
+                            ? "bg-dark-navy text-white border-dark-navy shadow-lg" 
+                            : "bg-off-white text-dark-navy border-dark-navy/5 hover:border-coral/30"
+                        }`}
+                      >
+                        {item.day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {selectedDay && (
+                  <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                    <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest block">2. Select a Time Slot</label>
+                    <div className="flex flex-wrap gap-3">
+                      {tutorData.availability?.find((a: any) => a.day === selectedDay)?.time?.map((slot: string) => (
+                        <button
+                          key={slot}
+                          onClick={() => setSelectedTime(slot)}
+                          className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg border-2 transition-all ${
+                            selectedTime === slot 
+                              ? "bg-coral text-white border-coral shadow-lg" 
+                              : "bg-off-white text-steel-blue border-dark-navy/5 hover:border-coral/30"
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4">
+                  <button
+                    disabled={!selectedDay || !selectedTime || isBookingInProgress}
+                    onClick={handleBooking}
+                    className="w-full py-4 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-xl hover:shadow-coral/20 disabled:opacity-50 disabled:hover:bg-dark-navy flex items-center justify-center gap-2"
+                  >
+                    {isBookingInProgress ? (
+                      "Processing..."
+                    ) : (
+                      <>Confirm & Pay $ {tutorData.hourlyRate} <ChevronRight size={18} /></>
+                    )}
+                  </button>
+                  <p className="text-center text-[9px] font-bold text-steel-blue uppercase mt-4">
+                    Secure payment via Payoneer Gateway
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
