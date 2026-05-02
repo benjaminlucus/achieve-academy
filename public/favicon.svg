@@ -1,0 +1,22 @@
+<svg width="280" height="80" viewBox="0 0 280 80"
+  fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Red accent bar -->
+  <rect x="98" y="8" width="3" height="32"
+    rx="1.5" fill="#D05050"/>
+
+  <!-- ACHIEVE text -->
+  <text x="110" y="36"
+    font-family="system-ui, -apple-system, sans-serif"
+    font-size="32" font-weight="700"
+    letter-spacing="-0.03em"
+    fill="#2B4162">ACHIEVE</text>
+
+  <!-- ACADEMY text -->
+  <text x="113" y="56"
+    font-family="system-ui, -apple-system, sans-serif"
+    font-size="14" font-weight="400"
+    letter-spacing="0.22em"
+    fill="#768BA7">ACADEMY</text>
+
+</svg>

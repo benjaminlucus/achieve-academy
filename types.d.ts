@@ -1,0 +1,96 @@
+import mongoose, { Document } from "mongoose";
+
+export interface IUser extends Document {
+  clerkId: string;
+  name: string;
+  email: string;
+  role: "student" | "tutor" | "admin";
+  status: "applied" 
+       | "reviewing"
+       | "interview_scheduled"
+       | "interviewed"
+       | "approved"
+       | "blocked";
+  profileImage?: string;
+  country?: string;
+  timezone?: string;
+  lastLogin?: Date;
+  isOnboarded?: boolean;
+}
+
+export interface IUserFlag extends Document {
+  user: mongoose.Types.ObjectId;
+  reason: string;
+  type: "late_payment" | "inactivity" | "cancellation";
+  count: number;
+  createdAt: Date;
+}
+
+export interface ITutorRequest extends Document {
+  student: mongoose.Types.ObjectId;
+  subject: string;
+  budget: number;
+  assignedTutor?: mongoose.Types.ObjectId;
+  status: "pending" | "assigned" | "rejected";
+  createdAt: Date;
+}
+
+export interface ISession extends Document {
+  student: mongoose.Types.ObjectId;
+  tutor: mongoose.Types.ObjectId;
+  startDate: Date;
+  endDate: Date;
+  durationType: "monthly";
+  status: "active" | "completed" | "cancelled";
+  rate: number;
+  monthsCompleted: number;
+  lastPaymentDate?: Date;
+  createdAt: Date;
+  subject: string;
+}
+
+export interface IStudentProfile extends Document {
+  user: mongoose.Types.ObjectId;
+  whichClass: string;
+  interests: string[];
+  subjects: string[];
+  learningGoals: string;
+  createdAt: Date;
+  description: string;
+  isVerified: boolean;
+}
+
+export interface ITutorProfile extends Document {
+  user: mongoose.Types.ObjectId;
+  subjects: string[];
+  skills: string[];
+  experienceYears: number;
+  education: string;
+  hourlyRate: number;
+  monthlyRate: number;
+  description: string;
+  languages: string[];
+  rating: number;
+  totalStudents: number;
+  availability: {
+    day: string;
+    time: string[];
+  }[];
+  isVerified: boolean;
+  createdAt: Date;
+}
+
+export interface IPayment extends Document {
+  session: mongoose.Types.ObjectId;
+  student: mongoose.Types.ObjectId;
+  tutor: mongoose.Types.ObjectId;
+  amount: number;
+  commission: number;
+  tutorEarning: number;
+  monthNumber: number;
+  status: "pending" | "paid" | "failed";
+  paymentMethod: string;
+  transactionId: string;
+  paidAt: Date;
+  createdAt: Date;
+}
