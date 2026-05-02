@@ -23,8 +23,8 @@ export default async function AnalyticsPage() {
     return redirect("/admin");
   }
 
-  const revenueData = [40, 60, 45, 70, 55, 90, 65, 80, 50, 85, 95, 75];
-  const sessionsData = [60, 80, 40, 100];
+  const revenueData: number[] = [40, 60, 45, 70, 55, 90, 65, 80, 50, 85, 95, 75];
+  const sessionsData: number[] = [60, 80, 40, 100];
   const subjectsData = [
     { name: "Mathematics", value: 85, color: "bg-dark-navy" },
     { name: "Physics", value: 65, color: "bg-coral" },
@@ -64,7 +64,7 @@ export default async function AnalyticsPage() {
              <LineChart className="text-gray-300" size={24} />
           </div>
           <div className="flex-grow flex items-end gap-2">
-             {revenueData.map((h, i) => (
+             {revenueData.map((h: number, i: number) => (
                <div key={i} className="flex-1 bg-gray-50 hover:bg-coral/20 transition-colors rounded-t-lg group relative" style={{ height: `${h}%` }}>
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-dark-navy text-white text-[8px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
                     ${h * 10}
