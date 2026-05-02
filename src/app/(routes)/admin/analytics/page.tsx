@@ -32,6 +32,41 @@ export default async function AnalyticsPage() {
     return redirect("/admin");
   }
 
+  const renderRevenueBars = () => {
+    return REVENUE_DATA.map((h: number, i: number) => (
+      <div key={i} className="flex-1 bg-gray-50 hover:bg-coral/20 transition-colors rounded-t-lg group relative" style={{ height: `${h}%` }}>
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-dark-navy text-white text-[8px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
+          ${h * 10}
+        </div>
+      </div>
+    ));
+  };
+
+  const renderSessionBars = () => {
+    return SESSIONS_DATA.map((h: number, i: number) => (
+      <div key={i} className="flex-1 bg-dark-navy/5 hover:bg-dark-navy/10 transition-colors rounded-xl flex flex-col items-center justify-end group relative" style={{ height: `${h}%` }}>
+        <div className={`w-full rounded-xl transition-all ${i === 3 ? 'bg-coral shadow-lg' : 'bg-dark-navy'}`} style={{ height: `${h}%` }}></div>
+        <div className="absolute -top-8 bg-gray-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
+          {h * 5} sessions
+        </div>
+      </div>
+    ));
+  };
+
+  const renderSubjectList = () => {
+    return SUBJECTS_DATA.map((sub, i) => (
+      <div key={i} className="space-y-2">
+         <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+            <span className="text-gray-600">{sub.name}</span>
+            <span className="text-gray-900">{sub.value}%</span>
+         </div>
+         <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden">
+            <div className={`h-full ${sub.color} rounded-full transition-all duration-1000`} style={{ width: `${sub.value}%` }} />
+         </div>
+      </div>
+    ));
+  };
+
   return (
     <div className="space-y-8 pb-12">
       {/* Page Header */}
@@ -64,13 +99,7 @@ export default async function AnalyticsPage() {
              <LineChart className="text-gray-300" size={24} />
           </div>
           <div className="flex-grow flex items-end gap-2">
-             {(REVENUE_DATA as any[]).map((h, i) => (
-               <div key={i} className="flex-1 bg-gray-50 hover:bg-coral/20 transition-colors rounded-t-lg group relative" style={{ height: `${h}%` }}>
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-dark-navy text-white text-[8px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
-                    ${h * 10}
-                  </div>
-               </div>
-             ))}
+             {renderRevenueBars()}
           </div>
           <div className="flex justify-between mt-4 px-2 text-[8px] font-black text-gray-400 uppercase tracking-widest">
              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
@@ -89,14 +118,7 @@ export default async function AnalyticsPage() {
              <BarChart3 className="text-gray-300" size={24} />
           </div>
           <div className="flex-grow flex items-end gap-4 px-4">
-             {(SESSIONS_DATA as any[]).map((h, i) => (
-               <div key={i} className="flex-1 bg-dark-navy/5 hover:bg-dark-navy/10 transition-colors rounded-xl flex flex-col items-center justify-end group relative" style={{ height: `${h}%` }}>
-                  <div className={`w-full rounded-xl transition-all ${i === 3 ? 'bg-coral shadow-lg' : 'bg-dark-navy'}`} style={{ height: `${h}%` }}></div>
-                  <div className="absolute -top-8 bg-gray-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
-                    {h * 5} sessions
-                  </div>
-               </div>
-             ))}
+             {renderSessionBars()}
           </div>
           <div className="flex justify-between mt-4 px-8 text-[8px] font-black text-gray-400 uppercase tracking-widest">
              <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
@@ -134,17 +156,7 @@ export default async function AnalyticsPage() {
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-80">
            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-8">Popular Subjects</h3>
            <div className="space-y-6 flex-grow overflow-y-auto pr-2">
-              {(SUBJECTS_DATA as any[]).map((sub, i) => (
-                <div key={i} className="space-y-2">
-                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                      <span className="text-gray-600">{sub.name}</span>
-                      <span className="text-gray-900">{sub.value}%</span>
-                   </div>
-                   <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden">
-                      <div className={`h-full ${sub.color} rounded-full transition-all duration-1000`} style={{ width: `${sub.value}%` }} />
-                   </div>
-                </div>
-              ))}
+              {renderSubjectList()}
            </div>
         </div>
 
