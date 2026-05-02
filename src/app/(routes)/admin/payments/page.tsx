@@ -1,9 +1,11 @@
 import React from "react";
-import { getCurrentUser } from "@/lib/utils";
+import { getCurrentUser, getTotalPayments } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import PaymentsTableClient from "./PaymentsTableClient";
 
-export default async function PaymentsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminPaymentsPage() {
   const user = await getCurrentUser();
 
   if (!user || user.role !== "admin") {

@@ -19,6 +19,7 @@ export default function TutorPrivateDashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,6 +28,16 @@ export default function TutorPrivateDashboard() {
         if (res.ok) {
           const data = await res.json();
           setTutorData(data);
+          
+          // Initialize availability if it doesn't exist
+          const initialAvailability = daysOfWeek.map(day => {
+            const existing = data.availability?.find((a: any) => a.day === day);
+            return {
+              day,
+              time: existing ? existing.time.join(", ") : ""
+            };
+          });
+
           setFormData({
             name: data.name,
             email: data.email,
@@ -37,7 +48,8 @@ export default function TutorPrivateDashboard() {
             experienceYears: data.experienceYears,
             hourlyRate: data.hourlyRate,
             bio: data.bio,
-            skills: data.subjects.join(", "), // Reusing subjects as skills for now
+            skills: data.subjects.join(", "),
+            availability: initialAvailability
           });
         }
       } catch (error) {
@@ -52,7 +64,18 @@ export default function TutorPrivateDashboard() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateTutorProfile(id, formData);
+      // Transform availability back to the format the database expects
+      const formattedAvailability = formData.availability
+        .filter((a: any) => a.time.trim() !== "")
+        .map((a: any) => ({
+          day: a.day,
+          time: a.time.split(",").map((t: string) => t.trim())
+        }));
+
+      await updateTutorProfile(id, {
+        ...formData,
+        availability: formattedAvailability
+      });
       setIsEditing(false);
       // Refresh data
       const res = await fetch(`/api/tutors/${id}`);
@@ -66,6 +89,15 @@ export default function TutorPrivateDashboard() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleAvailabilityChange = (day: string, value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      availability: prev.availability.map((a: any) => 
+        a.day === day ? { ...a, time: value } : a
+      )
+    }));
   };
 
   if (isLoading) return (
@@ -102,6 +134,40 @@ export default function TutorPrivateDashboard() {
               <p className="text-sm font-bold text-steel-blue uppercase tracking-widest flex items-center gap-2">
                 <Settings size={14} /> Private Dashboard
               </p>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl border border-dark-navy/10 shadow-sm space-y-6">
+              <h2 className="text-lg font-black text-dark-navy uppercase tracking-tight border-b pb-4 flex items-center gap-2">
+                <Clock className="text-coral" size={20} /> Weekly Availability
+              </h2>
+              <div className="space-y-4">
+                <p className="text-xs text-steel-blue font-bold uppercase tracking-widest mb-4">
+                  Set your available hours for each day (e.g. 10:00 - 14:00, 16:00 - 20:00)
+                </p>
+                <div className="grid gap-4">
+                  {formData.availability?.map((item: any) => (
+                    <div key={item.day} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-off-white/50 rounded-2xl border border-dark-navy/5">
+                      <div className="w-32">
+                        <span className="text-sm font-black text-dark-navy uppercase">{item.day}</span>
+                      </div>
+                      <div className="flex-grow">
+                        {isEditing ? (
+                          <input 
+                            className="w-full p-3 bg-white border border-dark-navy/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-dark-navy/20 text-sm"
+                            placeholder="Not available"
+                            value={item.time}
+                            onChange={(e) => handleAvailabilityChange(item.day, e.target.value)}
+                          />
+                        ) : (
+                          <p className="text-sm font-bold text-steel-blue">
+                            {item.time || "Not available"}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto">

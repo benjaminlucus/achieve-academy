@@ -35,6 +35,7 @@ export async function updateTutorProfile(userId: string, formData: any) {
       hourlyRate: Number(formData.hourlyRate),
       bio: formData.bio,
       skills: formData.skills ? formData.skills.split(",").map((s: string) => s.trim()) : [],
+      availability: formData.availability || [],
     }
   );
 

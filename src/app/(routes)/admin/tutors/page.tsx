@@ -3,6 +3,8 @@ import { getAllTutors, getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import TutorsTableClient from "./TutorsTableClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function TutorsApprovalPage() {
   const pendingTutors = await getAllTutors();
 
