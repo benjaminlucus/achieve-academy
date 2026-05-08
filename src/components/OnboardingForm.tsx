@@ -7,7 +7,7 @@ import { allCountries, allTimezones } from '@/lib/constants';
 
 const OnboardingForm = () => {
 
-  const router = useRouter();
+  const router = useRouter(); 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 

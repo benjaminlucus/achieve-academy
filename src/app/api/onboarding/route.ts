@@ -12,6 +12,8 @@ export async function POST(req: Request) {
     const user = await currentUser();
     const body = await req.json();
 
+    console.log("Received onboarding data:", body);
+
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
     // 1. Create or Update the Base User

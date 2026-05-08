@@ -26,7 +26,7 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 z-50 w-full bg-off-white/80 backdrop-blur-md border-b border-steel-blue/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
               <Image
@@ -34,7 +34,7 @@ export default function Navbar() {
                 alt="Achieve Academy Logo"
                 width={32}
                 height={32}
-                className="w-8 h-8"
+                className="w-38 h-38"
                 priority
               />
             </Link>
