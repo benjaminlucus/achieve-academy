@@ -16,18 +16,19 @@ export default async function TutorsPage({
   const query = searchParams.q || "";
   const subjectFilter = searchParams.subject || "Subject (All)";
 
-  // Basic fetch - in a real app, we'd add more complex mongo queries
+  // Basic fetch - ONLY show APPROVED (verified) users publicly
   const tutors = await TutorProfile.find({})
     .populate({
       path: "user",
       model: User,
-      select: "_id name email profileImage status",
+      match: { status: "approved" },
+      select: "_id name email profileImage status verificationLevel",
     })
     .lean();
 
   // Filter logic
   const filteredTutors = (tutors as any[]).filter((t) => {
-    if (!t.user || t.user.status === "blocked") return false;
+    if (!t.user) return false; // This filters out users whose status is not 'approved' due to the match in populate
     
     const matchesQuery = !query || 
       t.user.name.toLowerCase().includes(query.toLowerCase()) ||

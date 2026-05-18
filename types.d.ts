@@ -1,21 +1,17 @@
 import mongoose, { Document } from "mongoose";
-
+//htPh78Hpyy7#
 export interface IUser extends Document {
   clerkId: string;
   name: string;
   email: string;
   role: "student" | "tutor" | "admin";
-  status: "applied" 
-       | "reviewing"
-       | "interview_scheduled"
-       | "interviewed"
-       | "approved"
-       | "blocked";
+  status: "applied" | "reviewing" | "interview_pending" | "interview_scheduled" | "interview_live" | "interview_completed" | "approved" | "blocked";
+  verificationLevel: "none" | "green" | "blue";
   profileImage?: string;
   country?: string;
   timezone?: string;
   lastLogin?: Date;
-  isOnboarded?: boolean;
+  createdAt: Date;
 }
 
 export interface IUserFlag extends Document {
@@ -40,24 +36,30 @@ export interface ISession extends Document {
   tutor: mongoose.Types.ObjectId;
   startDate: Date;
   endDate: Date;
-  durationType: "monthly";
+  frequency: "weekly" | "monthly" | "once";
+  duration: number;
+  meetingLink?: string;
   status: "active" | "completed" | "cancelled";
+  subject: string;
   rate: number;
   monthsCompleted: number;
   lastPaymentDate?: Date;
+  notes?: string;
+  attendance?: {
+    date: Date;
+    present: boolean;
+  }[];
   createdAt: Date;
-  subject: string;
 }
 
 export interface IStudentProfile extends Document {
   user: mongoose.Types.ObjectId;
-  whichClass: string;
-  interests: string[];
-  subjects: string[];
-  learningGoals: string;
+  description?: string;
+  whichClass?: string;
+  subjects?: string[];
+  learningGoals?: string;
+  isVerified?: boolean;
   createdAt: Date;
-  description: string;
-  isVerified: boolean;
 }
 
 export interface ITutorProfile extends Document {
@@ -68,15 +70,36 @@ export interface ITutorProfile extends Document {
   education: string;
   hourlyRate: number;
   monthlyRate: number;
-  description: string;
+  bio: string;
   languages: string[];
   rating: number;
   totalStudents: number;
   availability: {
     day: string;
-    time: string[];
+    slots: string[];
   }[];
   isVerified: boolean;
+  payoutDetails?: {
+    method: "JazzCash" | "Easypaisa" | "Bank Transfer";
+    accountTitle: string;
+    accountNumber: string; // Phone number for JazzCash/Easypaisa, Account number for Bank
+    bankName?: string;
+    iban?: string;
+  };
+  createdAt: Date;
+}
+
+export interface ITutorPayout extends Document {
+  tutor: mongoose.Types.ObjectId;
+  amount: number; // Gross amount (total earned)
+  platformFee: number; // 20% commission
+  payoutAmount: number; // Net amount sent to tutor
+  status: "pending" | "paid" | "failed";
+  method: string;
+  transactionId?: string;
+  screenshot?: string; // URL to proof/screenshot
+  notes?: string;
+  paidAt?: Date;
   createdAt: Date;
 }
 

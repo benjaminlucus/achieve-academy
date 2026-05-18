@@ -5,16 +5,19 @@ import Link from "next/link";
 import { BookOpen, GraduationCap, MapPin, ChevronRight, Target, User } from "lucide-react";
 
 import { SearchBar } from "@/components/SearchBar";
+import { VerifiedTick } from "@/components/VerifiedTick";
+import { ConnectButton } from "@/components/ConnectButton";
+import { Toaster } from "react-hot-toast";
 
 export function StudentSearchSection({ initialStudents = [] }: { initialStudents: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
 
-  const allClasses = Array.from(new Set((initialStudents || []).map(s => s.gradeLevel || s.whichClass))).filter(Boolean).sort();
+  const allClasses = Array.from(new Set((initialStudents || []).map(s => s.whichClass || s.whichClass))).filter(Boolean).sort();
 
   const filteredStudents = (initialStudents || []).filter((student) => {
     const subjects = student.preferredSubjects || student.subjects || [];
-    const grade = student.gradeLevel || student.whichClass || "";
+    const grade = student.whichClass || student.whichClass || "";
     const nameMatch = student.user?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const subjectMatch = subjects.some((s: string) => 
       s.toLowerCase().includes(searchTerm.toLowerCase())
@@ -26,6 +29,7 @@ export function StudentSearchSection({ initialStudents = [] }: { initialStudents
 
   return (
     <div className="flex flex-col gap-8">
+      <Toaster />
       {/* Professional Search & Filter */}
       <SearchBar 
         placeholder="Search by name or interests..."
@@ -46,7 +50,7 @@ export function StudentSearchSection({ initialStudents = [] }: { initialStudents
               <div className="p-6 pb-0 flex flex-col items-center text-center">
                 <div className="w-full flex justify-end mb-2">
                   <span className="px-3 py-1 bg-coral text-off-white text-[9px] font-black uppercase tracking-widest border-2 border-dark-navy shadow-[2px_2px_0px_0px_rgba(43,65,98,1)]">
-                    {student.gradeLevel || student.whichClass || "N/A"}
+                    {student.whichClass || student.whichClass || "N/A"}
                   </span>
                 </div>
                 
@@ -58,9 +62,16 @@ export function StudentSearchSection({ initialStudents = [] }: { initialStudents
                   )}
                 </div>
                 
-                <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight group-hover:text-coral transition-colors">
-                  {student.user?.name || "Student Name"}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight group-hover:text-coral transition-colors">
+                    {student.user?.name || "Student Name"}
+                  </h3>
+                  <VerifiedTick 
+                    level={student.user?.verificationLevel} 
+                    status={student.user?.status} 
+                    size={18}
+                  />
+                </div>
               </div>
               
               {/* Card Body: Goals & Interests */}
@@ -101,13 +112,16 @@ export function StudentSearchSection({ initialStudents = [] }: { initialStudents
               </div>
               
               {/* Footer Action */}
-              <div className="p-4 pt-0">
+              <div className="p-4 pt-0 space-y-2">
                 <Link 
                   href={`/students/${student.user?._id || student._id}`}
                   className="w-full py-3 bg-dark-navy text-off-white text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-coral transition-all active:translate-y-0.5"
                 >
                   View Profile <ChevronRight size={14} />
                 </Link>
+                <div className="w-full">
+                  <ConnectButton targetUserId={student.user?._id || student._id} />
+                </div>
               </div>
             </div>
           ))

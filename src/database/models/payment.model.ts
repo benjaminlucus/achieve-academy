@@ -22,8 +22,8 @@ const PaymentSchema = new Schema<IPayment>({
 
   amount: { type: Number, required: true },
 
-  commission: { type: Number, required: true, default: 20 },
-  tutorEarning: { type: Number, required: true },
+  commission: { type: Number, required: true }, // 20% of amount
+  tutorEarning: { type: Number, required: true }, // 80% of amount
 
   monthNumber: { type: Number, required: true },
 

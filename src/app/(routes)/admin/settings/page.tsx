@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,8 @@ const settingSections = [
 ];
 
 export default async function SettingsPage() {
-  const user = await getCurrentUser();
+  const { userId } = await auth();
+  const user = await getCurrentUser(userId || undefined);
 
   if (!user || user.role !== "admin") {
     return redirect("/admin");

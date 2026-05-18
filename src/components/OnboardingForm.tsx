@@ -3,11 +3,10 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, GraduationCap, BookOpen, Globe, Clock, ChevronRight, ChevronLeft, Check } from 'lucide-react';
-import { allCountries, allTimezones } from '@/lib/constants';
 
 const OnboardingForm = () => {
 
-  const router = useRouter(); 
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -22,13 +21,21 @@ const OnboardingForm = () => {
     experienceYears: 0,
     education: '',
     hourlyRate: 0,
+    // Payout details
+    payoutDetails: {
+      method: 'JazzCash' as 'JazzCash' | 'Easypaisa' | 'Bank Transfer',
+      accountTitle: '',
+      accountNumber: '',
+      bankName: '',
+      iban: '',
+    },
     // Common
     subjects: [] as string[],
     description: '',
   });
 
 
-  const totalSteps = 3;
+  const totalSteps = formData.role === 'tutor' ? 4 : 3;
   const progress = (step / totalSteps) * 100;
 
   const handleRoleSelect = (role: 'student' | 'tutor') => {
@@ -48,7 +55,8 @@ const OnboardingForm = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      console.log("Onboarding API Response:", res);
+
+      console.log(res)
       if (res.ok) {
         router.push('/dashboard');
       }
@@ -117,14 +125,12 @@ const OnboardingForm = () => {
                   <label className="block text-sm font-semibold mb-1">Country</label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-3 w-4 h-4 text-[#70869d]" />
-                    <select
+                    <input
+                      type="text"
+                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1e3a5f] outline-none"
+                      placeholder="e.g. United Kingdom"
                       onChange={(e) => updateFields({ country: e.target.value })}
-                      className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-dark-navy/10 text-sm font-bold text-gray-700 transition-all appearance-none"
-                    >
-                      {allCountries.map((country) => (
-                        <option value={country.toLowerCase()}>{country.toUpperCase()}</option>
-                      ))}
-                    </select>
+                    />
                   </div>
                 </div>
                 <div>
@@ -135,9 +141,10 @@ const OnboardingForm = () => {
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1e3a5f] outline-none appearance-none"
                       onChange={(e) => updateFields({ timezone: e.target.value })}
                     >
-                      {allTimezones.map((timezone) => (
-                        <option value={timezone.toLowerCase()}>{timezone.toUpperCase()}</option>
-                      ))}
+                      <option value="">Select Timezone</option>
+                      <option value="GMT">GMT (London)</option>
+                      <option value="EST">EST (New York)</option>
+                      <option value="PKT">PKT (Pakistan)</option>
                     </select>
                   </div>
                 </div>
@@ -211,6 +218,120 @@ const OnboardingForm = () => {
               <div className="flex gap-4">
                 <button
                   onClick={() => setStep(2)}
+                  className="w-1/3 border border-[#70869d] text-[#70869d] py-3 rounded-lg font-bold flex justify-center items-center gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </button>
+                {formData.role === 'tutor' ? (
+                  <button
+                    onClick={() => setStep(4)}
+                    className="w-2/3 bg-[#1e3a5f] text-white py-3 rounded-lg font-bold flex justify-center items-center gap-2 hover:bg-[#c04d44] transition-colors"
+                  >
+                    Next <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="w-2/3 bg-[#d65a50] text-white py-3 rounded-lg font-bold flex justify-center items-center gap-2 hover:bg-[#c04d44] transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Complete Setup?'} <Check className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: PAYOUT DETAILS (TUTOR ONLY) */}
+          {step === 4 && formData.role === 'tutor' && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold">Payout Information</h2>
+                <p className="text-[#70869d]">How would you like to receive your earnings?</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Payout Method</label>
+                  <select
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1e3a5f] outline-none"
+                    value={formData.payoutDetails.method}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      payoutDetails: { ...formData.payoutDetails, method: e.target.value as any }
+                    })}
+                  >
+                    <option value="JazzCash">JazzCash</option>
+                    <option value="Easypaisa">Easypaisa</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Account Title</label>
+                  <input
+                    type="text"
+                    placeholder="Full Name on Account"
+                    className="w-full p-3 border rounded-lg"
+                    value={formData.payoutDetails.accountTitle}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      payoutDetails: { ...formData.payoutDetails, accountTitle: e.target.value }
+                    })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1">
+                    {formData.payoutDetails.method === 'Bank Transfer' ? 'Account Number' : 'Phone Number'}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={formData.payoutDetails.method === 'Bank Transfer' ? 'Bank Account Number' : 'Mobile Wallet Number'}
+                    className="w-full p-3 border rounded-lg"
+                    value={formData.payoutDetails.accountNumber}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      payoutDetails: { ...formData.payoutDetails, accountNumber: e.target.value }
+                    })}
+                  />
+                </div>
+
+                {formData.payoutDetails.method === 'Bank Transfer' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1">Bank Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. HBL, Alfalah"
+                        className="w-full p-3 border rounded-lg"
+                        value={formData.payoutDetails.bankName}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          payoutDetails: { ...formData.payoutDetails, bankName: e.target.value }
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1">IBAN (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="PK..."
+                        className="w-full p-3 border rounded-lg"
+                        value={formData.payoutDetails.iban}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          payoutDetails: { ...formData.payoutDetails, iban: e.target.value }
+                        })}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep(3)}
                   className="w-1/3 border border-[#70869d] text-[#70869d] py-3 rounded-lg font-bold flex justify-center items-center gap-2"
                 >
                   <ChevronLeft className="w-4 h-4" /> Back

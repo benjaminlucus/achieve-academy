@@ -33,6 +33,14 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
   ], // { day: "Monday", time: ["10AM", "2PM"] }
 
   isVerified: { type: Boolean, default: false },
+
+  payoutDetails: {
+    method: { type: String, enum: ["JazzCash", "Easypaisa", "Bank Transfer"] },
+    accountTitle: String,
+    accountNumber: String,
+    bankName: String,
+    iban: String,
+  },
 }, { timestamps: true });
 
 const TutorProfile = models.TutorProfile || mongoose.model<ITutorProfile>("TutorProfile", TutorProfileSchema);

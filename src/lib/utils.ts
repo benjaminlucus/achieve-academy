@@ -4,30 +4,129 @@ import TutorProfile from "@/database/models/tutor.model";
 import StudentProfile from "@/database/models/student.model";
 import Session from "@/database/models/session.model";
 import Payment from "@/database/models/payment.model";
-import { currentUser } from "@clerk/nextjs/server";
+import Payout from "@/database/models/payout.model";
 
-export async function getCurrentUser() {
+import Interview from "@/database/models/interview.model";
+import Connection from "@/database/models/connection.model";
+import Review from "@/database/models/review.model";
+import { differenceInMonths, isAfter } from "date-fns";
+
+export async function updateVerificationLevel(userId: string) {
   try {
     await connectDB();
+    const user = await User.findById(userId);
+    if (!user || user.status !== "approved") return;
 
-    const clerkUser = await currentUser();
+    // Check for Blue Tick eligibility
+    // Criteria: 6+ months active, high rating (4.5+), consistent activity (5+ completed sessions)
+    
+    const monthsActive = differenceInMonths(new Date(), new Date(user.createdAt));
+    
+    const tutorProfile = await TutorProfile.findOne({ user: userId });
+    const studentProfile = await StudentProfile.findOne({ user: userId });
+    
+    const completedSessions = await Session.countDocuments({
+      $or: [{ student: userId }, { tutor: userId }],
+      status: "completed"
+    });
 
-    if (!clerkUser) {
-      return null;
+    let rating = 0;
+    if (user.role === "tutor" && tutorProfile) {
+      rating = tutorProfile.rating || 0;
     }
 
+    const isEligibleForBlue = monthsActive >= 6 && rating >= 4.5 && completedSessions >= 5;
+
+    if (isEligibleForBlue && user.verificationLevel !== "blue") {
+      user.verificationLevel = "blue";
+      await user.save();
+    } else if (!isEligibleForBlue && user.verificationLevel === "blue") {
+      // Downgrade if no longer eligible? 
+      // For now, let's keep it simple and just upgrade.
+    }
+  } catch (error) {
+    console.error("Error updating verification level:", error);
+  }
+}
+
+export async function checkConnectionAccess(connectionId: string) {
+  try {
+    await connectDB();
+    const connection = await Connection.findById(connectionId);
+    if (!connection) return { hasAccess: false, reason: "Connection not found" };
+
+    if (connection.status !== "accepted") {
+      return { hasAccess: false, reason: "Connection not active" };
+    }
+
+    const now = new Date();
+    const isTrialExpired = connection.trialEndsAt && isAfter(now, new Date(connection.trialEndsAt));
+    const isPaid = connection.subscriptionStatus === "active";
+
+    if (isTrialExpired && !isPaid) {
+      return { hasAccess: false, reason: "trial_expired", trialEndsAt: connection.trialEndsAt };
+    }
+
+    return { hasAccess: true, status: connection.subscriptionStatus };
+  } catch (error) {
+    console.error("Error checking connection access:", error);
+    return { hasAccess: false, reason: "Error checking access" };
+  }
+}
+
+export async function getAllInterviews() {
+  try {
+    await connectDB();
+    const interviews = await Interview.find({})
+      .populate("userId", "name email profileImage status")
+      .sort({ scheduledAt: -1 });
+
+    const formattedInterviews = interviews.map(i => ({
+      id: i._id.toString(),
+      user: {
+        id: i.userId?._id?.toString(),
+        name: i.userId?.name,
+        email: i.userId?.email,
+        profileImage: i.userId?.profileImage,
+        status: i.userId?.status,
+      },
+      scheduledAt: i.scheduledAt,
+      timezone: i.timezone,
+      studentJoinLink: i.studentJoinLink,
+      hostJoinLink: i.hostJoinLink,
+      meetingId: i.meetingId,
+      status: i.status,
+      notes: i.notes,
+      duration: i.duration,
+    }));
+
+    return JSON.parse(JSON.stringify(formattedInterviews));
+  } catch (error) {
+    console.error("Error fetching interview data:", error);
+    return [];
+  }
+}
+
+export async function getCurrentUser(userId?: string) {
+  try {
+    if (!userId) return null;
+    
+    await connectDB();
+
     const databaseUser = await User.findOne({
-      clerkId: clerkUser.id
+      clerkId: userId
     }).lean();
+    
+    console.log("Database user:", databaseUser);
 
     if (!databaseUser) {
-      return null;
+      return "database user not found";
     }
 
     return JSON.parse(JSON.stringify(databaseUser))
   } catch (error) {
     console.error("Error fetching current user:", error);
-    return null;
+    return "error fetching current user";
   }
 }
 
@@ -93,6 +192,33 @@ export async function getAllTutors() {
   }
 }
 
+export async function createPaymentRecord(sessionId: string, amount: number, monthNumber: number) {
+  try {
+    await connectDB();
+    const session = await Session.findById(sessionId);
+    if (!session) throw new Error("Session not found");
+
+    const commission = amount * 0.20;
+    const tutorEarning = amount - commission;
+
+    const payment = await Payment.create({
+      session: sessionId,
+      student: session.student,
+      tutor: session.tutor,
+      amount,
+      commission,
+      tutorEarning,
+      monthNumber,
+      status: "pending",
+    });
+
+    return JSON.parse(JSON.stringify(payment));
+  } catch (error) {
+    console.error("Error creating payment record:", error);
+    return null;
+  }
+}
+
 export async function getTotalPayments() {
   try {
     await connectDB();
@@ -112,11 +238,11 @@ export async function getTotalPayments() {
 
     const tutorEarnings = payments
       .filter(p => p.status === "paid")
-      .reduce((sum, p) => sum + p.amount - p.commission, 0); // Assuming commission is a flat amount or logic
+      .reduce((sum, p) => sum + p.tutorEarning, 0);
 
     const pendingPayouts = payments
       .filter(p => p.status === "pending")
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + p.tutorEarning, 0);
 
     // ===== TABLE DATA =====
     const formattedPayments = payments.map(p => ({
@@ -148,26 +274,91 @@ export async function getAdminStatistics() {
   try {
     await connectDB();
 
-    const totalStudents = await StudentProfile.countDocuments();
-    const totalTutors = await TutorProfile.countDocuments();
-    const totalUsers = await User.countDocuments();
+    const [totalStudents, totalTutors, totalUsers, sessions, payments, payouts, pendingVerificationCount] = await Promise.all([
+      StudentProfile.countDocuments(),
+      TutorProfile.countDocuments(),
+      User.countDocuments(),
+      Session.find({}),
+      Payment.find({}),
+      Payout.find({}),
+      User.countDocuments({ status: { $in: ["applied", "reviewing", "interview_pending"] } })
+    ]);
+
+    const completedSessions = sessions.filter(s => s.status === "completed").length;
     
-    const sessions = await Session.find({});
-    const totalSessions = sessions.filter(s => s.status === "completed").length;
-    
-    const totalRevenue = sessions.reduce((total, s: any) => {
-      if (s.status === "completed") {
-        return total + (s.rate || 0);
+    // Revenue from payments
+    const totalRevenue = payments
+      .filter(p => p.status === "paid")
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    const totalPayouts = payouts
+      .filter(p => p.status === "paid")
+      .reduce((sum, p) => sum + (p.payoutAmount || 0), 0);
+
+    const commissionEarned = payments
+      .filter(p => p.status === "paid")
+      .reduce((sum, p) => sum + (p.commission || 0), 0);
+
+    const pendingPayments = payments
+      .filter(p => p.status === "pending")
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    const pendingPayouts = payments
+      .filter(p => p.status === "pending")
+      .reduce((sum, p) => sum + (p.tutorEarning || 0), 0);
+
+    // Analytics Data
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const revenueByMonth = new Array(12).fill(0);
+    const sessionsByMonth = new Array(12).fill(0);
+
+    payments.forEach(p => {
+      if (p.status === "paid" && p.createdAt) {
+        const month = new Date(p.createdAt).getMonth();
+        revenueByMonth[month] += p.amount || 0;
       }
-      return total;
-    }, 0);
+    });
+
+    sessions.forEach(s => {
+      if (s.status === "completed" && s.startDate) {
+        const month = new Date(s.startDate).getMonth();
+        sessionsByMonth[month] += 1;
+      }
+    });
+
+    // Subject distribution
+    const subjectCounts: Record<string, number> = {};
+    sessions.forEach(s => {
+      if (s.subject) {
+        subjectCounts[s.subject] = (subjectCounts[s.subject] || 0) + 1;
+      }
+    });
+    const popularSubjects = Object.entries(subjectCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
 
     return JSON.parse(JSON.stringify({
       totalStudents,
       totalTutors,
-      totalSessions,
+      totalSessions: completedSessions,
       totalRevenue,
-      totalUsers
+      totalPayouts,
+      commissionEarned,
+      totalUsers,
+      pendingPayments,
+      pendingPayouts,
+      pendingVerificationCount,
+      analytics: {
+        revenueByMonth,
+        sessionsByMonth,
+        popularSubjects,
+        monthNames,
+        userDistribution: {
+          students: totalStudents,
+          tutors: totalTutors
+        }
+      }
     }));
   } catch (error) {
     console.error("Error fetching statistics:", error);
@@ -176,8 +367,42 @@ export async function getAdminStatistics() {
       totalTutors: 0,
       totalSessions: 0,
       totalRevenue: 0,
-      totalUsers: 0
+      totalUsers: 0,
+      pendingPayments: 0,
+      pendingPayouts: 0,
+      pendingVerificationCount: 0
     };
+  }
+}
+
+export async function getAllStudents() {
+  try {
+    await connectDB();
+    const students = await StudentProfile.find({})
+      .populate("user", "name email status profileImage country timezone")
+      .sort({ createdAt: -1 });
+
+    const formattedStudents = students.map(s => ({
+      id: s._id.toString(),
+      userId: s.user?._id?.toString(),
+      name: s.user?.name,
+      email: s.user?.email,
+      status: s.user?.status,
+      profileImage: s.user?.profileImage,
+      whichClass: s.whichClass,
+      subjects: s.subjects,
+      learningGoals: s.learningGoals,
+      country: s.user?.country,
+      timezone: s.user?.timezone,
+      interviewDate: s.user?.interviewDate,
+      interviewLink: s.user?.interviewLink,
+      createdAt: s.createdAt
+    }));
+
+    return JSON.parse(JSON.stringify(formattedStudents));
+  } catch (error) {
+    console.error("Error fetching student data:", error);
+    return [];
   }
 }
 

@@ -1,3 +1,4 @@
+
 import mongoose, { Schema, models } from "mongoose";
 import { IStudentProfile } from "../../../types";
 

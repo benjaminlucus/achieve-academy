@@ -4,8 +4,13 @@ import TutorFeatures from "@/components/TutorFeatures";
 import HowItWorks from "@/components/HowItWorks";
 import StudentFeatures from "@/components/StudentFeatures";
 import Image from "next/image";
+import { getCurrentUser } from "@/lib/utils";
+import { auth } from "@clerk/nextjs/server";
 
-export default function Home() {
+export default async function Home() {
+  // const { userId } = await auth();
+  // const user = await getCurrentUser(userId || undefined);
+
   return (
     <div className="flex flex-col w-full min-h-screen">
       <Hero />

@@ -13,20 +13,32 @@ const InterviewSchema = new Schema(
       required: true,
     },
 
+    timezone: {
+      type: String,
+      default: "UTC",
+    },
+
     duration: {
       type: Number, // minutes
       default: 30,
     },
 
-    zoomLink: String,
+    studentJoinLink: String,
+    hostJoinLink: String,
+    meetingId: String,
+    meetingProvider: {
+      type: String,
+      default: "zoom",
+    },
 
     status: {
       type: String,
-      enum: ["scheduled", "completed", "cancelled"],
+      enum: ["scheduled", "completed", "cancelled", "live"],
       default: "scheduled",
     },
 
     notes: String,
+    completedAt: Date,
   },
   { timestamps: true }
 );

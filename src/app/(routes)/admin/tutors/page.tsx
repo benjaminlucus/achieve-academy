@@ -1,14 +1,16 @@
 import React from "react";
 import { getAllTutors, getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import TutorsTableClient from "./TutorsTableClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function TutorsApprovalPage() {
+  const { userId } = await auth();
   const pendingTutors = await getAllTutors();
 
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(userId || undefined);
 
   if (!user || user.role !== "admin") {
     return redirect("/admin");

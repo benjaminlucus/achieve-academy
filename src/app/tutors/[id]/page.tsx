@@ -14,6 +14,8 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { X, Check } from "lucide-react";
+import { ConnectButton } from "@/components/ConnectButton";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function TutorProfileView() {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +83,7 @@ export default function TutorProfileView() {
 
   return (
     <div className="bg-off-white min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+      <Toaster />
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Verification Banner */}
@@ -136,6 +139,13 @@ export default function TutorProfileView() {
                 </div>
                 <StatusBadge status={tutorData.status} />
               </div>
+
+              {/* Connection Button */}
+              {!isOwner && (
+                <div className="mt-4 flex justify-center md:justify-start">
+                  <ConnectButton targetUserId={tutorData.userId} />
+                </div>
+              )}
               
               <p className="mt-6 text-steel-blue text-sm font-medium leading-relaxed max-w-2xl text-center md:text-left">
                 {tutorData.bio}

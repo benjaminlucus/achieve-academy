@@ -2,13 +2,43 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import StudentProfile from "@/database/models/student.model";
 import Session from "@/database/models/session.model";
-import React from "react";
+import Payment from "@/database/models/payment.model";
+import { auth } from "@clerk/nextjs/server";
+import User from "@/database/models/user.model";
 
 export async function GET(req: any, { params }: any) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await connectDB();
 
     const { id: studentId } = await params;
+
+    // Fetch the requesting user to check if they are the student themselves or an admin
+    const requestingUser = await User.findOne({ clerkId: userId });
+    
+    if (!requestingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const isOwner = requestingUser._id.toString() === studentId;
+    const isAdmin = requestingUser.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      // If not owner or admin, return limited public info
+      const student = await StudentProfile.findOne({ user: studentId }).populate("user", "name profileImage status country");
+      if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
+      
+      return NextResponse.json({
+        name: student.user.name,
+        profileImage: student.user.profileImage,
+        whichClass: student.whichClass,
+        subjects: student.subjects,
+      });
+    }
 
     const student = await StudentProfile.findOne({ user: studentId })
       .populate("user");
@@ -21,25 +51,45 @@ export async function GET(req: any, { params }: any) {
       .populate("tutor", "name")
       .sort({ createdAt: -1 });
 
-    const completedSessions = sessions.filter(s => s.status === "completed"); // Keep only sessions where status = "completed"
+    const payments = await Payment.find({ student: studentId })
+      .sort({ createdAt: -1 });
 
-    // Reduces through each value in the array of completed sessions and sums up the hours learned. It calculates hours by taking the difference between endDate and startDate, converting from milliseconds to hours, and adding it to the total (Time taken for previous sessions). The final result is the total hours learned across all completed sessions.
+    const completedSessions = sessions.filter(s => s.status === "completed");
+
     const hoursLearned = completedSessions.reduce((total, s: any) => {
-      // (endDate - startDate) / 3600000
-      const hours = (new Date(s.endDate).getTime() - new Date(s.startDate).getTime()) / 3600000; // miliseconds to hours
-      return total + hours;
+      if (s.startDate && s.endDate) {
+        const hours = (new Date(s.endDate).getTime() - new Date(s.startDate).getTime()) / 3600000;
+        return total + (hours > 0 ? hours : 0);
+      }
+      return total;
     }, 0);
 
-    const activeCourses = [...new Set(sessions.map(s => s.subject))].length; // Creates a new Set (which only keeps unique values) from the array of subjects extracted from all sessions. Then it converts that Set back to an array and gets its length, which represents the number of unique subjects (active courses) the student has had sessions in.
+    const activeCourses = [...new Set(sessions.map(s => s.subject))].length;
 
-    // 4. Format history
-    const history = sessions.map(s => ({
+    // 4. Merge sessions and payments for a richer activity history
+    const sessionHistory = sessions.map(s => ({
       id: s._id,
-      tutor: s.tutor?.name,
-      subject: s.subject,
-      date: s.startDate,
-      status: s.status
+      type: "session",
+      title: `${s.status === "completed" ? "Completed" : s.status === "active" ? "Scheduled" : "Cancelled"} Session`,
+      subtitle: `${s.subject} with ${s.tutor?.name || "Tutor"}`,
+      date: s.startDate || s.createdAt,
+      status: s.status,
+      amount: null
     }));
+
+    const paymentHistory = payments.map(p => ({
+      id: p._id,
+      type: "payment",
+      title: p.status === "paid" ? "Payment Successful" : "Payment Pending",
+      subtitle: `Transaction: ${p.transactionId || "N/A"}`,
+      date: p.paidAt || p.createdAt,
+      status: p.status,
+      amount: p.amount
+    }));
+
+    const history = [...sessionHistory, ...paymentHistory]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 10); // Keep last 10 activities
 
     const studentData = {
       clerkId: student.user.clerkId,
@@ -51,10 +101,17 @@ export async function GET(req: any, { params }: any) {
       subjects: student.subjects,
       location: `${student.user.country}`,
 
+      // Interview Info
+      interviewDate: student.user.interviewDate,
+      interviewLink: student.user.interviewLink,
+      interviewTimezone: student.user.interviewTimezone,
+      meetingProvider: student.user.meetingProvider,
+
       stats: {
-        hoursLearned: Math.round(hoursLearned),
+        hoursLearned: Number(hoursLearned.toFixed(1)),
         activeCourses,
-        completedSessions: completedSessions.length
+        completedSessions: completedSessions.length,
+        totalSessions: sessions.length
       },
 
       history

@@ -1,30 +1,41 @@
-
-import { getCurrentUser } from "@/lib/utils";
+// app/dashboard/page.tsx
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
-  const user = await getCurrentUser();
+  const { userId } = await auth();
+
+  if (!userId) {
+    return redirect("/sign-in");
+  }
+
+  const user = await getCurrentUser(userId);
+
   if (!user) {
+    return redirect("/sign-in");
+  }
+
+  // ✅ SINGLE SOURCE OF TRUTH
+  if (!user.isOnboarded) {
     return redirect("/onboarding");
   }
 
-  if (user.role.toLowerCase() === "admin") {
-    return redirect("/admin");
-  }
+  const role = user.role?.toLowerCase();
 
-  if (user.role.toLowerCase() === "tutor") {
-    return redirect(`/tutors/${user._id}/dashboard`);
-  }
+  switch (role) {
+    case "admin":
+      return redirect("/admin");
 
-  if (user.role.toLowerCase() === "student") {
-    return redirect(`/students/${user._id}/dashboard`);
-  }
+    case "tutor":
+      return redirect(`/tutors/${user._id}/dashboard`);
 
-   if (user.role.toLowerCase() === "admin") {
-    return redirect("/admin");
-  }
+    case "student":
+      return redirect(`/students/${user._id}/dashboard`);
 
-  return redirect("/onboarding");
+    default:
+      return redirect("/onboarding");
+  }
 }

@@ -1,12 +1,14 @@
 import React from "react";
 import { getCurrentUser, getTotalPayments } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import PaymentsTableClient from "./PaymentsTableClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPaymentsPage() {
-  const user = await getCurrentUser();
+  const { userId } = await auth();
+  const user = await getCurrentUser(userId || undefined);
 
   if (!user || user.role !== "admin") {
     return redirect("/admin");

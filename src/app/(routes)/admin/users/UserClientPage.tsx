@@ -20,7 +20,7 @@ import { CreateUserDialog } from './CreateUserDialog';
 const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number }) => {
     const [filters, setFilters] = useState({
         search: "",
-        status: "All Status",
+        status: "Pending Verification",
     });
     const [page, setPage] = useState(1);
     const [open, setOpen] = useState(false);
@@ -30,9 +30,14 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
             user.name.toLowerCase().includes(filters.search.toLowerCase()) ||
             user.email.toLowerCase().includes(filters.search.toLowerCase());
 
-        const matchesStatus =
-            filters.status === "All Status" ||
-            user.status.toLowerCase() === filters.status.toLowerCase();
+        let matchesStatus = true;
+        if (filters.status === "Pending Verification") {
+            matchesStatus = ["applied", "reviewing", "interview_pending"].includes(user.status.toLowerCase());
+        } else if (filters.status === "Scheduled Interview") {
+            matchesStatus = user.status.toLowerCase() === "interview_scheduled";
+        } else if (filters.status !== "All Status") {
+            matchesStatus = user.status.toLowerCase() === filters.status.toLowerCase();
+        }
 
         return matchesSearch && matchesStatus;
     });
@@ -71,7 +76,8 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
 
             <SearchBar
                 placeholder="Search by name or email..."
-                allStatuses={["All Status", "Student", "Tutor", "Admin"]}
+                allStatuses={["Pending Verification", "Scheduled Interview", "Approved", "Blocked", "All Status"]}
+                initialStatus="Pending Verification"
                 onSearch={(data) => { setFilters(data); setPage(1); }}
             />
 

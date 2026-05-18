@@ -14,11 +14,14 @@ import {
 import Link from "next/link";
 import { getCurrentUser, getTotalPayments, getTotalUsers, getAdminStatistics } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const user = await getCurrentUser();
+  const { userId } = await auth();
+  const user = await getCurrentUser(userId || undefined);
+  console.log("getcutrrentusrer user: ", user)
 
   if (!user) {
     return redirect("/onboarding");
@@ -36,30 +39,33 @@ export default async function AdminDashboard() {
   const data = await getAdminStatistics();
 
   const stats = [
+    { label: "Pending Verification", value: data.pendingVerificationCount, growth: "ACTION REQ", isPositive: true, icon: GraduationCap, color: "bg-amber-50 text-amber-600 border-amber-100" },
     { label: "Total Users", value: data.totalUsers, growth: "+12.5%", isPositive: true, icon: Users, color: "bg-blue-50 text-blue-600 border-blue-100" },
-    { label: "Total Tutors", value: data.totalTutors, growth: "+4.2%", isPositive: true, icon: GraduationCap, color: "bg-purple-50 text-purple-600 border-purple-100" },
-    { label: "Total Students", value: data.totalStudents, growth: "+14.1%", isPositive: true, icon: BookOpen, color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-    { label: "Total Revenue", value: data.totalRevenue, growth: "+22.4%", isPositive: true, icon: DollarSign, color: "bg-amber-50 text-amber-600 border-amber-100" },
-    { label: "Total Sessions", value: data.totalSessions, growth: "-2.5%", isPositive: false, icon: Calendar, color: "bg-rose-50 text-rose-600 border-rose-100" },
+    { label: "Total Revenue", value: `$${data.totalRevenue.toLocaleString()}`, growth: "+22.4%", isPositive: true, icon: DollarSign, color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
+    { label: "Total Payouts", value: `$${data.totalPayouts.toLocaleString()}`, growth: "PAID", isPositive: true, icon: CreditCard, color: "bg-blue-50 text-blue-600 border-blue-100" },
   ];
 
 
-  const recentUsers = (await getTotalUsers()).slice(0, 4)
+  const pendingUsers = (await getTotalUsers()).filter((u: any) => ["applied", "reviewing", "interview_pending"].includes(u.status.toLowerCase())).slice(0, 5);
   const recentPayments = await getTotalPayments();
   const paymentsArray = recentPayments.payments.slice(0, 4);
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-14 pb-20">
 
-        <div className="bg-white p-8 rounded-3xl border-2 border-dark-navy shadow-[8px_8px_0px_0px_rgba(43,65,98,1)] flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
-          <div className="space-y-2 text-center md:text-left">
-            <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Tutor Payout Management</h2>
-            <p className="text-xs font-bold text-steel-blue uppercase tracking-widest">Process pending tutor earnings via Payoneer</p>
+        <div className="bg-white p-10 rounded-[3rem] border-2 border-dark-navy shadow-[12px_12px_0px_0px_rgba(43,65,98,1)] flex flex-col md:flex-row items-center justify-between gap-10 mb-16">
+          <div className="space-y-3 text-center md:text-left">
+            <h2 className="text-2xl font-black text-dark-navy uppercase tracking-tight">Financial Overview</h2>
+            <p className="text-[11px] font-bold text-steel-blue uppercase tracking-[0.2em]">Monitor pending transactions and tutor payouts</p>
           </div>
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div className="bg-off-white px-6 py-4 rounded-2xl border border-dark-navy/10 flex-grow text-center">
+              <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Pending Payments</p>
+              <p className="text-2xl font-black text-amber-600">${data.pendingPayments.toLocaleString()}</p>
+            </div>
+            <div className="bg-off-white px-6 py-4 rounded-2xl border border-dark-navy/10 flex-grow text-center">
               <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Pending Payouts</p>
-              <p className="text-2xl font-black text-coral">$1,240.00</p>
+              <p className="text-2xl font-black text-coral">${data.pendingPayouts.toLocaleString()}</p>
             </div>
             <button className="px-8 py-4 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-xl hover:shadow-coral/20">
               Bulk Payout
@@ -68,7 +74,7 @@ export default async function AdminDashboard() {
         </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
             <div className="absolute top-0 right-0 w-16 h-16 bg-gray-50/50 rounded-bl-full -mr-4 -mt-4 transition-all group-hover:bg-coral/5" />
@@ -90,12 +96,12 @@ export default async function AdminDashboard() {
       {/* Tables Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        {/* Recent Users Table */}
+        {/* Pending Verifications Table */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full transition-all">
           <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/20">
             <div>
-              <h3 className="text-lg font-black text-gray-900 tracking-tight uppercase">Recent Users</h3>
-              <p className="text-xs font-medium text-gray-500 mt-1 uppercase tracking-widest">Latest signups & updates</p>
+              <h3 className="text-lg font-black text-gray-900 tracking-tight uppercase">Pending Verification</h3>
+              <p className="text-xs font-medium text-gray-500 mt-1 uppercase tracking-widest">Users needing interview or approval</p>
             </div>
             <Link href="/admin/users" className="text-xs font-black text-coral uppercase tracking-widest hover:underline flex items-center gap-1">
               View All <ChevronRight size={14} />
@@ -113,7 +119,11 @@ export default async function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-50">
 
-                {recentUsers.map((user: any) => (
+                {pendingUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">No pending verifications</td>
+                  </tr>
+                ) : pendingUsers.map((user: any) => (
                   <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -127,21 +137,21 @@ export default async function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md border ${user.role === 'Tutor' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
+                      <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md border ${user.role === 'tutor' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
                         }`}>
                         {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                        <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                         <span className="text-[10px] font-black uppercase text-gray-600">{user.status}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 text-gray-400 hover:text-dark-navy transition-colors">
-                        <MoreVertical size={16} />
-                      </button>
+                      <Link href={user.role === 'tutor' ? "/admin/tutors" : "/admin/students"} className="p-2 text-coral hover:text-dark-navy transition-colors inline-block">
+                        <ChevronRight size={16} />
+                      </Link>
                     </td>
                   </tr>
                 ))}

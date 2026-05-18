@@ -17,11 +17,18 @@ const SessionSchema = new Schema<ISession>({
   startDate: Date,
   endDate: Date,
 
-  durationType: {
+  frequency: {
     type: String,
-    enum: ["monthly"],
-    default: "monthly"
+    enum: ["weekly", "monthly", "once"],
+    default: "weekly"
   },
+
+  duration: {
+    type: Number,
+    default: 60
+  },
+
+  meetingLink: String,
 
   subject: {
     type: String,
@@ -39,6 +46,12 @@ const SessionSchema = new Schema<ISession>({
   monthsCompleted: { type: Number, default: 0 },
 
   lastPaymentDate: Date,
+
+  notes: String,
+  attendance: [{
+    date: Date,
+    present: Boolean
+  }],
 
   createdAt: { type: Date, default: Date.now }
 });

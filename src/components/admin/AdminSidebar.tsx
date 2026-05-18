@@ -14,7 +14,10 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  GraduationCap,
+  Link as LinkIcon,
+  MessageSquare
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
@@ -22,8 +25,13 @@ const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
   { icon: Users, label: "Users", href: "/admin/users" },
   { icon: UserCheck, label: "Tutors Approval", href: "/admin/tutors" },
+  { icon: GraduationCap, label: "Students Approval", href: "/admin/students" },
+  { icon: Calendar, label: "Interviews", href: "/admin/interviews" },
+  { icon: LinkIcon, label: "Connections", href: "/admin/connections" },
+  { icon: MessageSquare, label: "All Messages", href: "/admin/messages" },
   { icon: Calendar, label: "Sessions", href: "/admin/sessions" },
   { icon: CreditCard, label: "Payments", href: "/admin/payments" },
+  { icon: DollarSign, label: "Tutor Payouts", href: "/admin/payouts" },
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
@@ -45,11 +53,10 @@ export default function AdminSidebar() {
         {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar Container */}
       <aside className={`
-        fixed inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transition-all duration-300 lg:translate-x-0
+        fixed inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transition-all duration-300 lg:translate-x-0 mt-20
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        ${isCollapsed ? 'w-20' : 'w-64'}
+        ${isCollapsed ? 'w-20' : 'w-72'}
       `}>
         <div className="flex flex-col h-full relative">
           {/* Collapse Toggle Button (Desktop Only) */}

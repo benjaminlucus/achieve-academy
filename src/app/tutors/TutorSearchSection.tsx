@@ -2,9 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { BookOpen, Clock, DollarSign, Star, ChevronRight, GraduationCap, MapPin } from "lucide-react";
+import { BookOpen, Clock, DollarSign, Star, ChevronRight, GraduationCap, MapPin, MessageSquarePlus } from "lucide-react";
 
 import { SearchBar } from "@/components/SearchBar";
+import { VerifiedTick } from "@/components/VerifiedTick";
+import { ConnectButton } from "@/components/ConnectButton";
+import { Toaster } from "react-hot-toast";
 
 export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,6 +28,7 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
 
   return (
     <div className="flex flex-col gap-8">
+      <Toaster />
       {/* Professional Search & Filter */}
       <SearchBar 
         placeholder="Type name or subject..."
@@ -54,13 +58,20 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
                 </div>
                 
                 <div className="flex-grow flex flex-col justify-center">
-                  <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight group-hover:text-coral transition-colors">
-                    {tutor.user?.name || "Expert Tutor"}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight group-hover:text-coral transition-colors">
+                      {tutor.user?.name || "Expert Tutor"}
+                    </h3>
+                    <VerifiedTick 
+                      level={tutor.user?.verificationLevel} 
+                      status={tutor.user?.status} 
+                      size={20}
+                    />
+                  </div>
                   <div className="flex items-center gap-1.5 mt-1">
                     <Star size={14} className="text-coral fill-coral" />
                     <span className="text-xs font-black text-dark-navy uppercase tracking-widest">{tutor.rating || "New"}</span>
-                    <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest ml-2">• Verified</span>
+                    <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest ml-2">• Verified Member</span>
                   </div>
                 </div>
               </div>
@@ -102,13 +113,16 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
               </div>
 
               {/* Footer Action */}
-              <div className="mt-auto border-t-2 border-dark-navy p-6 bg-off-white/30">
+              <div className="mt-auto border-t-2 border-dark-navy p-6 bg-off-white/30 flex flex-col gap-3">
                 <Link 
                   href={`/tutors/${tutor.user?._id || tutor._id}`}
                   className="w-full py-4 bg-dark-navy text-off-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-coral transition-all active:translate-y-1"
                 >
                   View Full Profile <ChevronRight size={16} />
                 </Link>
+                <div className="w-full">
+                  <ConnectButton targetUserId={tutor.user?._id || tutor._id} />
+                </div>
               </div>
             </div>
           ))

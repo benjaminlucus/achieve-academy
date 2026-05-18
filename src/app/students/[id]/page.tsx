@@ -13,6 +13,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
+import { ConnectButton } from "@/components/ConnectButton";
+import { Toaster } from "react-hot-toast";
 
 export default function StudentProfileView() {
   const { id } = useParams<{ id: string }>();
@@ -58,6 +60,7 @@ export default function StudentProfileView() {
 
   return (
     <div className="bg-off-white min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+      <Toaster />
       <div className="max-w-5xl mx-auto space-y-8">
 
         {/* Profile Header Card */}
@@ -81,6 +84,13 @@ export default function StudentProfileView() {
                 </div>
                 <StatusBadge status={studentData.status} />
               </div>
+
+              {/* Connection Button */}
+              {!isOwner && (
+                <div className="mt-4 flex justify-center md:justify-start">
+                  <ConnectButton targetUserId={studentData.userId} />
+                </div>
+              )}
 
               <div className="mt-6 bg-off-white p-4 rounded-2xl border border-dark-navy/5 inline-block w-full md:w-auto text-left">
                 <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest mb-2 flex items-center gap-2">
@@ -177,9 +187,11 @@ export default function StudentProfileView() {
                   <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">Email</span>
                   <span className="text-sm font-bold text-dark-navy truncate">{studentData.email}</span>
                 </div>
-                <button className="mt-4 w-full py-4 bg-dark-navy text-off-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-lg hover:shadow-coral/20">
-                  {isOwner ? "Update Profile" : "Contact Student"}
-                </button>
+                {isOwner && (
+                  <button className="mt-4 w-full py-4 bg-dark-navy text-off-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-lg hover:shadow-coral/20">
+                    Update Profile
+                  </button>
+                )}
               </div>
             </div>
 

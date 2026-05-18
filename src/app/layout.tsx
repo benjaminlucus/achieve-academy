@@ -39,7 +39,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-off-white font-sans text-dark-navy">
         <ClerkProvider afterSignOutUrl="/">
           <Navbar />
-          <main className="flex-grow">
+          <main className="flex-grow pt-20">
             {children}
           </main>
           <Footer />

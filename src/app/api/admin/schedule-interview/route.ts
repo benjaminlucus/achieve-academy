@@ -1,16 +1,29 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import User from "@/database/models/user.model";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import Interview from "@/database/models/interview.model";
+import { interviewScheduleSchema } from "@/lib/validations";
+import { sendEmail, emailTemplates } from "@/lib/email-service";
+import { formatManualZoomMeeting, isValidZoomUrl } from "@/lib/zoom-service";
 
 export async function POST(req: Request) {
   try {
-    const { userId, interviewLink, interviewDate } = await req.json();
+    const body = await req.json();
+    
+    // 1. Validate Request
+    const validation = interviewScheduleSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ 
+        error: "Validation failed", 
+        details: validation.error.format() 
+      }, { status: 400 });
+    }
 
-    if (!userId || !interviewLink || !interviewDate) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const { userId, scheduledAt, interviewLink, interviewHostLink, notes } = validation.data;
+
+    // 2. Extra Zoom Link Validation
+    if (!isValidZoomUrl(interviewLink)) {
+      return NextResponse.json({ error: "Invalid Zoom meeting URL" }, { status: 400 });
     }
 
     await connectDB();
@@ -20,15 +33,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 1. Update User in Database
-    await User.findByIdAndUpdate(userId, {
-      interviewLink,
-      interviewDate: new Date(interviewDate),
-      status: "interview_scheduled",
-    });
-
-    // 2. Send Professional Email via Resend
-    const formattedDate = new Date(interviewDate).toLocaleString('en-US', {
+    const scheduledDate = new Date(scheduledAt);
+    const formattedDate = scheduledDate.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -38,46 +44,65 @@ export async function POST(req: Request) {
       timeZoneName: 'short'
     });
 
-    const { data, error } = await resend.emails.send({
-      from: 'Achieve Academy <onboarding@resend.dev>', // Replace with your verified domain in production
-      to: user.email,
-      subject: 'Action Required: Your Tutor Interview has been Scheduled',
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-          <h1 style="color: #2b4162; font-size: 24px; font-weight: 800; text-transform: uppercase; margin-bottom: 20px;">Achieve Academy</h1>
-          <p style="font-size: 16px; color: #4a5568; line-height: 1.6;">Hello ${user.name},</p>
-          <p style="font-size: 16px; color: #4a5568; line-height: 1.6;">Congratulations! Your application has been reviewed, and we're excited to invite you to an interview as part of our tutor verification process.</p>
-          
-          <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 24px 0;">
-            <h2 style="font-size: 14px; font-weight: 800; color: #2b4162; text-transform: uppercase; margin-top: 0;">Interview Details</h2>
-            <p style="margin: 8px 0; color: #4a5568;"><strong>Date & Time:</strong> ${formattedDate}</p>
-            <p style="margin: 8px 0; color: #4a5568;"><strong>Meeting Link:</strong> <a href="${interviewLink}" style="color: #ff6f61; font-weight: 700;">Join Meeting Here</a></p>
-          </div>
+    // 3. Send Email FIRST (Transactional logic)
+    // In production, use user.email. For testing, we might want to keep a fixed email if needed, 
+    // but the requirement is professional workflow, so we use user.email.
+    const emailTemplate = emailTemplates.interviewScheduled(
+      user.name || "there",
+      formattedDate,
+      interviewLink
+    );
 
-          <p style="font-size: 14px; color: #718096; line-height: 1.6;">Please ensure you join the meeting on time. We recommend testing your microphone and camera a few minutes before the start time.</p>
-          
-          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-            <p style="font-size: 14px; color: #4a5568; margin-bottom: 4px;">Best regards,</p>
-            <p style="font-size: 14px; font-weight: 800; color: #2b4162; margin-top: 0;">The Achieve Academy Team</p>
-          </div>
-        </div>
-      `
+    const emailResult = await sendEmail({
+      to: user.email,
+      subject: emailTemplate.subject,
+      html: emailTemplate.html,
     });
 
-    if (error) {
-      console.error("Resend Email Error:", error);
-      // We don't return error here because the DB update was successful, 
-      // but you might want to log it or handle it.
+    if (!emailResult.success) {
+      return NextResponse.json({ 
+        error: "Failed to send interview invitation email. Database was not updated.",
+        details: emailResult.error
+      }, { status: 500 });
     }
+
+    // 4. Update Database ONLY AFTER successful email
+    const meetingDetails = formatManualZoomMeeting(interviewLink);
+
+    // Update User
+    await User.findByIdAndUpdate(userId, {
+      status: "interview_scheduled",
+      interviewDate: scheduledDate,
+      interviewLink: interviewLink,
+      interviewHostLink: interviewHostLink || interviewLink,
+      meetingId: meetingDetails.meetingId,
+      meetingProvider: "zoom",
+      meetingNotes: notes,
+    });
+
+    // Create Interview History Record
+    await Interview.create({
+      userId: user._id,
+      scheduledAt: scheduledDate,
+      studentJoinLink: interviewLink,
+      hostJoinLink: interviewHostLink || interviewLink,
+      meetingId: meetingDetails.meetingId,
+      meetingProvider: "zoom",
+      notes: notes,
+      status: "scheduled",
+    });
 
     return NextResponse.json({ 
       success: true, 
-      message: "Interview scheduled and email sent",
-      emailId: data?.id 
+      message: "Interview scheduled and email sent successfully",
+      data: {
+        scheduledAt: scheduledDate,
+        interviewLink
+      }
     });
 
   } catch (error) {
-    console.error("Schedule Interview Error:", error);
+    console.error("Schedule Interview API Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

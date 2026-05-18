@@ -10,10 +10,17 @@ import {
   Mail,
   ChevronRight,
   ShieldCheck,
-  ShieldX
+  ShieldX,
+  Calendar,
+  Play,
+  X,
+  AlertCircle,
+  Video
 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import { format } from "date-fns";
 
 interface Tutor {
   id: string;
@@ -27,28 +34,37 @@ interface Tutor {
   status: string;
 }
 
+const StatusBadge = ({ status }: { status: string }) => {
+  const styles: Record<string, string> = {
+    applied: "bg-blue-50 text-blue-600 border-blue-100",
+    reviewing: "bg-amber-50 text-amber-600 border-amber-100",
+    interview_pending: "bg-purple-50 text-purple-600 border-purple-100",
+    interview_scheduled: "bg-indigo-50 text-indigo-600 border-indigo-100",
+    interview_live: "bg-emerald-50 text-emerald-600 border-emerald-100 animate-pulse",
+    interview_completed: "bg-teal-50 text-teal-600 border-teal-100",
+    approved: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    blocked: "bg-rose-50 text-rose-600 border-rose-100",
+  };
+
+  return (
+    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${styles[status] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
+      <div className={`w-1.5 h-1.5 rounded-full ${status === 'approved' || status === 'interview_live' ? 'bg-emerald-500' : status === 'blocked' ? 'bg-rose-500' : 'bg-current'}`} />
+      <span className="text-[10px] font-black uppercase tracking-tight">{status.replace("_", " ")}</span>
+    </div>
+  );
+};
+
 export default function TutorsTableClient({ initialTutors }: { initialTutors: Tutor[] }) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
+  
+  // Scheduling State
   const [date, setDate] = useState("");
   const [zoomLink, setZoomLink] = useState("");
-
-  const handleSchedule = async () => {
-    await fetch("/api/interview/schedule", {
-      method: "POST",
-      body: JSON.stringify({
-        userId: selectedTutor?.id,
-        scheduledAt: date,
-        zoomLink,
-      }),
-    });
-
-    setSelectedTutor(null);
-    router.refresh();
-  };
-
-  const router = useRouter();
+  const [notes, setNotes] = useState("");
+  const [isScheduling, setIsScheduling] = useState(false);
 
   const filteredTutors = initialTutors.filter((tutor) => {
     const matchesSearch =
@@ -59,80 +75,100 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
     return matchesSearch && matchesStatus;
   });
 
-
   const updateStatus = async (userId: string, status: string) => {
-    await fetch(`/api/admin/users/${userId}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    });
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
 
-    router.refresh();
+      if (!res.ok) throw new Error("Failed to update status");
+      
+      toast.success(`Tutor status updated to ${status}`);
+      router.refresh();
+    } catch (error) {
+      toast.error("Error updating status");
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!date || !zoomLink) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setIsScheduling(true);
+    try {
+      const res = await fetch("/api/admin/schedule-interview", {
+        method: "POST",
+        body: JSON.stringify({
+          userId: selectedTutor?.id,
+          scheduledAt: new Date(date).toISOString(),
+          interviewLink: zoomLink,
+          notes
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) throw new Error(result.error || "Failed to schedule");
+
+      toast.success("Interview scheduled and email sent!");
+      setSelectedTutor(null);
+      setDate("");
+      setZoomLink("");
+      setNotes("");
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || "Error scheduling interview");
+    } finally {
+      setIsScheduling(false);
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Filters & Search */}
       <SearchBar
         placeholder="Search tutors by name, email or subject..."
-        allStatuses={["All Status", "Pending", "Approved", "Rejected"]}
+        allStatuses={["All Status", "applied", "reviewing", "interview_pending", "interview_scheduled", "approved", "blocked"]}
         onSearch={(data) => {
           setSearchTerm(data.search);
           setSelectedStatus(data.status);
         }}
       />
 
-      {/* Tutor Cards Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {filteredTutors.length === 0 && (
-          <div className="col-span-full py-12 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">No tutors found matching your search.</p>
-          </div>
-        )}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-20">
         {filteredTutors.map((tutor) => (
-          <div key={tutor.id} className="bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
+          <div key={tutor.id} className="bg-white border border-gray-100 rounded-[2rem] shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
             <div className="p-6 flex flex-col md:flex-row gap-6">
-              {/* Profile Side */}
-              <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                <div className="w-20 h-20 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-3xl shadow-[4px_4px_0px_0px_rgba(255,111,97,1)] mb-4">
+              <div className="flex flex-col items-center md:items-start">
+                <div className="w-20 h-20 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-3xl shadow-xl shadow-dark-navy/10 mb-4 overflow-hidden">
                   {tutor.name.charAt(0)}
                 </div>
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border mb-4 ${tutor.status === 'Pending'
-                  ? 'bg-amber-50 text-amber-600 border-amber-100'
-                  : tutor.status === 'Approved'
-                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                    : 'bg-rose-50 text-rose-600 border-rose-100'
-                  }`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${tutor.status === 'Pending' ? 'bg-amber-500' : tutor.status === 'Approved' ? 'bg-emerald-500' : 'bg-rose-500'
-                    }`} />
-                  <span className="text-[10px] font-black uppercase">{tutor.status}</span>
-                </div>
+                <StatusBadge status={tutor.status} />
               </div>
 
-              {/* Info Side */}
               <div className="flex-grow space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight uppercase group-hover:text-coral transition-colors">{tutor.name}</h3>
+                    <h3 className="text-xl font-black text-gray-900 tracking-tight uppercase">{tutor.name}</h3>
                     <div className="flex items-center gap-2 text-xs font-medium text-gray-400 mt-1">
                       <Mail size={14} className="text-gray-300" /> {tutor.email}
                     </div>
                   </div>
-                  <button className="p-2 text-gray-400 hover:text-dark-navy transition-colors">
-                    <ChevronRight size={18} />
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Experience</p>
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                      <Clock size={14} className="text-coral" /> {tutor.experience}
+                      <Clock size={14} className="text-coral" /> {tutor.experience} Years
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Education</p>
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                      <GraduationCap size={14} className="text-coral" /> {tutor.education.split('in')[0]}
+                      <GraduationCap size={14} className="text-coral" /> {tutor.education}
                     </div>
                   </div>
                 </div>
@@ -147,89 +183,128 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
                     ))}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
-                  <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    <MapPin size={14} className="text-gray-300" /> {tutor.country}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    <Clock size={14} className="text-gray-300" /> {tutor.timezone}
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* Action Bar */}
-            <div className="p-4 bg-gray-50/50 border-t border-gray-100 grid grid-cols-2 gap-3">
+            <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex flex-wrap gap-2">
               {tutor.status === "applied" && (
-                <button onClick={() => updateStatus(tutor.id, "reviewing")}>
+                <button 
+                  onClick={() => updateStatus(tutor.id, "reviewing")}
+                  className="flex-grow py-3 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all"
+                >
                   Start Review
                 </button>
               )}
+              
               {tutor.status === "reviewing" && (
-                <button onClick={() => setSelectedTutor(tutor)}>
+                <button 
+                  onClick={() => updateStatus(tutor.id, "interview_pending")}
+                  className="flex-grow py-3 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all"
+                >
+                  Move to Interview
+                </button>
+              )}
+
+              {tutor.status === "interview_pending" && (
+                <button 
+                  onClick={() => setSelectedTutor(tutor)}
+                  className="flex-grow py-3 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-dark-navy transition-all shadow-lg shadow-coral/20"
+                >
                   Schedule Interview
                 </button>
               )}
 
-              {tutor.status === "interview_scheduled" && (
-                <button onClick={() => updateStatus(tutor.id, "interviewed")}>
-                  Mark Interview Done
-                </button>
-              )}
-
-              {tutor.status === "interviewed" && (
+              {tutor.status === "interview_completed" && (
                 <>
-                  <button className="flex items-center justify-center gap-2 py-3 bg-white border border-gray-200 text-rose-500 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm active:scale-95 group" onClick={() => updateStatus(tutor.id, "approved")}>
-                    Approve
+                  <button 
+                    onClick={() => updateStatus(tutor.id, "approved")}
+                    className="flex-grow py-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20"
+                  >
+                    Approve Tutor
                   </button>
-                  <button className="flex items-center justify-center gap-2 py-3 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-all shadow-sm active:scale-95 group" onClick={() => updateStatus(tutor.id, "rejected")}>
+                  <button 
+                    onClick={() => updateStatus(tutor.id, "rejected")}
+                    className="flex-grow py-3 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20"
+                  >
                     Reject
                   </button>
                 </>
               )}
+
+              {tutor.status === "approved" && (
+                <button 
+                  onClick={() => updateStatus(tutor.id, "blocked")}
+                  className="flex-grow py-3 bg-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                >
+                  Block Tutor
+                </button>
+              )}
             </div>
-            {selectedTutor && (
-              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
-
-                  <h2 className="text-lg font-bold">Schedule Interview</h2>
-
-                  <input
-                    type="datetime-local"
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full border p-3 rounded"
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Zoom Link"
-                    onChange={(e) => setZoomLink(e.target.value)}
-                    className="w-full border p-3 rounded"
-                  />
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSchedule}
-                      className="flex-1 bg-dark-navy text-white py-2 rounded"
-                    >
-                      Save
-                    </button>
-
-                    <button
-                      onClick={() => setSelectedTutor(null)}
-                      className="flex-1 border py-2 rounded"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-
-                </div>
-              </div>
-            )}
           </div>
         ))}
       </div>
+
+      {/* Scheduling Modal */}
+      {selectedTutor && (
+        <div className="fixed inset-0 bg-dark-navy/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-lg space-y-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Schedule Interview</h2>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">For {selectedTutor.name}</p>
+              </div>
+              <button onClick={() => setSelectedTutor(null)} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <Calendar size={12} /> Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/20 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <Video size={12} /> Zoom Meeting Link
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://zoom.us/j/..."
+                  className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/20 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
+                  onChange={(e) => setZoomLink(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <AlertCircle size={12} /> Interview Notes (Optional)
+                </label>
+                <textarea
+                  placeholder="Mention topics to discuss..."
+                  rows={3}
+                  className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/20 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all resize-none"
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <button 
+              disabled={isScheduling}
+              onClick={handleSchedule}
+              className="w-full py-5 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-[1.5rem] hover:bg-coral transition-all shadow-xl shadow-dark-navy/20 disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {isScheduling ? "Sending Email & Saving..." : "Confirm & Send Email"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

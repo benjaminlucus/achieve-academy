@@ -7,14 +7,14 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-[calc(100vh-80px)] bg-gray-50/50 mt-20 isolate">
+    <div className="flex min-h-screen bg-gray-50/50 isolate">
       <AdminSidebar />
-      <main className="flex-1 lg:pl-64 p-4 lg:p-8 overflow-y-auto">
+      <main className="flex-1 lg:pl-80 p-6 lg:p-14 overflow-y-auto mt-24">
         {/* Top Header/Status Bar (optional) */}
-        <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight uppercase">Admin Panel</h1>
-            <p className="text-sm font-medium text-gray-500 mt-1">
+        <header className="mb-14 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-3">
+            <h1 className="text-4xl font-black text-dark-navy tracking-tight uppercase">Admin Panel</h1>
+            <p className="text-[11px] font-black text-steel-blue uppercase tracking-[0.4em] leading-relaxed">
               Welcome back, Admin. System is running normally.
             </p>
           </div>

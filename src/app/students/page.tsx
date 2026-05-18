@@ -15,18 +15,19 @@ export default async function StudentsPage({
   const query = searchParams.q || "";
   const classFilter = searchParams.class || "Class (All)";
 
-  // Basic fetch
+  // Basic fetch - ONLY show APPROVED (verified) users publicly
   const students = await StudentProfile.find({})
     .populate({
       path: "user",
       model: User,
-      select: "_id name email profileImage status country",
+      match: { status: "approved" },
+      select: "_id name email profileImage status country verificationLevel",
     })
     .lean();
 
   // Filter logic
   const filteredStudents = (students || []).filter((s: any) => {
-    if (!s.user || s.user.status === "blocked") return false;
+    if (!s.user) return false; // This filters out users whose status is not 'approved' due to the match in populate
     
     const subjects = s.preferredSubjects || s.subjects || [];
     const name = s.user.name || "";
@@ -36,7 +37,7 @@ export default async function StudentsPage({
       subjects.some((sub: string) => sub.toLowerCase().includes(query.toLowerCase()));
     
     const matchesClass = classFilter === "Class (All)" || 
-      s.gradeLevel === classFilter || s.whichClass === classFilter;
+      s.whichClass === classFilter || s.whichClass === classFilter;
 
     return matchesQuery && matchesClass;
   });

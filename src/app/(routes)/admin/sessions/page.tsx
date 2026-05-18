@@ -1,12 +1,14 @@
 import React from "react";
 import { getAllSessions, getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import SessionsTableClient from "./SessionsTableClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSessionsPage() {
-  const user = await getCurrentUser();
+  const { userId } = await auth();
+  const user = await getCurrentUser(userId || undefined);
 
   if (!user || user.role !== "admin") {
     return redirect("/admin");
