@@ -56,6 +56,8 @@ const SessionSchema = new Schema<ISession>({
   createdAt: { type: Date, default: Date.now }
 });
 
+SessionSchema.index({ status: 1 });
+
 const Session = models.Session || mongoose.model<ISession>("Session", SessionSchema);
 
 export default Session;

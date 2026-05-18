@@ -82,7 +82,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setSelectedPartner(partner)}
-                    disabled={isExpired && !isPaid}
+                    disabled={!!isExpired && !isPaid}
                     className={`p-3 rounded-xl border transition-all ${
                       isExpired && !isPaid 
                         ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed' 

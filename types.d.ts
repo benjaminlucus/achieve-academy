@@ -1,16 +1,28 @@
 import mongoose, { Document } from "mongoose";
-//htPh78Hpyy7#
+
+export type UserStatus = "applied" | "interview_scheduled" | "verified" | "blocked";
+
 export interface IUser extends Document {
   clerkId: string;
   name: string;
   email: string;
   role: "student" | "tutor" | "admin";
-  status: "applied" | "reviewing" | "interview_pending" | "interview_scheduled" | "interview_live" | "interview_completed" | "approved" | "blocked";
+  status: UserStatus;
+  isOnboarded?: boolean;
   verificationLevel: "none" | "green" | "blue";
   profileImage?: string;
   country?: string;
   timezone?: string;
   lastLogin?: Date;
+  interviewDate?: Date;
+  interviewTimezone?: string;
+  interviewLink?: string;
+  interviewHostLink?: string;
+  meetingId?: string;
+  meetingProvider?: string;
+  meetingDuration?: number;
+  meetingNotes?: string;
+  interviewCompletedAt?: Date;
   createdAt: Date;
 }
 
@@ -70,7 +82,8 @@ export interface ITutorProfile extends Document {
   education: string;
   hourlyRate: number;
   monthlyRate: number;
-  bio: string;
+  description?: string;
+  bio?: string;
   languages: string[];
   rating: number;
   totalStudents: number;

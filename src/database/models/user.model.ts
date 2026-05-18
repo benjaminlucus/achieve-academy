@@ -19,7 +19,7 @@ const UserSchema = new Schema<IUser>({
 
   status: {
     type: String,
-    enum: ["applied", "reviewing", "interview_pending", "interview_scheduled", "interview_live", "interview_completed", "approved", "blocked"],
+    enum: ["applied", "interview_scheduled", "verified", "blocked"],
     default: "applied"
   },
 
@@ -51,6 +51,9 @@ const UserSchema = new Schema<IUser>({
 
   lastLogin: Date,
 }, { timestamps: true });
+
+UserSchema.index({ email: 1 });
+UserSchema.index({ status: 1 });
 
 const User = models.User || mongoose.model<IUser>("User", UserSchema);
 

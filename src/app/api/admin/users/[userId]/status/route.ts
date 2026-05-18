@@ -4,17 +4,25 @@ import User from "@/database/models/user.model";
 import TutorProfile from "@/database/models/tutor.model";
 import StudentProfile from "@/database/models/student.model";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
+import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { isValidUserStatus, type UserStatus } from "@/lib/user-status";
+import { writeAuditLog } from "@/lib/audit";
+import { captureException } from "@/lib/monitoring";
 
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const admin = await requireAdmin();
     const { userId } = await context.params;
     const { status, reason } = await req.json();
 
-    if (!status) {
-      return NextResponse.json({ error: "Status is required" }, { status: 400 });
+    if (!status || !isValidUserStatus(status)) {
+      return NextResponse.json(
+        { error: "Invalid status. Use: applied, interview_scheduled, verified, blocked" },
+        { status: 400 }
+      );
     }
 
     await connectDB();
@@ -25,63 +33,53 @@ export async function PATCH(
     }
 
     const oldStatus = user.status;
+    const updateData: { status: UserStatus; verificationLevel?: string } = { status };
 
-    // 1. Update User Status
-    const updateData: any = { status };
-    
-    // Set verification level to green if approved
-    if (status === "approved") {
+    if (status === "verified") {
       updateData.verificationLevel = "green";
     }
 
     await User.findByIdAndUpdate(userId, updateData);
 
-    // 2. Handle specific status transition logic
-    if (status === "approved") {
-      // If approved, mark profile as verified if it's a tutor
+    if (status === "verified") {
       if (user.role === "tutor") {
-        await TutorProfile.findOneAndUpdate(
-          { user: userId },
-          { isVerified: true }
-        );
+        await TutorProfile.findOneAndUpdate({ user: userId }, { isVerified: true });
       } else if (user.role === "student") {
-        await StudentProfile.findOneAndUpdate(
-          { user: userId },
-          { isVerified: true }
-        );
+        await StudentProfile.findOneAndUpdate({ user: userId }, { isVerified: true });
       }
 
-      // Send Approval Email
       const template = emailTemplates.userApproved(user.name || "there", user.role);
       await sendEmail({
         to: user.email,
         subject: template.subject,
         html: template.html,
       });
-    } 
-    else if (status === "blocked" && oldStatus !== "blocked") {
-      // Logic for blocking user (maybe send notification)
-    }
-    else if (status === "rejected" || (status === "blocked" && oldStatus === "applied")) {
-       // Send Rejection Email if they were in application phase
-       const template = emailTemplates.userRejected(user.name || "there", reason);
-       await sendEmail({
-         to: user.email,
-         subject: template.subject,
-         html: template.html,
-       });
+    } else if (status === "blocked" && oldStatus !== "blocked") {
+      if (oldStatus === "applied" || oldStatus === "interview_scheduled") {
+        const template = emailTemplates.userRejected(user.name || "there", reason);
+        await sendEmail({
+          to: user.email,
+          subject: template.subject,
+          html: template.html,
+        });
+      }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Status updated from ${oldStatus} to ${status}` 
+    await writeAuditLog({
+      action: "user_status_change",
+      actorId: admin._id,
+      targetUserId: userId,
+      metadata: { from: oldStatus, to: status, reason },
     });
 
-  } catch (error: any) {
-    console.error("Update User Status Error:", error);
-    return NextResponse.json(
-      { error: "Failed to update status", details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: `Status updated from ${oldStatus} to ${status}`,
+    });
+  } catch (error) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
+    captureException(error, { route: "admin/users/status" });
+    return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
   }
 }

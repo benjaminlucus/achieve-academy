@@ -138,6 +138,11 @@ export async function sendMessage(data: {
     const conversation = await Conversation.findById(data.conversationId);
     if (!conversation) throw new Error("Conversation not found");
 
+    const isParticipant = conversation.participants.some(
+      (p: mongoose.Types.ObjectId) => p.toString() === currentUser._id.toString()
+    );
+    if (!isParticipant) throw new Error("Forbidden");
+
     // Check trial/payment access
     if (conversation.connection) {
       const access = await checkConnectionAccess(conversation.connection.toString());
@@ -149,7 +154,9 @@ export async function sendMessage(data: {
       }
     }
 
-    const receiverId = conversation.participants.find(p => p.toString() !== currentUser._id.toString());
+    const receiverId = conversation.participants.find(
+      (p: mongoose.Types.ObjectId) => p.toString() !== currentUser._id.toString()
+    );
     if (!receiverId) throw new Error("Receiver not found");
 
     const message = await Message.create({
@@ -190,13 +197,25 @@ export async function sendMessage(data: {
 
 export async function markAsRead(messageIds: string[]) {
   try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
     await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
     await Message.updateMany(
-      { _id: { $in: messageIds.map(id => new mongoose.Types.ObjectId(id)) } },
+      {
+        _id: { $in: messageIds.map((id) => new mongoose.Types.ObjectId(id)) },
+        receiver: currentUser._id,
+      },
       { isRead: true, readAt: new Date() }
     );
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }

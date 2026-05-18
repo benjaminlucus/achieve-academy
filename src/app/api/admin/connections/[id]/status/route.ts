@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import Connection from "@/database/models/connection.model";
-import User from "@/database/models/user.model";
-import { auth } from "@clerk/nextjs/server";
+import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { captureException } from "@/lib/monitoring";
 import { addDays } from "date-fns";
 
 export async function PATCH(
@@ -12,13 +12,8 @@ export async function PATCH(
   try {
     const { id } = await context.params;
     const { subscriptionStatus, paymentStatus, extendDays } = await req.json();
-    const { userId: clerkId } = await auth();
-
-    if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+    await requireAdmin();
     await connectDB();
-    const admin = await User.findOne({ clerkId });
-    if (!admin || admin.role !== "admin") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
     const connection = await Connection.findById(id);
     if (!connection) return NextResponse.json({ error: "Connection not found" }, { status: 404 });
@@ -39,8 +34,10 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, connection });
 
-  } catch (error: any) {
-    console.error("Update Admin Connection Error:", error);
+  } catch (error) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
+    captureException(error, { route: "admin/connections/status" });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

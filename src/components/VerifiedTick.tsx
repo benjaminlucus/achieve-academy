@@ -10,7 +10,7 @@ interface VerifiedTickProps {
 
 export const VerifiedTick = ({ level = "none", status, size = 16, className = "" }: VerifiedTickProps) => {
   // If status is approved but level is none, it's a green tick (standard verification)
-  const isGreen = level === "green" || (status === "approved" && level === "none");
+  const isGreen = level === "green" || (status === "verified" && level === "none");
   const isBlue = level === "blue";
 
   if (!isGreen && !isBlue) return null;

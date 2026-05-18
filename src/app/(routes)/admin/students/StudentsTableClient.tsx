@@ -21,6 +21,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
+import { UserStatusBadge } from "@/components/admin/UserStatusBadge";
+import { normalizeUserStatus } from "@/lib/user-status";
 
 interface Student {
   id: string;
@@ -37,26 +39,6 @@ interface Student {
   interviewDate?: string;
   interviewLink?: string;
 }
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, string> = {
-    applied: "bg-blue-50 text-blue-600 border-blue-100",
-    reviewing: "bg-amber-50 text-amber-600 border-amber-100",
-    interview_pending: "bg-purple-50 text-purple-600 border-purple-100",
-    interview_scheduled: "bg-indigo-50 text-indigo-600 border-indigo-100",
-    interview_live: "bg-emerald-50 text-emerald-600 border-emerald-100 animate-pulse",
-    interview_completed: "bg-teal-50 text-teal-600 border-teal-100",
-    approved: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    blocked: "bg-rose-50 text-rose-600 border-rose-100",
-  };
-
-  return (
-    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${styles[status] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
-      <div className={`w-1.5 h-1.5 rounded-full ${status === 'approved' || status === 'interview_live' ? 'bg-emerald-500' : status === 'blocked' ? 'bg-rose-500' : 'bg-current'}`} />
-      <span className="text-[10px] font-black uppercase tracking-tight">{status.replace("_", " ")}</span>
-    </div>
-  );
-};
 
 export default function StudentsTableClient({ initialStudents }: { initialStudents: Student[] }) {
   const router = useRouter();
@@ -134,7 +116,7 @@ export default function StudentsTableClient({ initialStudents }: { initialStuden
     <div className="space-y-6">
       <SearchBar
         placeholder="Search students by name, email or grade..."
-        allStatuses={["All Status", "applied", "reviewing", "interview_pending", "interview_scheduled", "approved", "blocked"]}
+        allStatuses={["All Status", "applied", "interview_scheduled", "verified", "blocked"]}
         onSearch={(data) => {
           setSearchTerm(data.search);
           setSelectedStatus(data.status);
@@ -153,7 +135,7 @@ export default function StudentsTableClient({ initialStudents }: { initialStuden
                     student.name.charAt(0)
                   )}
                 </div>
-                <StatusBadge status={student.status} />
+                <UserStatusBadge status={student.status} />
               </div>
 
               <div className="flex-grow space-y-4">
@@ -189,52 +171,34 @@ export default function StudentsTableClient({ initialStudents }: { initialStuden
             </div>
 
             <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex flex-wrap gap-2">
-              {student.status === "applied" && (
-                <button 
-                  onClick={() => updateStatus(student.userId, "reviewing")}
-                  className="flex-grow py-3 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all"
-                >
-                  Start Review
-                </button>
-              )}
-              
-              {student.status === "reviewing" && (
-                <button 
-                  onClick={() => updateStatus(student.userId, "interview_pending")}
-                  className="flex-grow py-3 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all"
-                >
-                  Move to Interview
-                </button>
-              )}
-
-              {student.status === "interview_pending" && (
-                <button 
+              {normalizeUserStatus(student.status) === "applied" && (
+                <button
                   onClick={() => setSelectedStudent(student)}
-                  className="flex-grow py-3 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-dark-navy transition-all shadow-lg shadow-coral/20"
+                  className="flex-grow py-3 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-dark-navy transition-all"
                 >
                   Schedule Interview
                 </button>
               )}
 
-              {student.status === "interview_completed" && (
+              {normalizeUserStatus(student.status) === "interview_scheduled" && (
                 <>
-                  <button 
-                    onClick={() => updateStatus(student.userId, "approved")}
-                    className="flex-grow py-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20"
+                  <button
+                    onClick={() => updateStatus(student.userId, "verified")}
+                    className="flex-grow py-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all"
                   >
-                    Approve Student
+                    Verify Student
                   </button>
-                  <button 
-                    onClick={() => updateStatus(student.userId, "rejected")}
-                    className="flex-grow py-3 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20"
+                  <button
+                    onClick={() => updateStatus(student.userId, "blocked")}
+                    className="flex-grow py-3 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 transition-all"
                   >
-                    Reject
+                    Block
                   </button>
                 </>
               )}
 
-              {student.status === "approved" && (
-                <button 
+              {normalizeUserStatus(student.status) === "verified" && (
+                <button
                   onClick={() => updateStatus(student.userId, "blocked")}
                   className="flex-grow py-3 bg-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all"
                 >

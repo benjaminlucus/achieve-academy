@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Achieve Academy
 
-## Getting Started
+Tutoring marketplace MVP built with Next.js App Router, Clerk, and MongoDB. Supports student–tutor connections, trial messaging, manual payment verification (Pakistan MVP), and an admin verification workflow.
 
-First, run the development server:
+## Stack
+
+- **Frontend:** Next.js 16, React 19, Tailwind CSS 4
+- **Auth:** Clerk
+- **Database:** MongoDB + Mongoose
+- **Realtime:** Pusher
+- **Email:** Resend
+
+## Prerequisites
+
+- Node.js 20+
+- MongoDB instance
+- Clerk application
+- (Optional) Resend, Pusher, Sentry accounts
+
+## Setup
+
+1. Clone and install:
+
+```bash
+npm install
+```
+
+2. Copy environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Fill in `.env.local` (see `.env.example` for all keys). **Never commit real secrets.**
+
+4. Run the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## User roles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Role | Flow |
+|------|------|
+| **Student** | Sign up → onboarding → dashboard → connect with tutors |
+| **Tutor** | Sign up → onboarding → admin verification → dashboard |
+| **Admin** | Sign up → onboarding with `ADMIN_ONBOARDING_PIN` → `/admin` |
 
-## Learn More
+## User status lifecycle
 
-To learn more about Next.js, take a look at the following resources:
+`applied` → `interview_scheduled` → `verified` | `blocked`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Payment flow (manual MVP)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Student completes a session → pending `Payment` record is created.
+2. Student submits payment proof via `/api/payments/verify` with `transactionId` + `sessionId`.
+3. Server validates ownership, idempotency, and commission (20%).
+4. `Connection.subscriptionStatus` is set to `active`.
 
-## Deploy on Vercel
+Integrate a real payment provider (Stripe, JazzCash API, etc.) before scaling.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Security
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- All `/api/admin/*` routes require an authenticated **admin** user.
+- Middleware requires Clerk auth for all `/api/*` routes.
+- Payment verification is rate-limited and audit-logged.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | ESLint |
+
+## Production checklist
+
+- Set strong `ADMIN_ONBOARDING_PIN`
+- Use verified Resend domain (`RESEND_FROM_EMAIL`)
+- Configure `SENTRY_DSN` for error monitoring
+- Use MongoDB Atlas with IP allowlist
+- Replace in-memory rate limiting with Redis/Upstash for multi-instance deploys
+
+## Project structure
+
+```
+src/
+  app/           # Routes (App Router)
+  components/    # UI components
+  database/      # Mongoose models + connection
+  lib/           # Auth, payments, logging, utilities
+  middleware.ts  # Clerk route protection
+```

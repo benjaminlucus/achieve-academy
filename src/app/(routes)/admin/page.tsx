@@ -5,6 +5,7 @@ import {
   GraduationCap,
   BookOpen,
   DollarSign,
+  CreditCard,
   Calendar,
   ChevronRight,
   ArrowUpRight,
@@ -46,7 +47,9 @@ export default async function AdminDashboard() {
   ];
 
 
-  const pendingUsers = (await getTotalUsers()).filter((u: any) => ["applied", "reviewing", "interview_pending"].includes(u.status.toLowerCase())).slice(0, 5);
+  const pendingUsers = (await getTotalUsers()).filter((u: { status: string }) =>
+    ["applied", "interview_scheduled"].includes(u.status.toLowerCase())
+  ).slice(0, 5);
   const recentPayments = await getTotalPayments();
   const paymentsArray = recentPayments.payments.slice(0, 4);
 
@@ -144,7 +147,7 @@ export default async function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                        <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'verified' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                         <span className="text-[10px] font-black uppercase text-gray-600">{user.status}</span>
                       </div>
                     </td>

@@ -21,9 +21,12 @@ import { SearchBar } from "@/components/SearchBar";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
+import { UserStatusBadge } from "@/components/admin/UserStatusBadge";
+import { normalizeUserStatus } from "@/lib/user-status";
 
 interface Tutor {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   subjects: string[];
@@ -33,26 +36,6 @@ interface Tutor {
   education: string;
   status: string;
 }
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, string> = {
-    applied: "bg-blue-50 text-blue-600 border-blue-100",
-    reviewing: "bg-amber-50 text-amber-600 border-amber-100",
-    interview_pending: "bg-purple-50 text-purple-600 border-purple-100",
-    interview_scheduled: "bg-indigo-50 text-indigo-600 border-indigo-100",
-    interview_live: "bg-emerald-50 text-emerald-600 border-emerald-100 animate-pulse",
-    interview_completed: "bg-teal-50 text-teal-600 border-teal-100",
-    approved: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    blocked: "bg-rose-50 text-rose-600 border-rose-100",
-  };
-
-  return (
-    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${styles[status] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
-      <div className={`w-1.5 h-1.5 rounded-full ${status === 'approved' || status === 'interview_live' ? 'bg-emerald-500' : status === 'blocked' ? 'bg-rose-500' : 'bg-current'}`} />
-      <span className="text-[10px] font-black uppercase tracking-tight">{status.replace("_", " ")}</span>
-    </div>
-  );
-};
 
 export default function TutorsTableClient({ initialTutors }: { initialTutors: Tutor[] }) {
   const router = useRouter();
@@ -71,7 +54,9 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
       tutor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tutor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tutor.subjects.some(sub => sub.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = selectedStatus === "All Status" || tutor.status.toLowerCase() === selectedStatus.toLowerCase();
+    const matchesStatus =
+      selectedStatus === "All Status" ||
+      normalizeUserStatus(tutor.status) === selectedStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -102,7 +87,7 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
       const res = await fetch("/api/admin/schedule-interview", {
         method: "POST",
         body: JSON.stringify({
-          userId: selectedTutor?.id,
+          userId: selectedTutor?.userId || selectedTutor?.id,
           scheduledAt: new Date(date).toISOString(),
           interviewLink: zoomLink,
           notes
@@ -130,7 +115,7 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
     <div className="space-y-6">
       <SearchBar
         placeholder="Search tutors by name, email or subject..."
-        allStatuses={["All Status", "applied", "reviewing", "interview_pending", "interview_scheduled", "approved", "blocked"]}
+        allStatuses={["All Status", "applied", "interview_scheduled", "verified", "blocked"]}
         onSearch={(data) => {
           setSearchTerm(data.search);
           setSelectedStatus(data.status);
@@ -145,7 +130,7 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
                 <div className="w-20 h-20 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-3xl shadow-xl shadow-dark-navy/10 mb-4 overflow-hidden">
                   {tutor.name.charAt(0)}
                 </div>
-                <StatusBadge status={tutor.status} />
+                <UserStatusBadge status={tutor.status} />
               </div>
 
               <div className="flex-grow space-y-4">
@@ -187,53 +172,35 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
             </div>
 
             <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex flex-wrap gap-2">
-              {tutor.status === "applied" && (
-                <button 
-                  onClick={() => updateStatus(tutor.id, "reviewing")}
-                  className="flex-grow py-3 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all"
-                >
-                  Start Review
-                </button>
-              )}
-              
-              {tutor.status === "reviewing" && (
-                <button 
-                  onClick={() => updateStatus(tutor.id, "interview_pending")}
-                  className="flex-grow py-3 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all"
-                >
-                  Move to Interview
-                </button>
-              )}
-
-              {tutor.status === "interview_pending" && (
-                <button 
+              {normalizeUserStatus(tutor.status) === "applied" && (
+                <button
                   onClick={() => setSelectedTutor(tutor)}
-                  className="flex-grow py-3 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-dark-navy transition-all shadow-lg shadow-coral/20"
+                  className="flex-grow py-3 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-dark-navy transition-all"
                 >
                   Schedule Interview
                 </button>
               )}
 
-              {tutor.status === "interview_completed" && (
+              {normalizeUserStatus(tutor.status) === "interview_scheduled" && (
                 <>
-                  <button 
-                    onClick={() => updateStatus(tutor.id, "approved")}
-                    className="flex-grow py-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20"
+                  <button
+                    onClick={() => updateStatus(tutor.userId || tutor.id, "verified")}
+                    className="flex-grow py-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all"
                   >
-                    Approve Tutor
+                    Verify Tutor
                   </button>
-                  <button 
-                    onClick={() => updateStatus(tutor.id, "rejected")}
-                    className="flex-grow py-3 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20"
+                  <button
+                    onClick={() => updateStatus(tutor.userId || tutor.id, "blocked")}
+                    className="flex-grow py-3 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 transition-all"
                   >
-                    Reject
+                    Block
                   </button>
                 </>
               )}
 
-              {tutor.status === "approved" && (
-                <button 
-                  onClick={() => updateStatus(tutor.id, "blocked")}
+              {normalizeUserStatus(tutor.status) === "verified" && (
+                <button
+                  onClick={() => updateStatus(tutor.userId || tutor.id, "blocked")}
                   className="flex-grow py-3 bg-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all"
                 >
                   Block Tutor

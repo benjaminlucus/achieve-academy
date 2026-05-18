@@ -1,33 +1,50 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import TutorProfile from "@/database/models/tutor.model";
+import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { parsePagination, paginationMeta } from "@/lib/pagination";
+import { normalizeUserStatus } from "@/lib/user-status";
+import { captureException } from "@/lib/monitoring";
 
-export async function GET() {
-    try {
-        await connectDB();
+export async function GET(req: NextRequest) {
+  try {
+    await requireAdmin();
+    await connectDB();
 
-        const tutors = await TutorProfile.find({})
-            .populate("user", "name email status profileImage")
-            .sort({ createdAt: -1 });
+    const { searchParams } = new URL(req.url);
+    const { page, limit, skip } = parsePagination(searchParams);
 
-        const formattedTutors = tutors.map(t => ({
-            id: t._id,
-            userId: t.user?._id,
-            name: t.user?.name,
-            email: t.user?.email,
-            status: t.user?.status,
-            profileImage: t.user?.profileImage,
-            subjects: t.subjects,
-            experience: t.experienceYears,
-            education: t.education,
-            isVerified: t.isVerified,
-            createdAt: t.createdAt
-        }));
+    const [tutors, total] = await Promise.all([
+      TutorProfile.find({})
+        .populate("user", "name email status profileImage")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      TutorProfile.countDocuments(),
+    ]);
 
-        return NextResponse.json(formattedTutors);
+    const formattedTutors = tutors.map((t) => ({
+      id: t.user?._id?.toString(),
+      userId: t.user?._id?.toString(),
+      name: t.user?.name,
+      email: t.user?.email,
+      status: normalizeUserStatus(t.user?.status),
+      profileImage: t.user?.profileImage,
+      subjects: t.subjects,
+      experience: t.experienceYears,
+      education: t.education,
+      isVerified: t.isVerified,
+      createdAt: t.createdAt,
+    }));
 
-    } catch (error) {
-        console.error("Admin Fetch Tutors Error:", error);
-        return NextResponse.json({ error: "Failed to fetch tutors" }, { status: 500 });
-    }
+    return NextResponse.json({
+      tutors: formattedTutors,
+      pagination: paginationMeta(total, { page, limit, skip }),
+    });
+  } catch (error) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
+    captureException(error, { route: "admin/tutors" });
+    return NextResponse.json({ error: "Failed to fetch tutors" }, { status: 500 });
+  }
 }

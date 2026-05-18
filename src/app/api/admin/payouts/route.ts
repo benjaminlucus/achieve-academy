@@ -4,18 +4,15 @@ import User from "@/database/models/user.model";
 import TutorProfile from "@/database/models/tutor.model";
 import Payment from "@/database/models/payment.model";
 import Payout from "@/database/models/payout.model";
-import { auth } from "@clerk/nextjs/server";
+import { authErrorResponse, requireAdmin } from "@/lib/auth";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
-import mongoose from "mongoose";
+import { writeAuditLog } from "@/lib/audit";
+import { captureException } from "@/lib/monitoring";
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+    await requireAdmin();
     await connectDB();
-    const admin = await User.findOne({ clerkId });
-    if (!admin || admin.role !== "admin") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
     // 1. Fetch all tutors with their profiles
     const tutors = await TutorProfile.find({})
@@ -61,20 +58,18 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, payouts: filteredData });
 
-  } catch (error: any) {
-    console.error("Get Admin Payouts Error:", error);
+  } catch (error) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
+    captureException(error, { route: "admin/payouts GET" });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+    const admin = await requireAdmin();
     await connectDB();
-    const admin = await User.findOne({ clerkId });
-    if (!admin || admin.role !== "admin") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
     const body = await req.json();
     const { tutorId, amount, transactionId, screenshot, notes } = body;
@@ -106,29 +101,43 @@ export async function POST(req: NextRequest) {
       paidAt: new Date()
     });
 
-    // Send Email Notification to Tutor
-    const tutorUser: any = tutorProfile.user;
+    await writeAuditLog({
+      action: "payout_created",
+      actorId: admin._id,
+      targetUserId: tutorId,
+      metadata: { amount, transactionId, method: payoutMethod },
+    });
+
+    const tutorUser: { name?: string; email?: string } | null = tutorProfile.user as {
+      name?: string;
+      email?: string;
+    };
     if (tutorUser?.email) {
       const emailTemplate = emailTemplates.payoutConfirmed({
         name: tutorUser.name || "Tutor",
-        amount: amount,
+        amount,
         method: payoutMethod,
         transactionId: transactionId || "N/A",
         date: new Date().toLocaleDateString(),
-        screenshot: screenshot
+        screenshot,
       });
 
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: tutorUser.email,
         subject: emailTemplate.subject,
-        html: emailTemplate.html
+        html: emailTemplate.html,
       });
+      if (!emailResult.success) {
+        console.warn("Payout email failed:", emailResult.error);
+      }
     }
 
     return NextResponse.json({ success: true, payout });
 
-  } catch (error: any) {
-    console.error("Create Payout Error:", error);
+  } catch (error) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
+    captureException(error, { route: "admin/payouts POST" });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

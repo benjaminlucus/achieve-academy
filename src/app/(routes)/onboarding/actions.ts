@@ -54,7 +54,7 @@ export async function completeOnboarding(rawData: any) {
         isOnboarded: true,
         country: validatedData.country || "",
         timezone: validatedData.timezone || "",
-        status: role === "admin" ? "approved" : "active",
+        status: role === "admin" ? "verified" : "applied",
       },
       { upsert: true, new: true }
     );

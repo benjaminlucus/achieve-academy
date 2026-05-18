@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import Session from "@/database/models/session.model";
-import { createPaymentRecord, updateVerificationLevel } from "@/lib/utils";
+import { updateVerificationLevel } from "@/lib/utils";
+import { createPendingPaymentForSession } from "@/lib/payments";
 import { auth } from "@clerk/nextjs/server";
 import User from "@/database/models/user.model";
 
@@ -44,17 +45,9 @@ export async function PATCH(
 
     // Automation logic when session is marked as completed
     if (status === "completed" && oldStatus !== "completed") {
-      // 1. Create Payment Record (Simplified automation)
-      // Assuming payment is due upon completion for now
-      await createPaymentRecord(session._id.toString(), session.rate, session.monthsCompleted + 1);
-      
-      // 2. Update months completed if it's a recurring session
-      if (session.frequency !== "once") {
-        session.monthsCompleted += 1;
-        await session.save();
-      }
+      await createPendingPaymentForSession(session._id.toString());
 
-      // 3. Trigger Verification Level check (for blue tick eligibility)
+      // Trigger Verification Level check (for blue tick eligibility)
       await updateVerificationLevel(session.tutor.toString());
       await updateVerificationLevel(session.student.toString());
       

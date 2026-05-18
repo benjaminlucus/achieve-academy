@@ -1,31 +1,46 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
-import StudentProfile from "@/database/models/student.model";
-import Session from "@/database/models/session.model";
-import React from "react";
-import TutorProfile from "@/database/models/tutor.model";
 import User from "@/database/models/user.model";
+import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { parsePagination, paginationMeta } from "@/lib/pagination";
+import { normalizeUserStatus } from "@/lib/user-status";
+import { captureException } from "@/lib/monitoring";
 
-export async function GET(req: any) {
+export async function GET(req: NextRequest) {
   try {
+    await requireAdmin();
     await connectDB();
 
-    const users = await User.find({})
-      .select("name email role status createdAt")
-      .sort({ createdAt: -1 });
+    const { searchParams } = new URL(req.url);
+    const { page, limit, skip } = parsePagination(searchParams);
 
-    const formattedUsers = users.map(u => ({
-      id: u._id,
+    const [users, total] = await Promise.all([
+      User.find({})
+        .select("name email role status createdAt")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(),
+    ]);
+
+    const formattedUsers = users.map((u) => ({
+      id: u._id.toString(),
       name: u.name,
       email: u.email,
       role: u.role,
-      status: u.status,
-      joined: u.createdAt
+      status: normalizeUserStatus(u.status),
+      joined: u.createdAt,
     }));
 
-    return NextResponse.json(formattedUsers);
-
+    return NextResponse.json({
+      users: formattedUsers,
+      pagination: paginationMeta(total, { page, limit, skip }),
+    });
   } catch (error) {
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
+    captureException(error, { route: "admin/users" });
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }

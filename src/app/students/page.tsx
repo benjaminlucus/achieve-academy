@@ -20,7 +20,7 @@ export default async function StudentsPage({
     .populate({
       path: "user",
       model: User,
-      match: { status: "approved" },
+      match: { status: "verified" },
       select: "_id name email profileImage status country verificationLevel",
     })
     .lean();

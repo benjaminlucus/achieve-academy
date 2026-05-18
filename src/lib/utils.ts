@@ -10,12 +10,15 @@ import Interview from "@/database/models/interview.model";
 import Connection from "@/database/models/connection.model";
 import Review from "@/database/models/review.model";
 import { differenceInMonths, isAfter } from "date-fns";
+import { isVerifiedUserStatus, normalizeUserStatus } from "@/lib/user-status";
+import { PLATFORM_COMMISSION_RATE } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 export async function updateVerificationLevel(userId: string) {
   try {
     await connectDB();
     const user = await User.findById(userId);
-    if (!user || user.status !== "approved") return;
+    if (!user || !isVerifiedUserStatus(user.status)) return;
 
     // Check for Blue Tick eligibility
     // Criteria: 6+ months active, high rating (4.5+), consistent activity (5+ completed sessions)
@@ -117,16 +120,18 @@ export async function getCurrentUser(userId?: string) {
       clerkId: userId
     }).lean();
     
-    console.log("Database user:", databaseUser);
-
     if (!databaseUser) {
-      return "database user not found";
+      return null;
     }
 
-    return JSON.parse(JSON.stringify(databaseUser))
+    const serialized = JSON.parse(JSON.stringify(databaseUser));
+    serialized.status = normalizeUserStatus(serialized.status);
+    return serialized;
   } catch (error) {
-    console.error("Error fetching current user:", error);
-    return "error fetching current user";
+    logger.error("get_current_user_failed", {
+      message: error instanceof Error ? error.message : "unknown",
+    });
+    return null;
   }
 }
 
@@ -172,7 +177,7 @@ export async function getAllTutors() {
       .sort({ createdAt: -1 });
 
     const formattedTutors = tutors.map(t => ({
-      id: t._id.toString(),
+      id: t.user?._id?.toString() || t._id.toString(),
       userId: t.user?._id?.toString(),
       name: t.user?.name,
       email: t.user?.email,
@@ -192,14 +197,15 @@ export async function getAllTutors() {
   }
 }
 
+/** @deprecated Use createPendingPaymentForSession from @/lib/payments */
 export async function createPaymentRecord(sessionId: string, amount: number, monthNumber: number) {
   try {
     await connectDB();
     const session = await Session.findById(sessionId);
     if (!session) throw new Error("Session not found");
 
-    const commission = amount * 0.20;
-    const tutorEarning = amount - commission;
+    const commission = Math.round(amount * PLATFORM_COMMISSION_RATE * 100) / 100;
+    const tutorEarning = Math.round((amount - commission) * 100) / 100;
 
     const payment = await Payment.create({
       session: sessionId,
@@ -214,7 +220,9 @@ export async function createPaymentRecord(sessionId: string, amount: number, mon
 
     return JSON.parse(JSON.stringify(payment));
   } catch (error) {
-    console.error("Error creating payment record:", error);
+    logger.error("create_payment_record_failed", {
+      message: error instanceof Error ? error.message : "unknown",
+    });
     return null;
   }
 }
@@ -281,7 +289,7 @@ export async function getAdminStatistics() {
       Session.find({}),
       Payment.find({}),
       Payout.find({}),
-      User.countDocuments({ status: { $in: ["applied", "reviewing", "interview_pending"] } })
+      User.countDocuments({ status: { $in: ["applied", "interview_scheduled"] }, role: { $ne: "admin" } })
     ]);
 
     const completedSessions = sessions.filter(s => s.status === "completed").length;

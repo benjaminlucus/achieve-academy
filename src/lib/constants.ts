@@ -1,4 +1,7 @@
-export const ITEMS_PER_PAGE = 5
+export const ITEMS_PER_PAGE = 20;
+
+/** Platform commission on tutor earnings (20%). */
+export const PLATFORM_COMMISSION_RATE = 0.2;
 
 export const allCountries = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",

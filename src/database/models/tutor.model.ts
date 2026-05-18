@@ -1,6 +1,5 @@
 import mongoose, { Schema, models } from "mongoose";
 import { ITutorProfile } from "../../../types";
-import { time } from "node:console";
 
 const TutorProfileSchema = new Schema<ITutorProfile>({
   user: {
