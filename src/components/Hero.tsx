@@ -37,9 +37,9 @@ export default function Hero() {
                   Go to Dashboard
                 </Link>
               </Show>
-              <button className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-dark-navy bg-transparent border-2 border-dark-navy hover:bg-dark-navy hover:text-off-white transition-colors rounded-sm">
+              <Link href="/#how-it-works" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-dark-navy bg-transparent border-2 border-dark-navy hover:bg-dark-navy hover:text-off-white transition-colors rounded-sm text-center">
                 How it works
-              </button>
+              </Link>
             </div>
             
             <div className="flex items-center gap-6 pt-6">

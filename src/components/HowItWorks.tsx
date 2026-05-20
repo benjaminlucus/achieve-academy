@@ -62,7 +62,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="py-24 bg-off-white border-y-2 border-dark-navy/10">
+    <section id="how-it-works" className="py-24 bg-off-white border-y-2 border-dark-navy/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="flex justify-center mb-4">

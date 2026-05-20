@@ -18,7 +18,9 @@ import {
   ChevronRight,
   GraduationCap,
   Link as LinkIcon,
-  MessageSquare
+  MessageSquare,
+  HelpCircle,
+  MessageCircle
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
@@ -33,7 +35,9 @@ const sidebarItems = [
   { icon: Calendar, label: "Sessions", href: "/admin/sessions" },
   { icon: CreditCard, label: "Payments", href: "/admin/payments" },
   { icon: DollarSign, label: "Tutor Payouts", href: "/admin/payouts" },
+  { icon: MessageCircle, label: "Feedbacks", href: "/admin/feedbacks" },
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
+  { icon: HelpCircle, label: "Admin Guide", href: "/admin/guide" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 
@@ -127,8 +131,8 @@ export default function AdminSidebar() {
 
       {/* Adjust Main Content Padding in Layout based on sidebar state */}
       <style jsx global>{`
-        main.lg\\:pl-64 {
-          padding-left: ${isCollapsed ? '5rem' : '16rem'} !important;
+        main.lg\\:pl-80 {
+          padding-left: ${isCollapsed ? '5rem' : '20rem'} !important;
           transition: padding-left 0.3s ease-in-out;
         }
       `}</style>

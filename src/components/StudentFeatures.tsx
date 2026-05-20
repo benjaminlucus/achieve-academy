@@ -9,7 +9,7 @@ export default function StudentFeatures() {
       title: "Learn from tutors worldwide",
       description: "Find the right instructor across any subject or skill.",
       linkText: "Explore",
-      linkHref: "#",
+      linkHref: "/tutors",
       imageSrc: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop",
       imageAlt: "Learn globally"
     },
@@ -18,7 +18,7 @@ export default function StudentFeatures() {
       title: "Monthly commitment builds momentum",
       description: "Thirty days of focused learning creates real progress.",
       linkText: "Reserve",
-      linkHref: "#",
+      linkHref: "/sign-up",
       imageSrc: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop",
       imageAlt: "Consistent learning"
     },
@@ -27,7 +27,7 @@ export default function StudentFeatures() {
       title: "Clear pricing, no surprises",
       description: "Know exactly what you pay before you begin.",
       linkText: "Start",
-      linkHref: "#",
+      linkHref: "/sign-up",
       imageSrc: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=2070&auto=format&fit=crop",
       imageAlt: "Transparent pricing"
     }

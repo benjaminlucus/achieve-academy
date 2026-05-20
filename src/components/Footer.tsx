@@ -49,7 +49,7 @@ export default function Footer() {
               <li><Link href="/#features" className="hover:text-off-white transition-colors">Features</Link></li>
               <li><Link href="/tutors" className="hover:text-off-white transition-colors">Find Tutors</Link></li>
               <li><Link href="/#how-it-works" className="hover:text-off-white transition-colors">How it works</Link></li>
-              <li><Link href="/#testimonials" className="hover:text-off-white transition-colors">Success Stories</Link></li>
+              <li><Link href="/feedbacks" className="hover:text-off-white transition-colors">Success Stories</Link></li>
             </ul>
           </div>
           
@@ -76,7 +76,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-3">
                 <MapPin size={18} className="text-coral" />
-                <span>123 Education St, San Francisco</span>
+                <span>Currently Remote Startup</span>
               </div>
             </div>
           </div>

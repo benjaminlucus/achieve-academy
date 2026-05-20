@@ -6,6 +6,7 @@ import StudentFeatures from "@/components/StudentFeatures";
 import Image from "next/image";
 import { getCurrentUser } from "@/lib/utils";
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 
 export default async function Home() {
   // const { userId } = await auth();
@@ -83,12 +84,12 @@ export default async function Home() {
                 Join thousands of students who are already achieving their goals with Achieve Academy.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <button className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-dark-navy bg-off-white hover:bg-coral hover:text-off-white transition-colors border-2 border-off-white hover:border-coral">
+                <Link href="/sign-up" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-dark-navy bg-off-white hover:bg-coral hover:text-off-white transition-colors border-2 border-off-white hover:border-coral text-center">
                   Get Started for Free
-                </button>
-                <button className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-off-white border-2 border-off-white hover:bg-off-white hover:text-dark-navy transition-colors">
+                </Link>
+                <Link href="/contact" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-off-white border-2 border-off-white hover:bg-off-white hover:text-dark-navy transition-colors text-center">
                   Contact Support
-                </button>
+                </Link>
               </div>
             </div>
           </div>
