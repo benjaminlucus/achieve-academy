@@ -1,11 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {  Mail, MapPin, Phone } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from 'react-icons/fa';
-
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
+
+  // Don't show public footer on admin routes
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
   
   return (
     <footer className="bg-dark-navy text-off-white py-20 relative z-10">

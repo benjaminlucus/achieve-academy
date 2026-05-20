@@ -5,10 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { SignInButton, SignUpButton, Show, UserButton, useUser, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { user } = useUser();
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Don't show public navbar on admin routes
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 

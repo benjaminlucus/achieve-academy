@@ -6,7 +6,8 @@ import {
   User, Mail, MapPin, Clock, GraduationCap, 
   BookOpen, Settings, Save, Edit2, 
   X, Target, History, Award, BookCheck,
-  ChevronRight, Calendar, CreditCard
+  ChevronRight, Calendar, CreditCard, Zap, Trophy,
+  Star, Briefcase, TrendingUp
 } from "lucide-react";
 import { updateStudentProfile } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -15,6 +16,7 @@ import { SessionSection } from "@/components/dashboard/SessionSection";
 import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import Image from "next/image";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function StudentPrivateDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -57,6 +59,7 @@ export default function StudentPrivateDashboard() {
     try {
       await updateStudentProfile(id, formData);
       setIsEditing(false);
+      toast.success("Profile updated successfully!");
       const res = await fetch(`/api/students/${id}`);
       if (res.ok) {
         const data = await res.json();
@@ -64,7 +67,7 @@ export default function StudentPrivateDashboard() {
       }
     } catch (error) {
       console.error("Error saving data:", error);
-      alert("Failed to save changes.");
+      toast.error("Failed to save changes.");
     } finally {
       setIsSaving(false);
     }
@@ -72,7 +75,7 @@ export default function StudentPrivateDashboard() {
 
   if (isLoading) return (
     <div className="min-h-screen bg-off-white flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-dark-navy border-t-coral rounded-full animate-spin"></div>
+      <div className="w-16 h-16 border-4 border-coral border-t-dark-navy rounded-full animate-spin"></div>
     </div>
   );
 
@@ -84,36 +87,47 @@ export default function StudentPrivateDashboard() {
 
   return (
     <div className="bg-[#F8F9FA] min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
+      <Toaster />
       <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Trial Status Banner */}
         <TrialBanner userRole="student" myId={id} />
 
         {/* Profile Header */}
-        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+        <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-coral/5 rounded-full -ml-32 -mt-32 blur-3xl" />
+          
+          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left relative z-10">
             <div className="relative group">
-              {studentData.profileImage ? (
-                <Image src={studentData.profileImage} alt={studentData.name} width={100} height={100} className="w-24 h-24 rounded-3xl object-cover ring-4 ring-dark-navy/5 transition-all group-hover:scale-105" />
-              ) : (
-                <div className="w-24 h-24 bg-dark-navy rounded-3xl flex items-center justify-center text-white text-4xl font-black transition-all group-hover:scale-105">
-                  {studentData.name.charAt(0)}
+              <div className="w-28 h-28 rounded-3xl bg-coral p-1 shadow-2xl -rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                <div className="w-full h-full rounded-[1.4rem] bg-white overflow-hidden rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                  {studentData.profileImage ? (
+                    <Image src={studentData.profileImage} alt={studentData.name} width={112} height={112} className="object-cover w-full h-full" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-coral bg-white text-4xl font-black">
+                      {studentData.name.charAt(0)}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-dark-navy text-white p-2 rounded-2xl border-4 border-white shadow-lg z-20">
+                <Trophy size={20} />
+              </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{studentData.name}</h1>
-              <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-full border border-dark-navy/5">
+              <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
                   <GraduationCap size={14} className="text-coral" /> {studentData.whichClass}
                 </span>
-                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-full border border-dark-navy/5">
+                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
                   <MapPin size={14} className="text-coral" /> {studentData.location}
                 </span>
+                <StatusBadge status={studentData.status} />
               </div>
             </div>
           </div>
-          <div className="flex gap-4 w-full md:w-auto">
+          <div className="flex gap-4 w-full md:w-auto relative z-10">
             {isEditing ? (
               <>
                 <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-8 py-4 bg-gray-50 text-dark-navy font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all border border-dark-navy/5">
@@ -131,6 +145,38 @@ export default function StudentPrivateDashboard() {
           </div>
         </div>
 
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-12 h-12 bg-coral/10 text-coral rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <Clock size={24} />
+            </div>
+            <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Hours Learned</p>
+            <p className="text-2xl font-black text-dark-navy">{studentData.stats.hoursLearned}h</p>
+          </div>
+          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <BookOpen size={24} />
+            </div>
+            <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Active Courses</p>
+            <p className="text-2xl font-black text-dark-navy">{studentData.stats.activeCourses}</p>
+          </div>
+          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <Zap size={24} className="fill-current" />
+            </div>
+            <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">XP Points</p>
+            <p className="text-2xl font-black text-dark-navy">450</p>
+          </div>
+          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <TrendingUp size={24} />
+            </div>
+            <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Streak</p>
+            <p className="text-2xl font-black text-dark-navy">5 Days</p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           
           {/* Main Content */}
@@ -142,7 +188,7 @@ export default function StudentPrivateDashboard() {
             <SessionSection userRole="student" />
 
             {/* Academic Info */}
-            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-10">
+            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-10">
               <div className="flex items-center justify-between border-b border-gray-50 pb-6">
                 <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Academic Profile</h2>
                 <BookCheck className="text-coral" size={24} />
@@ -150,31 +196,19 @@ export default function StudentPrivateDashboard() {
 
               <div className="grid md:grid-cols-2 gap-10">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Full Name</label>
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Current Grade / Level</label>
                   {isEditing ? (
-                    <input className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                    <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.whichClass} onChange={(e) => setFormData({...formData, whichClass: e.target.value})} />
                   ) : (
-                    <p className="text-dark-navy font-bold text-lg">{studentData.name}</p>
+                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">{studentData.whichClass}</p>
                   )}
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Email Address</label>
-                  <p className="text-dark-navy font-bold text-lg opacity-60">{studentData.email}</p>
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Current Grade</label>
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Learning Goals</label>
                   {isEditing ? (
-                    <input className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.whichClass} onChange={(e) => setFormData({...formData, whichClass: e.target.value})} />
+                    <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.learningGoals} onChange={(e) => setFormData({...formData, learningGoals: e.target.value})} />
                   ) : (
-                    <p className="text-dark-navy font-bold text-lg">{studentData.whichClass}</p>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Timezone</label>
-                  {isEditing ? (
-                    <input className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.timezone} onChange={(e) => setFormData({...formData, timezone: e.target.value})} />
-                  ) : (
-                    <p className="text-dark-navy font-bold text-lg">{formData.timezone}</p>
+                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">{studentData.learningGoals}</p>
                   )}
                 </div>
               </div>
@@ -182,24 +216,13 @@ export default function StudentPrivateDashboard() {
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Subjects of Interest</label>
                 {isEditing ? (
-                  <input className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.subjects} onChange={(e) => setFormData({...formData, subjects: e.target.value})} />
+                  <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.subjects} onChange={(e) => setFormData({...formData, subjects: e.target.value})} />
                 ) : (
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-3 p-5 bg-gray-50 rounded-2xl border border-gray-100">
                     {studentData.subjects.map((s: string) => (
-                      <span key={s} className="px-5 py-2 bg-dark-navy/5 text-dark-navy text-[10px] font-black uppercase tracking-widest rounded-xl border border-dark-navy/5">{s}</span>
+                      <span key={s} className="px-5 py-2 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl">{s}</span>
                     ))}
                   </div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Learning Goals</label>
-                {isEditing ? (
-                  <textarea rows={4} className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all resize-none" value={formData.learningGoals} onChange={(e) => setFormData({...formData, learningGoals: e.target.value})} />
-                ) : (
-                  <p className="text-dark-navy font-medium text-lg leading-relaxed italic text-steel-blue/80">
-                    "{studentData.learningGoals}"
-                  </p>
                 )}
               </div>
             </div>
@@ -207,74 +230,39 @@ export default function StudentPrivateDashboard() {
 
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-10">
-            {/* Stats Card */}
-            <div className="bg-dark-navy p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-coral/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-coral/20 transition-all" />
-              <h2 className="text-lg font-black uppercase tracking-tight border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
-                Progress <Target className="text-coral" size={20} />
-              </h2>
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Hours</p>
-                  <p className="text-3xl font-black">{studentData.stats.hoursLearned}h</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Sessions</p>
-                  <p className="text-3xl font-black">{studentData.stats.completedSessions}<span className="text-xs opacity-40 ml-1 font-bold">/ {studentData.stats.totalSessions}</span></p>
-                </div>
-              </div>
-            </div>
-
             {/* Connections Section */}
             <ConnectionList userRole="student" myId={id} />
 
-            {/* Recent Activity */}
-            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-8">
-              <h2 className="text-lg font-black text-dark-navy uppercase tracking-tight flex items-center justify-between">
-                Activity <History className="text-coral" size={20} />
+            {/* Achievements Card */}
+            <div className="bg-dark-navy p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-coral/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-coral/20 transition-all" />
+              <h2 className="text-lg font-black uppercase tracking-tight border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
+                My Progress <Target className="text-coral" size={20} />
               </h2>
-              <div className="space-y-4">
-                {studentData.history && studentData.history.length > 0 ? (
-                  studentData.history.map((item: any) => (
-                    <div key={item.id} className="group flex items-center gap-4 p-4 hover:bg-gray-50 rounded-[1.5rem] transition-all cursor-pointer border border-transparent hover:border-dark-navy/5">
-                      <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        {item.type === "payment" ? (
-                          <CreditCard size={20} className="text-coral" />
-                        ) : (
-                          <Calendar size={20} className="text-dark-navy/30" />
-                        )}
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <p className="text-xs font-black text-dark-navy uppercase truncate tracking-tight">{item.title}</p>
-                        <p className="text-[9px] font-bold text-steel-blue uppercase truncate">{item.subtitle}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-dark-navy">{new Date(item.date).toLocaleDateString()}</p>
-                        {item.amount && <p className="text-[10px] font-bold text-coral">${item.amount}</p>}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-steel-blue font-medium italic text-center py-6">No recent activity found.</p>
-                )}
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                    <span>Course Completion</span>
+                    <span>75%</span>
+                  </div>
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-coral rounded-full" style={{ width: '75%' }} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-1">XP Points</p>
+                    <p className="text-xl font-black">450</p>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-1">Rank</p>
+                    <p className="text-xl font-black">#12</p>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Wallet Card */}
-            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Learning Wallet</h2>
-                <CreditCard className="text-dark-navy/20" size={18} />
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-black text-dark-navy">$0.00</p>
-                <p className="text-[10px] font-black text-coral uppercase tracking-widest">Available Credit</p>
-              </div>
-              <button className="w-full py-4 bg-dark-navy/5 hover:bg-dark-navy text-dark-navy hover:text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all border border-dark-navy/5">
-                Top Up Wallet
-              </button>
             </div>
           </div>
+
         </div>
       </div>
     </div>

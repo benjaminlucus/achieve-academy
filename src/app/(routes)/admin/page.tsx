@@ -54,23 +54,23 @@ export default async function AdminDashboard() {
   const paymentsArray = recentPayments.payments.slice(0, 4);
 
   return (
-    <div className="space-y-14 pb-20">
+    <div className="space-y-8 md:space-y-14 pb-20">
 
-        <div className="bg-white p-10 rounded-[3rem] border-2 border-dark-navy shadow-[12px_12px_0px_0px_rgba(43,65,98,1)] flex flex-col md:flex-row items-center justify-between gap-10 mb-16">
-          <div className="space-y-3 text-center md:text-left">
-            <h2 className="text-2xl font-black text-dark-navy uppercase tracking-tight">Financial Overview</h2>
-            <p className="text-[11px] font-bold text-steel-blue uppercase tracking-[0.2em]">Monitor pending transactions and tutor payouts</p>
+        <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border-2 border-dark-navy shadow-[8px_8px_0px_0px_rgba(43,65,98,1)] md:shadow-[12px_12px_0px_0px_rgba(43,65,98,1)] flex flex-col lg:flex-row items-center justify-between gap-8 md:gap-10 mb-10 md:mb-16">
+          <div className="space-y-2 md:space-y-3 text-center lg:text-left">
+            <h2 className="text-xl md:text-2xl font-black text-dark-navy uppercase tracking-tight">Financial Overview</h2>
+            <p className="text-[10px] md:text-[11px] font-bold text-steel-blue uppercase tracking-[0.2em]">Monitor transactions and payouts</p>
           </div>
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="bg-off-white px-6 py-4 rounded-2xl border border-dark-navy/10 flex-grow text-center">
-              <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Pending Payments</p>
-              <p className="text-2xl font-black text-amber-600">${data.pendingPayments.toLocaleString()}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex items-center gap-4 w-full lg:w-auto">
+            <div className="bg-off-white px-4 md:px-6 py-3 md:py-4 rounded-2xl border border-dark-navy/10 text-center">
+              <p className="text-[9px] md:text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Pending Payments</p>
+              <p className="text-xl md:text-2xl font-black text-amber-600">${data.pendingPayments.toLocaleString()}</p>
             </div>
-            <div className="bg-off-white px-6 py-4 rounded-2xl border border-dark-navy/10 flex-grow text-center">
-              <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Pending Payouts</p>
-              <p className="text-2xl font-black text-coral">${data.pendingPayouts.toLocaleString()}</p>
+            <div className="bg-off-white px-4 md:px-6 py-3 md:py-4 rounded-2xl border border-dark-navy/10 text-center">
+              <p className="text-[9px] md:text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Pending Payouts</p>
+              <p className="text-xl md:text-2xl font-black text-coral">${data.pendingPayouts.toLocaleString()}</p>
             </div>
-            <button className="px-8 py-4 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-xl hover:shadow-coral/20">
+            <button className="sm:col-span-2 lg:col-span-1 px-8 py-4 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-xl hover:shadow-coral/20">
               Bulk Payout
             </button>
           </div>
