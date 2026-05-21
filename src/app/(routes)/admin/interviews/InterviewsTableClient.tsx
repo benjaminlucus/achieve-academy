@@ -191,6 +191,7 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
     try {
       const res = await fetch(`/api/admin/interviews/${id}`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
 

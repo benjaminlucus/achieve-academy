@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   const { userId } = await auth();
-
+// 4660 6270 0205 3810
   if (!userId) {
     return redirect("/sign-in");
   }

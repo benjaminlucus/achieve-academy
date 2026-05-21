@@ -32,7 +32,8 @@ export const onboardingSchema = z.object({
 });
 
 export const zoomUrlSchema = z.string().url().refine((url) => {
-  const zoomRegex = /^(https?:\/\/)?([a-z0-9-]+\.)?zoom\.(us|com)\/(j|my|s)\/[\d\w?=-]+$/i;
+  // More inclusive Zoom regex that handles password tokens and extra query params
+  const zoomRegex = /^(https?:\/\/)?([a-z0-9-]+\.)?zoom\.(us|com)\/(j|my|s)\/[\d\w?=&._-]+$/i;
   return zoomRegex.test(url);
 }, {
   message: "Invalid Zoom meeting URL. Please provide a valid zoom.us or zoom.com link.",

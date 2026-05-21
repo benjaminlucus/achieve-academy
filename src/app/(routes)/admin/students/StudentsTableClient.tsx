@@ -65,6 +65,7 @@ export default function StudentsTableClient({ initialStudents }: { initialStuden
     try {
       const res = await fetch(`/api/admin/users/${userId}/status`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
 
@@ -87,6 +88,7 @@ export default function StudentsTableClient({ initialStudents }: { initialStuden
     try {
       const res = await fetch("/api/admin/schedule-interview", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: selectedStudent?.userId,
           scheduledAt: new Date(date).toISOString(),

@@ -64,6 +64,7 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
     try {
       const res = await fetch(`/api/admin/users/${userId}/status`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
 
@@ -86,6 +87,7 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
     try {
       const res = await fetch("/api/admin/schedule-interview", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: selectedTutor?.userId || selectedTutor?.id,
           scheduledAt: new Date(date).toISOString(),

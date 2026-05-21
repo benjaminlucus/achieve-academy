@@ -5,7 +5,7 @@
  * and provides a structure for future automated meeting creation via Zoom API.
  */
 
-export const ZOOM_URL_REGEX = /^(https?:\/\/)?([a-z0-9-]+\.)?zoom\.(us|com)\/(j|my|s)\/[\d\w?=-]+$/i;
+export const ZOOM_URL_REGEX = /^(https?:\/\/)?([a-z0-9-]+\.)?zoom\.(us|com)\/(j|my|s)\/[\d\w?=&._-]+$/i;
 
 /**
  * Validates if a string is a proper Zoom meeting URL
