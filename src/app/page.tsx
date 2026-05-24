@@ -38,12 +38,12 @@ export default async function Home() {
             </div>
             
             <div className="flex flex-col gap-8">
-              <span className="text-dark-navy font-bold tracking-widest uppercase text-xs">About Achieve Academy</span>
+              <span className="text-dark-navy font-bold tracking-widest uppercase text-xs">About Ravencrest Academy</span>
               <h2 className="text-4xl sm:text-5xl font-extrabold text-dark-navy tracking-tight leading-tight">
                 Our mission is to make quality <span className="text-coral">education accessible</span> to everyone.
               </h2>
               <p className="text-xl text-steel-blue leading-relaxed font-medium">
-                At Achieve Academy, we believe that every student has the potential to excel if given the right guidance. Our platform bridges the gap between ambitious students and world-class tutors.
+                At Ravencrest Academy, we believe that every student has the potential to excel if given the right guidance. Our platform bridges the gap between ambitious students and world-class tutors.
               </p>
               
               <div className="grid sm:grid-cols-2 gap-8 pt-4">
@@ -81,7 +81,7 @@ export default async function Home() {
                 Ready to start your <span className="text-coral">learning journey?</span>
               </h2>
               <p className="text-xl text-steel-blue max-w-2xl mx-auto font-medium">
-                Join thousands of students who are already achieving their goals with Achieve Academy.
+                Join thousands of students who are already achieving their goals with Ravencrest Academy.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Link href="/sign-up" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-dark-navy bg-off-white hover:bg-coral hover:text-off-white transition-colors border-2 border-off-white hover:border-coral text-center">

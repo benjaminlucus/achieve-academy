@@ -23,13 +23,13 @@ export default function Footer() {
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/logo.svg"
-                alt="Achieve Academy Logo"
+                alt="Ravencrest Academy Logo"
                 width={32}
                 height={32}
                 className="w-8 h-8 invert brightness-0"
               />
               <span className="text-xl font-bold tracking-tight">
-                Achieve Academy
+                Ravencrest Academy
               </span>
             </Link>
             <p className="text-steel-blue font-medium">
@@ -76,7 +76,7 @@ export default function Footer() {
             <div className="flex flex-col gap-4 text-steel-blue font-medium">
               <div className="flex items-center gap-3">
                 <Mail size={18} className="text-coral" />
-                <span>hello@achieveacademy.com</span>
+                <span>hello@ravencrestacademy.com</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone size={18} className="text-coral" />
@@ -91,7 +91,7 @@ export default function Footer() {
         </div>
         
         <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-steel-blue text-sm font-medium">
-          <p>© {currentYear} Achieve Academy. All rights reserved.</p>
+          <p>© {currentYear} Ravencrest Academy. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:text-off-white transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-off-white transition-colors">Terms</Link>

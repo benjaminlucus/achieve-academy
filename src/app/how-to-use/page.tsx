@@ -69,7 +69,7 @@ export default function HowToUsePage() {
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
           <span className="text-coral font-black uppercase tracking-[0.3em] text-xs block">Application Guide</span>
           <h1 className="text-5xl md:text-6xl font-black text-dark-navy tracking-tight uppercase">
-            Mastering <span className="text-coral">Achieve Academy</span>
+            Mastering <span className="text-coral">Ravencrest Academy</span>
           </h1>
           <p className="text-xl text-steel-blue font-medium leading-relaxed">
             Everything you need to know about using our platform, from your first login to your first successful session.

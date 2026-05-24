@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "achieve-academy",
+      "name": "ravencrest-academy",
       "dependencies": {
         "@clerk/nextjs": "^7.0.8",
         "@types/mongoose": "^5.11.96",

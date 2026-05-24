@@ -28,7 +28,7 @@ export default function SignUpPage() {
             Join the Community
           </div>
           <h1 className="text-4xl font-bold leading-tight">
-            Start Your Journey with <span className="text-[#d65a50]">Achieve Academy</span>
+            Start Your Journey with <span className="text-[#d65a50]">Ravencrest Academy</span>
           </h1>
           <ul className="space-y-4 text-[#70869d]">
             <li className="flex items-center gap-3">

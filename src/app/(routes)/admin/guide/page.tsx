@@ -101,7 +101,7 @@ export default function AdminGuidePage() {
             <HelpCircle size={32} className="text-coral" />
             Admin Command Center Guide
           </h1>
-          <p className="text-sm font-bold text-steel-blue uppercase tracking-[0.2em]">Master the tools to manage Achieve Academy effectively</p>
+          <p className="text-sm font-bold text-steel-blue uppercase tracking-[0.2em]">Master the tools to manage Ravencrest Academy effectively</p>
         </div>
         <div className="flex items-center gap-3 bg-off-white px-6 py-4 rounded-2xl border border-dark-navy/10">
           <ShieldCheck className="text-emerald-500" size={24} />

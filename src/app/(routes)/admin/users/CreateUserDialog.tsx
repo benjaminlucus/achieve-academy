@@ -158,7 +158,7 @@ export const CreateUserDialog = ({ isOpen, onClose, onSuccess }: CreateUserDialo
                 className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-dark-navy/10 text-sm font-bold text-gray-700 transition-all appearance-none"
               >
                 {allCountries.map((country) => (
-                  <option value={country.toLowerCase()}>{country.toUpperCase()}</option>
+                  <option key={country} value={country.toLowerCase()}>{country.toUpperCase()}</option>
                 ))}
               </select>
             </div>
@@ -175,7 +175,7 @@ export const CreateUserDialog = ({ isOpen, onClose, onSuccess }: CreateUserDialo
                 className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-dark-navy/10 text-sm font-bold text-gray-700 transition-all appearance-none"
               >
                 {allTimezones.map((timezone) => (
-                  <option value={timezone.toLowerCase()}>{timezone.toUpperCase()}</option>
+                  <option key={timezone} value={timezone.toLowerCase()}>{timezone.toUpperCase()}</option>
                 ))}
               </select>
             </div>

@@ -2,9 +2,9 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const APP_NAME = "Achieve Academy";
+const APP_NAME = "Ravencrest Academy";
 const FROM_EMAIL =
-  process.env.RESEND_FROM_EMAIL || "Achieve Academy <onboarding@resend.dev>";
+  process.env.RESEND_FROM_EMAIL || "Ravencrest Academy <onboarding@resend.dev>";
 
 interface EmailOptions {
   to: string;

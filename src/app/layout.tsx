@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Achieve Academy | Personalized Learning with Expert Tutors",
-  description: "Connect with expert tutors and achieve your academic goals with Achieve Academy.",
+  title: "Ravencrest Academy | Personalized Learning with Expert Tutors",
+  description: "Connect with expert tutors and achieve your academic goals with Ravencrest Academy.",
   icons: {
     icon: "/favicon.svg",
   },

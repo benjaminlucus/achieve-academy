@@ -43,7 +43,7 @@ export default async function TestimonialsPage() {
             Trusted by <span className="text-coral">hundreds</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed">
-            Real feedback from students and tutors who have transformed their learning journey with Achieve Academy.
+            Real feedback from students and tutors who have transformed their learning journey with Ravencrest Academy.
           </p>
         </div>
       </section>

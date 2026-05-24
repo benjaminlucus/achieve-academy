@@ -50,7 +50,7 @@ export default function NotFound() {
 
         <div className="pt-12">
           <p className="text-[10px] font-black text-steel-blue/40 uppercase tracking-[0.4em]">
-            Achieve Academy • Navigation Support
+            Ravencrest Academy • Navigation Support
           </p>
         </div>
       </div>

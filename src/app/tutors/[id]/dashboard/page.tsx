@@ -287,7 +287,7 @@ export default function TutorPrivateDashboard() {
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-10">
             {/* Connections */}
-            <ConnectionList />
+            <ConnectionList userRole="tutor" myId={id} />
 
             {/* Availability */}
             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-8">

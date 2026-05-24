@@ -15,7 +15,7 @@ export default async function Dashboard() {
   const user = await getCurrentUser(userId);
 
   if (!user) {
-    return redirect("/sign-in");
+    return redirect("/onboarding");
   }
 
   // ✅ SINGLE SOURCE OF TRUTH

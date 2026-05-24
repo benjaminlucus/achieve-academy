@@ -74,7 +74,7 @@ export default function HowItWorks() {
             How it <span className="text-coral">Works</span>
           </h2>
           <p className="text-sm font-bold text-steel-blue uppercase tracking-widest max-w-2xl mx-auto">
-            Everything you need to know about starting your journey with Achieve Academy.
+            Everything you need to know about starting your journey with Ravencrest Academy.
           </p>
         </div>
 

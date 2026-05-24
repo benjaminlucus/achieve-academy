@@ -71,7 +71,7 @@ const OnboardingForm = () => {
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-4 font-sans text-[#1e3a5f]">
       {/* Header / Logo Space */}
       <div className="mb-8 text-2xl font-bold tracking-tight">
-        ACHIEVE <span className="text-[#d65a50]">ACADEMY</span>
+        RAVENCREST <span className="text-[#d65a50]">ACADEMY</span>
       </div>
 
       <div className="w-full max-auto max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">

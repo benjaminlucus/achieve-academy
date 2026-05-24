@@ -33,7 +33,7 @@ export default function SignInPage() {
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center md:hidden">
-            <h2 className="text-2xl font-bold text-dark-navy uppercase tracking-tighter">ACHIEVE ACADEMY</h2>
+            <h2 className="text-2xl font-bold text-dark-navy uppercase tracking-tighter">RAVENCREST ACADEMY</h2>
           </div>
           
           <ClerkLoading>

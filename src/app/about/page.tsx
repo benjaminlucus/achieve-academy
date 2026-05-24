@@ -43,7 +43,7 @@ export default function AboutPage() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-coral to-rose">Through Guidance</span>
           </h1>
           <p className="text-xl text-steel-blue max-w-3xl mx-auto font-medium leading-relaxed">
-            Achieve Academy was born from a simple idea: that every student, regardless of their background, deserves access to world-class educational guidance.
+            Ravencrest Academy was born from a simple idea: that every student, regardless of their background, deserves access to world-class educational guidance.
           </p>
         </div>
       </section>
@@ -67,7 +67,7 @@ export default function AboutPage() {
 
             <div className="space-y-12">
               <div className="space-y-6">
-                <h2 className="text-4xl font-black text-dark-navy tracking-tight uppercase">The Achieve Academy Mission</h2>
+                <h2 className="text-4xl font-black text-dark-navy tracking-tight uppercase">The Ravencrest Academy Mission</h2>
                 <p className="text-lg text-steel-blue leading-relaxed font-medium">
                   We are building more than just a tutoring platform; we are building a global bridge. In a world where quality education can sometimes feel like a luxury, we strive to make it a standard. 
                 </p>

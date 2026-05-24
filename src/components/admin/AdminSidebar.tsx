@@ -49,6 +49,7 @@ export default function AdminSidebar() {
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOpen(false);
   }, [pathname]);
 
@@ -147,7 +148,7 @@ export default function AdminSidebar() {
         }
         @media (min-width: 1024px) {
           main.lg\\:pl-72 {
-            padding-left: var(--sidebar-width) !important;
+            padding-left: calc(var(--sidebar-width) + 3rem) !important;
           }
         }
         main {

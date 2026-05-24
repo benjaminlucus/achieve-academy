@@ -1,4 +1,4 @@
-# Achieve Academy
+# Ravencrest Academy
 
 Tutoring marketplace MVP built with Next.js App Router, Clerk, and MongoDB. Supports student–tutor connections, trial messaging, manual payment verification (Pakistan MVP), and an admin verification workflow.
 

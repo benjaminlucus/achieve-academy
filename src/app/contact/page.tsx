@@ -82,7 +82,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Email Us</p>
-                    <p className="text-lg font-bold text-dark-navy">support@achieveacademy.com</p>
+                    <p className="text-lg font-bold text-dark-navy">contact@contact.ravencrestacademy.com</p>
                   </div>
                 </div>
                 

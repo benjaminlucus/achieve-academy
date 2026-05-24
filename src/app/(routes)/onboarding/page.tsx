@@ -162,7 +162,7 @@ export default function OnboardingPage() {
               <div className="text-center space-y-3">
                 <span className="text-[10px] font-black text-coral uppercase tracking-[0.2em]">Step 1 of {totalSteps}</span>
                 <h1 className="text-4xl font-black text-dark-navy tracking-tight">Choose Your Role</h1>
-                <p className="text-steel-blue font-medium">How would you like to use Achieve Academy?</p>
+                <p className="text-steel-blue font-medium">How would you like to use Ravencrest Academy?</p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8">

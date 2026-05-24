@@ -5,7 +5,7 @@ import Link from "next/link";
 const sections = [
   {
     title: "1. Acceptance of Terms",
-    content: "By accessing or using Achieve Academy, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our platform. These terms apply to all students, tutors, and visitors.",
+    content: "By accessing or using Ravencrest Academy, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our platform. These terms apply to all students, tutors, and visitors.",
     icon: Scale,
   },
   {
@@ -20,7 +20,7 @@ const sections = [
   },
   {
     title: "4. Tutor Payouts & Fees",
-    content: "Achieve Academy charges a 20% platform commission on all student payments. Tutors receive 80% of the gross earnings. Payouts are processed manually upon request and after verification of completed sessions.",
+    content: "Ravencrest Academy charges a 20% platform commission on all student payments. Tutors receive 80% of the gross earnings. Payouts are processed manually upon request and after verification of completed sessions.",
     icon: Gavel,
   },
   {

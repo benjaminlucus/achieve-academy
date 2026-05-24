@@ -12,11 +12,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Don't show public navbar on admin routes
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
-
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   const navLinks = [
@@ -31,20 +26,23 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-off-white/80 backdrop-blur-md border-b border-steel-blue/20">
+    <nav className={`fixed top-0 z-50 w-full bg-off-white/80 backdrop-blur-md border-b border-steel-blue/20 transition-all duration-300 ${pathname?.startsWith("/admin") ? 'lg:pl-[var(--sidebar-width,18rem)]' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className={`flex items-center gap-2 ${pathname?.startsWith("/admin") ? 'hidden lg:flex' : 'flex'}`}>
               <Image
                 src="/logo.svg"
-                alt="Achieve Academy Logo"
+                alt="Ravencrest Academy Logo"
                 width={32}
                 height={32}
                 className="w-38 h-38"
                 priority
               />
             </Link>
+            {pathname?.startsWith("/admin") && (
+              <div className="w-10 lg:hidden" />
+            )}
           </div>
 
           {/* Desktop Nav */}
