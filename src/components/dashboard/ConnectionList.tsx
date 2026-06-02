@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Calendar, UserX, Loader2, Clock, AlertCircle, CreditCard } from "lucide-react";
+import { MessageSquare, Calendar, Loader2, Clock, AlertCircle, CreditCard } from "lucide-react";
 import { ScheduleSessionModal } from "./ScheduleSessionModal";
-import { format, differenceInDays, isAfter } from "date-fns";
+import { differenceInDays, isAfter } from "date-fns";
 
 interface ConnectionListProps {
   userRole: "student" | "tutor";

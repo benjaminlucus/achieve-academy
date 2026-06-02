@@ -1,4 +1,3 @@
-import React from "react";
 import { getAllStudents, getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";

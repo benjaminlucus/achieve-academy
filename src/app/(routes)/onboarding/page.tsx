@@ -2,7 +2,20 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GraduationCap, UserRound, ArrowRight, ArrowLeft, Check, Clock, Globe, Book, Star, DollarSign, Languages, Briefcase } from "lucide-react";
+import { 
+  GraduationCap, 
+  UserRound, 
+  ArrowRight, 
+  ArrowLeft, 
+  Check, 
+  Clock, 
+  Globe, 
+  Book, 
+  Star, 
+  DollarSign, 
+  Languages, 
+  Briefcase 
+} from "lucide-react";
 import { completeOnboarding } from "./actions";
 import { allTimezones, allGrades } from "@/lib/constants";
 

@@ -1,5 +1,4 @@
-import React from "react";
-import { getCurrentUser, getTotalPayments } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import PaymentsTableClient from "./PaymentsTableClient";

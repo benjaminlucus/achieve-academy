@@ -6,10 +6,7 @@ import {
   TrendingUp, 
   Clock, 
   Wallet,
-  MoreVertical,
-  ChevronRight,
   ArrowUpRight,
-  ArrowDownLeft
 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 

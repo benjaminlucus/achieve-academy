@@ -1,7 +1,7 @@
 import React from "react";
 import { Shield, CreditCard, UserCheck, Gavel, Mail, Scale } from "lucide-react";
 import Link from "next/link";
-// i am just testingt the code and just maki g evrything to happen at the time to track, bla bla blab a]alsjdods so dhsos iwbidxbqbadhsnskaksksjhakjjdhdhjfksaoisjsjjahsjhahjshajhshajjjjjjjsjjsojsoqjsljaljlajslajs
+
 const sections = [
   {
     title: "1. Acceptance of Terms",

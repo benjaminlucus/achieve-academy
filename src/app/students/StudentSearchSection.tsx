@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { BookOpen, GraduationCap, MapPin, ChevronRight, Target, User } from "lucide-react";
+import { MapPin, ChevronRight, Target } from "lucide-react";
 
 import { SearchBar } from "@/components/SearchBar";
 import { VerifiedTick } from "@/components/VerifiedTick";

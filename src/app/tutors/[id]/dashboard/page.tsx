@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
-  User, Mail, MapPin, Clock, GraduationCap, 
-  DollarSign, BookOpen, Settings, Save, Edit2, 
-  X, ShieldCheck, ShieldAlert, BarChart3, TrendingUp,
-  ChevronRight, Calendar, CreditCard, Star, Languages, Briefcase,
-  History, Zap, Award, Users, MessageSquare
+  MapPin, GraduationCap, 
+  DollarSign, Edit2, 
+  ShieldCheck, Briefcase,
+  Calendar, Star, Users
 } from "lucide-react";
 import { updateTutorProfile } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";

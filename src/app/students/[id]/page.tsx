@@ -1,13 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import {
-  BookOpen, GraduationCap, Mail, MapPin,
-  Clock, Calendar, CheckCircle, ChevronRight,
-  LayoutDashboard, Search, Settings, LogOut, CreditCard, Bell, History,
-  TrendingUp, Award, Zap, Target, Star, ShieldCheck, Trophy
+  BookOpen, GraduationCap, Search, History, Award, Zap, Target, ShieldCheck, Trophy
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";

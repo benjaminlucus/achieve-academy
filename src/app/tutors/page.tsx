@@ -1,9 +1,6 @@
 import { connectDB } from "@/database/connect";
 import User from "@/database/models/user.model";
 import TutorProfile from "@/database/models/tutor.model";
-import { SearchBar } from "@/components/SearchBar";
-import Link from "next/link";
-import { BookOpen, Clock, DollarSign, Star } from "lucide-react";
 import { TutorSearchSection } from "./TutorSearchSection";
 
 export default async function TutorsPage(props: any) {

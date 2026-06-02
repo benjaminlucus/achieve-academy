@@ -2,20 +2,13 @@
 
 import React, { useState } from "react";
 import {
-  CheckCircle,
-  XCircle,
   MapPin,
-  Clock,
   GraduationCap,
   Mail,
-  ChevronRight,
-  ShieldCheck,
-  ShieldX,
-  BookOpen,
-  Calendar,
   Video,
   X,
-  AlertCircle
+  AlertCircle,
+  Calendar
 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { useRouter } from "next/navigation";

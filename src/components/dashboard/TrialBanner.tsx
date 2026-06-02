@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, AlertCircle, CreditCard, ChevronRight, CheckCircle, Loader2 } from "lucide-react";
-import { format, differenceInDays, isAfter } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
+import { Clock, AlertCircle, CreditCard } from "lucide-react";
+import { differenceInDays, isAfter } from "date-fns";
+import { motion } from "framer-motion";
 
 interface TrialBannerProps {
   userRole: "student" | "tutor";
