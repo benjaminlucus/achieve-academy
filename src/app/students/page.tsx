@@ -1,16 +1,14 @@
 import { connectDB } from "@/database/connect";
 import User from "@/database/models/user.model";
 import StudentProfile from "@/database/models/student.model";
-import Link from "next/link";
-import { BookOpen, GraduationCap, MapPin } from "lucide-react";
 import { StudentSearchSection } from "./StudentSearchSection";
 
-export default async function StudentsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; class?: string };
-}) {
+export const dynamic = "force-dynamic";
+
+export default async function StudentsPage( props: any) {
   await connectDB();
+
+  const searchParams = props.searchParams || {};
 
   const query = searchParams.q || "";
   const classFilter = searchParams.class || "Class (All)";

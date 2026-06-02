@@ -6,12 +6,9 @@ import Link from "next/link";
 import { BookOpen, Clock, DollarSign, Star } from "lucide-react";
 import { TutorSearchSection } from "./TutorSearchSection";
 
-export default async function TutorsPage({
-  searchParams,
-}: {
-  searchParams: {q?: string, subject?: string}
-}) {
+export default async function TutorsPage(props: any) {
   await connectDB();
+  const searchParams = props.searchParams || {};
 
   const query = searchParams.q || "";
   const subjectFilter = searchParams.subject || "Subject (All)";
