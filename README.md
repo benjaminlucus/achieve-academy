@@ -1,5 +1,8 @@
 # Ravencrest Academy
 
+
+##### *'Note for Hack Club Reviewer: The initial codebase structural setup and baseline error resolution were assisted by an AI editor. All subsequent features, business logic, and UI elements tracking toward my 35-hour goal are being typed completely by hand.'*
+
 Tutoring marketplace MVP built with Next.js App Router, Clerk, and MongoDB. Supports student–tutor connections, trial messaging, manual payment verification (Pakistan MVP), and an admin verification workflow.
 
 ## Stack
