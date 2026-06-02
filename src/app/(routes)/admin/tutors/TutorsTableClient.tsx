@@ -37,7 +37,7 @@ interface Tutor {
   status: string;
 }
 
-export default function TutorsTableClient({ initialTutors }: { initialTutors: Tutor[] }) {
+export default function TutorsTableClient({ initialTutors = [] }: { initialTutors?: Tutor[] }) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
@@ -49,14 +49,14 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
   const [notes, setNotes] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
 
-  const filteredTutors = initialTutors.filter((tutor) => {
+  const filteredTutors = (initialTutors || []).filter((tutor) => {
     const matchesSearch =
-      tutor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tutor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tutor.subjects.some(sub => sub.toLowerCase().includes(searchTerm.toLowerCase()));
+      (tutor.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tutor.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tutor.subjects || []).some(sub => (sub || "").toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus =
       selectedStatus === "All Status" ||
-      normalizeUserStatus(tutor.status) === selectedStatus.toLowerCase();
+      normalizeUserStatus(tutor.status || "") === selectedStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -130,7 +130,7 @@ export default function TutorsTableClient({ initialTutors }: { initialTutors: Tu
             <div className="p-6 flex flex-col md:flex-row gap-6">
               <div className="flex flex-col items-center md:items-start">
                 <div className="w-20 h-20 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-3xl shadow-xl shadow-dark-navy/10 mb-4 overflow-hidden">
-                  {tutor.name.charAt(0)}
+                  {(tutor.name || "T").charAt(0)}
                 </div>
                 <UserStatusBadge status={tutor.status} />
               </div>

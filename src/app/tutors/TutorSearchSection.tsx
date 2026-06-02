@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { BookOpen, Clock, DollarSign, Star, ChevronRight, GraduationCap, MapPin, MessageSquarePlus } from "lucide-react";
+import { Star, ChevronRight} from "lucide-react";
 
 import { SearchBar } from "@/components/SearchBar";
 import { VerifiedTick } from "@/components/VerifiedTick";

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
   DollarSign, 
   TrendingUp, 
@@ -28,16 +28,21 @@ interface Stats {
 }
 
 export default function PaymentsTableClient({ 
-  initialPayments, 
-  stats 
+  initialPayments = [], 
+  stats = {
+    totalRevenue: 0,
+    commissionEarned: 0,
+    tutorEarnings: 0,
+    pendingPayouts: 0
+  } 
 }: { 
-  initialPayments: Payment[], 
-  stats: Stats 
+  initialPayments?: Payment[], 
+  stats?: Stats 
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
 
-  const filteredPayments = initialPayments.filter((payment) => {
+  const filteredPayments = (initialPayments || []).filter((payment) => {
     const matchesSearch = 
       payment.user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -46,10 +51,10 @@ export default function PaymentsTableClient({
   });
 
   const statsCards = [
-    { label: "Total Revenue", value: `$${stats.totalRevenue.toFixed(2)}`, icon: DollarSign, color: "bg-blue-500" },
-    { label: "Commission", value: `$${stats.commissionEarned.toFixed(2)}`, icon: TrendingUp, color: "bg-emerald-500" },
-    { label: "Tutor Earnings", value: `$${stats.tutorEarnings.toFixed(2)}`, icon: Wallet, color: "bg-amber-500" },
-    { label: "Pending Payouts", value: `$${stats.pendingPayouts.toFixed(2)}`, icon: Clock, color: "bg-rose-500" },
+    { label: "Total Revenue", value: `$${(stats?.totalRevenue || 0).toFixed(2)}`, icon: DollarSign, color: "bg-blue-500" },
+    { label: "Commission", value: `$${(stats?.commissionEarned || 0).toFixed(2)}`, icon: TrendingUp, color: "bg-emerald-500" },
+    { label: "Tutor Earnings", value: `$${(stats?.tutorEarnings || 0).toFixed(2)}`, icon: Wallet, color: "bg-amber-500" },
+    { label: "Pending Payouts", value: `$${(stats?.pendingPayouts || 0).toFixed(2)}`, icon: Clock, color: "bg-rose-500" },
   ];
 
   return (

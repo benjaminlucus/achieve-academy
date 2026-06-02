@@ -23,16 +23,16 @@ interface Session {
   price: string;
 }
 
-export default function SessionsTableClient({ initialSessions }: { initialSessions: Session[] }) {
+export default function SessionsTableClient({ initialSessions = [] }: { initialSessions?: Session[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
-  const filteredSessions = initialSessions.filter((session) => {
+  const filteredSessions = (initialSessions || []).filter((session) => {
     const matchesSearch = 
-      session.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.tutor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.id.toLowerCase().includes(searchTerm.toLowerCase());
+      (session.student || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (session.tutor || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (session.subject || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (session.id || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === "All Status" || !selectedStatus || session.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });

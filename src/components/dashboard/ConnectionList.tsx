@@ -14,8 +14,10 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
   const [connections, setConnections] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const fetchConnections = async () => {
       try {
         const res = await fetch("/api/connections");
@@ -33,7 +35,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
     fetchConnections();
   }, []);
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="animate-spin text-dark-navy" size={32} />

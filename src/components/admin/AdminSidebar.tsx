@@ -45,7 +45,12 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { signOut } = useClerk();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -53,24 +58,27 @@ export default function AdminSidebar() {
     setIsOpen(false);
   }, [pathname]);
 
+  // Listen for external toggle events
+  useEffect(() => {
+    const handleToggle = () => setIsOpen(prev => !prev);
+    window.addEventListener('toggle-admin-sidebar', handleToggle);
+    return () => window.removeEventListener('toggle-admin-sidebar', handleToggle);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <button 
-        className="lg:hidden fixed top-5 left-4 z-[60] p-2 bg-white rounded-xl shadow-md border border-gray-100 text-dark-navy hover:text-coral transition-all active:scale-95"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Menu"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
       {/* Sidebar Aside */}
       <aside className={`
         fixed inset-y-0 left-0 z-[50] bg-white border-r border-gray-100 transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isCollapsed ? 'lg:w-20' : 'w-72 lg:w-72'}
         shadow-2xl lg:shadow-none
-      `}>
+      `}
+      style={{
+        '--sidebar-width': isCollapsed ? '5rem' : '18rem'
+      } as React.CSSProperties}>
         <div className="flex flex-col h-full relative">
           
           {/* Collapse Toggle Button (Desktop Only) */}
@@ -83,7 +91,7 @@ export default function AdminSidebar() {
           </button>
 
           {/* Logo Section */}
-          <div className={`p-6 border-b border-gray-50 transition-all duration-300 ${isCollapsed ? 'px-4' : ''}`}>
+          <div className={`p-6 border-b border-gray-50 transition-all duration-300 flex items-center justify-between ${isCollapsed ? 'px-4' : ''}`}>
             <Link href="/" className="flex items-center gap-3 overflow-hidden">
               <div className="w-10 h-10 bg-dark-navy rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg shadow-dark-navy/10">
                 <span className="text-white font-bold text-xl">A</span>
@@ -94,6 +102,14 @@ export default function AdminSidebar() {
                 </span>
               )}
             </Link>
+            
+            {/* Mobile Close Button */}
+            <button 
+              className="lg:hidden p-2 text-gray-400 hover:text-dark-navy transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <X size={20} />
+            </button>
           </div>
 
           {/* Navigation Links */}
@@ -143,12 +159,9 @@ export default function AdminSidebar() {
 
       {/* Dynamic Content Spacing */}
       <style jsx global>{`
-        :root {
-          --sidebar-width: ${isCollapsed ? '5rem' : '18rem'};
-        }
         @media (min-width: 1024px) {
           main.lg\\:pl-72 {
-            padding-left: calc(var(--sidebar-width) + 3rem) !important;
+            padding-left: calc(${isCollapsed ? '5rem' : '18rem'} + 3rem) !important;
           }
         }
         main {

@@ -76,11 +76,11 @@ export default function Footer() {
             <div className="flex flex-col gap-4 text-steel-blue font-medium">
               <div className="flex items-center gap-3">
                 <Mail size={18} className="text-coral" />
-                <span>hello@ravencrestacademy.com</span>
+                <span>contact@ravencrestacademy.com</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone size={18} className="text-coral" />
-                <span>+1 (555) 000-0000</span>
+                <span>+92 3015040363</span>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin size={18} className="text-coral" />

@@ -99,9 +99,9 @@ const InterviewCard = ({ interview, onStatusChange }: { interview: Interview; on
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg shadow-inner overflow-hidden">
               {interview.user.profileImage ? (
-                <img src={interview.user.profileImage} alt={interview.user.name} className="w-full h-full object-cover" />
+                <img src={interview.user.profileImage} alt={interview.user.name || "User"} className="w-full h-full object-cover" />
               ) : (
-                interview.user.name.charAt(0)
+                (interview.user.name || "U").charAt(0)
               )}
             </div>
             <div>

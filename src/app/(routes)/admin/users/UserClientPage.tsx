@@ -1,20 +1,14 @@
 "use client";
 
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
-    Search,
-    Filter,
-    MoreVertical,
     UserPlus,
-    Mail,
     ShieldAlert,
     UserCog,
     Eye,
-    X
 } from "lucide-react";
 import { SearchBar } from '@/components/SearchBar';
 import { ITEMS_PER_PAGE } from '@/lib/constants';
-import AllUsersTable from './AllUsersTable';
 import { CreateUserDialog } from './CreateUserDialog';
 
 const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number }) => {
@@ -114,7 +108,7 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
-                                                {user.name.charAt(0)}
+                                                {(user.name || "U").charAt(0)}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>

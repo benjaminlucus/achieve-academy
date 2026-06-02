@@ -23,7 +23,7 @@ const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
-                                                {user.name.charAt(0)}
+                                                {(user.name || "U").charAt(0)}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
@@ -80,7 +80,7 @@ const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number
                         <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg">
-                                    {user.name.charAt(0)}
+                                    {(user.name || "U").charAt(0)}
                                 </div>
                                 <div>
                                     <p className="text-base font-black text-gray-900 uppercase tracking-tight">{user.name}</p>

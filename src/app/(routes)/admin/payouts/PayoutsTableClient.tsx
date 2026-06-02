@@ -163,9 +163,9 @@ export default function PayoutsTableClient() {
               <div className="flex items-center gap-4 min-w-[250px]">
                 <div className="w-16 h-16 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-xl overflow-hidden shadow-inner">
                   {tutor.profileImage ? (
-                    <img src={tutor.profileImage} alt={tutor.name} className="w-full h-full object-cover" />
+                    <img src={tutor.profileImage} alt={tutor.name || "Tutor"} className="w-full h-full object-cover" />
                   ) : (
-                    tutor.name.charAt(0)
+                    (tutor.name || "T").charAt(0)
                   )}
                 </div>
                 <div>

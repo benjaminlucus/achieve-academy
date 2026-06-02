@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TutorsApprovalPage() {
   const { userId } = await auth();
-  const pendingTutors = await getAllTutors();
+  const pendingTutors = (await getAllTutors()) || [];
 
   const user = await getCurrentUser(userId || undefined);
 
@@ -16,7 +16,7 @@ export default async function TutorsApprovalPage() {
     return redirect("/admin");
   }
 
-  const pendingCount = pendingTutors.filter((t: { status: string }) => t.status === "Pending").length;
+  const pendingCount = (pendingTutors || []).filter((t: { status: string }) => t && t.status === "Pending").length;
 
   
   return (

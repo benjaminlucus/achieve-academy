@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function StudentsApprovalPage() {
   const { userId } = await auth();
-  const students = await getAllStudents();
+  const students = (await getAllStudents()) || [];
 
   const user = await getCurrentUser(userId || undefined);
 
@@ -15,7 +15,7 @@ export default async function StudentsApprovalPage() {
     return redirect("/admin");
   }
 
-  const pendingCount = students.filter((s: any) => s.status === "applied" || s.status === "reviewing").length;
+  const pendingCount = (students || []).filter((s: any) => s && (s.status === "applied" || s.status === "reviewing")).length;
 
   return (
     <div className="space-y-6 pb-12">

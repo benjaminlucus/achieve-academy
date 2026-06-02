@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 interface TrialBannerProps {
   userRole: "student" | "tutor";
   myId: string;
-}
+} 
 
 export const TrialBanner = ({ userRole, myId }: TrialBannerProps) => {
   const [connections, setConnections] = useState<any[]>([]);

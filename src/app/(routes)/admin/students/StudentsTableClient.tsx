@@ -33,7 +33,7 @@ interface Student {
   interviewLink?: string;
 }
 
-export default function StudentsTableClient({ initialStudents }: { initialStudents: Student[] }) {
+export default function StudentsTableClient({ initialStudents = [] }: { initialStudents?: Student[] }) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
@@ -45,12 +45,12 @@ export default function StudentsTableClient({ initialStudents }: { initialStuden
   const [notes, setNotes] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
 
-  const filteredStudents = initialStudents.filter((student) => {
+  const filteredStudents = (initialStudents || []).filter((student) => {
     const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.subjects.some(sub => sub.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = selectedStatus === "All Status" || student.status.toLowerCase() === selectedStatus.toLowerCase();
+      (student.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.subjects || []).some(sub => (sub || "").toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = selectedStatus === "All Status" || (student.status || "").toLowerCase() === selectedStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -125,9 +125,9 @@ export default function StudentsTableClient({ initialStudents }: { initialStuden
               <div className="flex flex-col items-center md:items-start">
                 <div className="w-20 h-20 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-3xl shadow-xl shadow-dark-navy/10 mb-4 overflow-hidden">
                   {student.profileImage ? (
-                    <Image src={student.profileImage} alt={student.name} width={80} height={80} className="w-full h-full object-cover" />
+                    <Image src={student.profileImage} alt={student.name || "Student"} width={80} height={80} className="w-full h-full object-cover" />
                   ) : (
-                    student.name.charAt(0)
+                    (student.name || "S").charAt(0)
                   )}
                 </div>
                 <UserStatusBadge status={student.status} />

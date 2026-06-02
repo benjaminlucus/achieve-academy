@@ -18,7 +18,13 @@ export default async function AdminPaymentsPage() {
   });
 
   const data = await res.json();
-  const allPayments = data.payments;
+  const allPayments = data.payments || [];
+  const stats = data.stats || {
+    totalRevenue: 0,
+    commissionEarned: 0,
+    tutorEarnings: 0,
+    pendingPayouts: 0
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -30,7 +36,7 @@ export default async function AdminPaymentsPage() {
         </div>
       </div>
 
-      <PaymentsTableClient initialPayments={allPayments} stats={data.stats} />
+      <PaymentsTableClient initialPayments={allPayments} stats={stats} />
     </div>
   );
 }

@@ -17,15 +17,28 @@ export const SearchBar = ({
 }) => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(initialStatus);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 🔥 Debounce (important for performance)
   useEffect(() => {
+    if (!mounted) return;
     const delay = setTimeout(() => {
       onSearch({ search, status });
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, status]);
+  }, [search, status, mounted]);
+
+  if (!mounted) return (
+    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center opacity-50">
+      <div className="relative flex-1 w-full h-11 bg-gray-50 rounded-xl animate-pulse" />
+      <div className="w-full md:w-32 h-11 bg-gray-50 rounded-xl animate-pulse" />
+    </div>
+  );
 
   return (
     <div>
