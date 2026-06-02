@@ -51,6 +51,7 @@ export async function createStudySession(data: {
   }
 }
 
+
 export async function updateSessionAttendance(sessionId: string, attendanceData: { date: string; present: boolean }) {
   try {
     const { userId: clerkId } = await auth();
