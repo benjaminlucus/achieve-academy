@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useLayoutEffect } from "react";
 import { Search, Filter } from "lucide-react";
 
 export const SearchBar = ({
@@ -19,13 +19,13 @@ export const SearchBar = ({
   const [status, setStatus] = useState(initialStatus);
   const [mounted, setMounted] = useState(false);
 
-  // Use useEffect only to set mounted flag after hydration
-  useEffect(() => {
+  // Use useLayoutEffect for hydration flag to avoid cascading renders
+  useLayoutEffect(() => {
     setMounted(true);
   }, []);
 
   // 🔥 Debounce (important for performance)
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!mounted) return;
     const delay = setTimeout(() => {
       onSearch({ search, status });
