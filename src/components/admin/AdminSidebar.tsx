@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -47,18 +47,18 @@ export default function AdminSidebar() {
   const [mounted, setMounted] = useState(false);
   const { signOut } = useClerk();
 
-  useEffect(() => {
+  // Use useLayoutEffect for hydration flag to avoid cascading renders
+  useLayoutEffect(() => {
     setMounted(true);
   }, []);
 
   // Close sidebar on route change (mobile)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  useLayoutEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
   // Listen for external toggle events
-  useEffect(() => {
+  useLayoutEffect(() => {
     const handleToggle = () => setIsOpen(prev => !prev);
     window.addEventListener('toggle-admin-sidebar', handleToggle);
     return () => window.removeEventListener('toggle-admin-sidebar', handleToggle);
