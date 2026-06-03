@@ -13,7 +13,6 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  Menu,
   X,
   ChevronRight,
   GraduationCap,
@@ -84,7 +83,7 @@ export default function AdminSidebar() {
           {/* Collapse Toggle Button (Desktop Only) */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex absolute -right-3 top-10 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-400 hover:text-dark-navy hover:border-dark-navy shadow-sm z-50 transition-all duration-300"
+            className="hidden lg:flex absolute -right-3 top-10 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-400 hover:text-dark-navy hover:border-dark-navy transition-all z-10"
             style={{ transform: isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             <ChevronRight size={14} />
