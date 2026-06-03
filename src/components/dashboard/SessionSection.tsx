@@ -1,15 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Clock, BookOpen, Play, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Calendar, Clock, Play, CheckCircle, Loader2 } from "lucide-react";
 import { format, isAfter, isBefore, addMinutes } from "date-fns";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 
+interface UserInfo {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  email: string;
+}
+
 interface Session {
   _id: string;
-  student: any;
-  tutor: any;
+  student: UserInfo;
+  tutor: UserInfo;
   startDate: string;
   duration: number;
   subject: string;
@@ -52,7 +59,8 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
 
       toast.success("Session marked as completed!");
       setSessions(prev => prev.filter(s => s._id !== sessionId));
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Error updating session:", error);
       toast.error("Error updating session");
     }
   };
@@ -92,7 +100,6 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
           const end = addMinutes(start, session.duration);
           const now = new Date();
           const isLive = isBefore(start, now) && isAfter(end, now);
-          const isUpcoming = isAfter(start, now);
           const partner = userRole === "student" ? session.tutor : session.student;
 
           return (

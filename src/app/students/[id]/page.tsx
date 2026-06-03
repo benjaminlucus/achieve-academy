@@ -12,10 +12,20 @@ import { useUser } from "@clerk/nextjs";
 import { ConnectButton } from "@/components/ConnectButton";
 import { Toaster } from "react-hot-toast";
 
+interface StudentData {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  clerkId: string;
+  status: string;
+  verificationLevel: string;
+  [key: string]: any;
+}
+
 export default function StudentProfileView() {
   const { id } = useParams<{ id: string }>();
   const { user: clerkUser } = useUser();
-  const [studentData, setStudentData] = useState<any>(null);
+  const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

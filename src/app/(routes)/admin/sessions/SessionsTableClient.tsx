@@ -7,8 +7,7 @@ import {
   User, 
   BookOpen, 
   GraduationCap,
-  MoreVertical,
-  ChevronRight
+  MoreVertical
 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 

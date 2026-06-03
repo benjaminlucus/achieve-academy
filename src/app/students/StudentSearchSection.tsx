@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { MapPin, ChevronRight, Target } from "lucide-react";
 
@@ -8,6 +8,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { VerifiedTick } from "@/components/VerifiedTick";
 import { ConnectButton } from "@/components/ConnectButton";
 import { Toaster } from "react-hot-toast";
+import Image from "next/image";
 
 export function StudentSearchSection({ initialStudents = [] }: { initialStudents: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,9 +55,9 @@ export function StudentSearchSection({ initialStudents = [] }: { initialStudents
                   </span>
                 </div>
                 
-                <div className="w-20 h-20 bg-dark-navy border-2 border-dark-navy flex items-center justify-center overflow-hidden mb-4 shadow-[4px_4px_0px_0px_rgba(255,111,97,1)]">
+                <div className="w-20 h-20 bg-dark-navy border-2 border-dark-navy flex items-center justify-center overflow-hidden mb-4 shadow-[4px_4px_0px_0px_rgba(255,111,97,1)] relative">
                   {student.user?.profileImage ? (
-                    <img src={student.user.profileImage} alt={student.user.name} className="w-full h-full object-cover" />
+                    <Image src={student.user.profileImage} alt={student.user.name} fill className="object-cover" />
                   ) : (
                     <span className="text-3xl font-bold text-off-white uppercase">{student.user?.name?.charAt(0) || "S"}</span>
                   )}
@@ -82,7 +83,7 @@ export function StudentSearchSection({ initialStudents = [] }: { initialStudents
                     <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest">Learning Goals</span>
                   </div>
                   <p className="text-dark-navy text-xs font-medium leading-relaxed line-clamp-3 italic bg-off-white p-3 border border-dark-navy/10 rounded">
-                    "{student.learningGoals || "Looking for an expert to help me master my subjects."}"
+                    &quot;{student.learningGoals || "Looking for an expert to help me master my subjects."}&quot;
                   </p>
                 </div>
                 

@@ -8,7 +8,6 @@ import Payout from "@/database/models/payout.model";
 
 import Interview from "@/database/models/interview.model";
 import Connection from "@/database/models/connection.model";
-import Review from "@/database/models/review.model";
 import { differenceInMonths, isAfter } from "date-fns";
 import { isVerifiedUserStatus, normalizeUserStatus } from "@/lib/user-status";
 import { PLATFORM_COMMISSION_RATE } from "@/lib/constants";
@@ -26,7 +25,6 @@ export async function updateVerificationLevel(userId: string) {
     const monthsActive = differenceInMonths(new Date(), new Date(user.createdAt));
     
     const tutorProfile = await TutorProfile.findOne({ user: userId });
-    const studentProfile = await StudentProfile.findOne({ user: userId });
     
     const completedSessions = await Session.countDocuments({
       $or: [{ student: userId }, { tutor: userId }],

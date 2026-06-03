@@ -96,9 +96,10 @@ export default function OnboardingPage() {
         setIsPending(false);
         setStep(role === "tutor" ? "availability" : "details");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      alert("Something went wrong. Please check your connection and try again.");
+      const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+      alert(`An error occurred: ${errorMessage}`);
       setIsPending(false);
       setStep(role === "tutor" ? "availability" : "details");
     }

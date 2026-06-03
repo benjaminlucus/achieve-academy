@@ -1,14 +1,4 @@
 import React from "react";
-import {
-  Search,
-  Filter,
-  MoreVertical,
-  UserPlus,
-  Mail,
-  ShieldAlert,
-  UserCog,
-  Eye
-} from "lucide-react";
 import { getCurrentUser, getTotalUserCount, getTotalUsers } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -31,4 +21,5 @@ export default async function UsersPage() {
     <div>
       <UserClient users={allUsers} totalCount={totalCount} />
     </div>
-)}
+  );
+}

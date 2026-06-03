@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { 
   MapPin, GraduationCap, 
   DollarSign, Edit2, 
@@ -19,7 +19,6 @@ import { toast, Toaster } from "react-hot-toast";
 
 export default function TutorPrivateDashboard() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [tutorData, setTutorData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -36,7 +35,7 @@ export default function TutorPrivateDashboard() {
           const data = await res.json();
           setTutorData(data);
           
-          const initialAvailability = daysOfWeek.map(day => {
+          const initialAvailability = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => {
             const existing = data.availability?.find((a: any) => a.day === day);
             return {
               day,

@@ -11,29 +11,52 @@ import {
   MoreVertical, 
   Search,
   Check,
-  CheckCheck,
-  Image as ImageIcon,
-  File as FileIcon,
-  X
+  CheckCheck
 } from "lucide-react";
 import { sendMessage, markAsRead } from "@/app/(routes)/messages/actions";
 import Image from "next/image";
 
-export default function ChatContainer({ currentUser, initialConversations }: any) {
-  const [conversations, setConversations] = useState(initialConversations);
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+interface Participant {
+  _id: string;
+  name: string;
+  profileImage?: string;
+}
+
+interface Message {
+  _id: string;
+  sender: string;
+  content: string;
+  messageType: string;
+  createdAt: string | Date;
+  isRead: boolean;
+}
+
+interface Conversation {
+  _id: string;
+  participants: Participant[];
+  lastMessage?: Message;
+  updatedAt: string | Date;
+}
+
+interface ChatContainerProps {
+  currentUser: { _id: string };
+  initialConversations: Conversation[];
+}
+
+export default function ChatContainer({ currentUser, initialConversations }: ChatContainerProps) {
+  const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to user-specific channel for new conversation updates
   useEffect(() => {
     const channel = pusherClient.subscribe(`user-${currentUser._id}`);
     
-    channel.bind("conversation-update", (data: any) => {
-      setConversations((prev: any) => {
-        const index = prev.findIndex((c: any) => c._id === data.conversationId);
+    channel.bind("conversation-update", (data: { conversationId: string, lastMessage: Message }) => {
+      setConversations((prev) => {
+        const index = prev.findIndex((c) => c._id === data.conversationId);
         if (index !== -1) {
           const updated = [...prev];
           updated[index] = { ...updated[index], lastMessage: data.lastMessage, updatedAt: new Date() };
@@ -54,7 +77,7 @@ export default function ChatContainer({ currentUser, initialConversations }: any
 
     const channel = pusherClient.subscribe(`chat-${selectedConversation._id}`);
     
-    channel.bind("new-message", (message: any) => {
+    channel.bind("new-message", (message: Message) => {
       setMessages((prev) => [...prev, message]);
       if (message.sender !== currentUser._id) {
         markAsRead([message._id]);
@@ -71,23 +94,20 @@ export default function ChatContainer({ currentUser, initialConversations }: any
     if (!selectedConversation) return;
 
     const fetchMessages = async () => {
-      setIsLoadingMessages(true);
       try {
         const res = await fetch(`/api/messages/${selectedConversation._id}`);
         if (res.ok) {
-          const data = await res.json();
+          const data: Message[] = await res.json();
           setMessages(data);
           
           // Mark unread messages as read
           const unreadIds = data
-            .filter((m: any) => !m.isRead && m.sender !== currentUser._id)
-            .map((m: any) => m._id);
+            .filter((m) => !m.isRead && m.sender !== currentUser._id)
+            .map((m) => m._id);
           if (unreadIds.length > 0) markAsRead(unreadIds);
         }
       } catch (error) {
         console.error("Fetch Messages Error:", error);
-      } finally {
-        setIsLoadingMessages(false);
       }
     };
 
@@ -118,8 +138,8 @@ export default function ChatContainer({ currentUser, initialConversations }: any
     }
   };
 
-  const getOtherParticipant = (conversation: any) => {
-    return conversation.participants.find((p: any) => p._id !== currentUser._id);
+  const getOtherParticipant = (conversation: Conversation) => {
+    return conversation.participants.find((p) => p._id !== currentUser._id) as Participant;
   };
 
   return (
@@ -138,7 +158,7 @@ export default function ChatContainer({ currentUser, initialConversations }: any
         </div>
         
         <div className="flex-grow overflow-y-auto custom-scrollbar">
-          {conversations.map((conv: any) => {
+          {conversations.map((conv) => {
             const otherUser = getOtherParticipant(conv);
             const isActive = selectedConversation?._id === conv._id;
             return (
@@ -192,7 +212,7 @@ export default function ChatContainer({ currentUser, initialConversations }: any
               <div>
                 <h3 className="text-sm font-black text-dark-navy uppercase tracking-tight">{getOtherParticipant(selectedConversation).name}</h3>
                 <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Online
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Online
                 </p>
               </div>
             </div>
@@ -205,7 +225,7 @@ export default function ChatContainer({ currentUser, initialConversations }: any
 
           {/* Messages Area */}
           <div className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar">
-            {messages.map((msg, i) => {
+            {messages.map((msg) => {
               const isMine = msg.sender === currentUser._id;
               return (
                 <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
@@ -248,6 +268,7 @@ export default function ChatContainer({ currentUser, initialConversations }: any
             </form>
           </div>
         </div>
+
       ) : (
         <div className="flex-grow flex flex-col items-center justify-center bg-gray-50/30 text-center p-10 space-y-6">
           <div className="w-24 h-24 bg-dark-navy/5 rounded-[2.5rem] flex items-center justify-center text-dark-navy/20">

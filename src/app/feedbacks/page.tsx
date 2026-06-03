@@ -5,19 +5,30 @@ import {
   MessageCircle, 
   ShieldCheck, 
   User,
-  ExternalLink,
   ChevronRight
 } from "lucide-react";
 import { connectDB } from "@/database/connect";
 import Feedback from "@/database/models/feedback.model";
 import Link from "next/link";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
+
+interface FeedbackDocument {
+  _id: string;
+  userName: string;
+  userRole: string;
+  rating: number;
+  text: string;
+  screenshotUrl?: string;
+  createdAt: string;
+}
 
 async function getPublicFeedbacks() {
   try {
     await connectDB();
-    return await Feedback.find({ isPublic: true }).sort({ createdAt: -1 });
+    const feedbacks = await Feedback.find({ isPublic: true }).sort({ createdAt: -1 });
+    return JSON.parse(JSON.stringify(feedbacks)) as FeedbackDocument[];
   } catch (error) {
     console.error("Error fetching feedback:", error);
     return [];
@@ -84,7 +95,7 @@ export default async function TestimonialsPage() {
       {/* Feedbacks Grid */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-          {feedbacks.map((f: any) => (
+          {feedbacks.map((f) => (
             <div 
               key={f._id} 
               className="break-inside-avoid bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group"
@@ -113,12 +124,12 @@ export default async function TestimonialsPage() {
               </div>
 
               <p className="text-gray-600 leading-relaxed italic mb-6">
-                "{f.text}"
+                &quot;{f.text}&quot;
               </p>
 
               {f.screenshotUrl && (
                 <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-100 mb-6 group-hover:border-coral/20 transition-colors">
-                  <img src={f.screenshotUrl} alt="Review Screenshot" className="object-cover w-full h-full" />
+                  <Image src={f.screenshotUrl} alt="Review Screenshot" fill className="object-cover" />
                   <div className="absolute inset-0 bg-dark-navy/0 group-hover:bg-dark-navy/20 transition-colors" />
                 </div>
               )}

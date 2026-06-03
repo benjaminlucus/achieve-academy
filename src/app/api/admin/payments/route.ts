@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
       Payment.find({ status: "pending" }).select("tutorEarning").lean(),
     ]);
 
-    const totalRevenue = allPaid.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const commissionEarned = allPaid.reduce((sum, p) => sum + (p.commission || 0), 0);
-    const tutorEarnings = allPaid.reduce((sum, p) => sum + (p.tutorEarning || 0), 0);
-    const pendingPayouts = allPending.reduce((sum, p) => sum + (p.tutorEarning || 0), 0);
+    const totalRevenue = allPaid.reduce((sum, p) => sum + ((p as any).amount || 0), 0);
+    const commissionEarned = allPaid.reduce((sum, p) => sum + ((p as any).commission || 0), 0);
+    const tutorEarnings = allPaid.reduce((sum, p) => sum + ((p as any).tutorEarning || 0), 0);
+    const pendingPayouts = allPending.reduce((sum, p) => sum + ((p as any).tutorEarning || 0), 0);
 
     const formattedPayments = payments.map((p) => ({
       id: p._id.toString(),

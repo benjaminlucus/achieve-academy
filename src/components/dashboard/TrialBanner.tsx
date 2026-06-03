@@ -10,8 +10,21 @@ interface TrialBannerProps {
   myId: string;
 } 
 
-export const TrialBanner = ({ userRole, myId }: TrialBannerProps) => {
-  const [connections, setConnections] = useState<any[]>([]);
+interface ConnectionPartner {
+  name: string;
+}
+
+interface Connection {
+  _id: string;
+  status: string;
+  subscriptionStatus: string;
+  trialEndsAt: string;
+  student: ConnectionPartner;
+  tutor: ConnectionPartner;
+}
+
+export const TrialBanner = ({ userRole }: TrialBannerProps) => {
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +34,7 @@ export const TrialBanner = ({ userRole, myId }: TrialBannerProps) => {
         if (res.ok) {
           const data = await res.json();
           // Find connections that are in trial or expired but not paid
-          const trialConnections = data.connections.filter((c: any) => 
+          const trialConnections = data.connections.filter((c: Connection) => 
             c.status === "accepted" && 
             (c.subscriptionStatus === "trial" || c.subscriptionStatus === "expired" || (c.subscriptionStatus === "none" && c.trialEndsAt))
           );

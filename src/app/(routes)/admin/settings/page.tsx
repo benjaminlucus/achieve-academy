@@ -1,10 +1,8 @@
 import React from "react";
 import { 
-  Settings, 
   ShieldCheck, 
   Bell, 
   Globe, 
-  Mail, 
   Lock, 
   Database, 
   CreditCard,

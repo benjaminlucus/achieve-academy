@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
 
     const feedbacks = await Feedback.find(query).sort({ createdAt: -1 });
     return NextResponse.json({ success: true, feedbacks });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("GET Feedbacks Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

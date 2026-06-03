@@ -4,8 +4,6 @@ import TutorFeatures from "@/components/TutorFeatures";
 import HowItWorks from "@/components/HowItWorks";
 import StudentFeatures from "@/components/StudentFeatures";
 import Image from "next/image";
-import { getCurrentUser } from "@/lib/utils";
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
 export default async function Home() {

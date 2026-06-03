@@ -10,10 +10,25 @@ interface ConnectionListProps {
   myId: string;
 }
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface Connection {
+  _id: string;
+  status: string;
+  subscriptionStatus: string;
+  trialEndsAt?: string | Date;
+  student: User;
+  tutor: User;
+}
+
 export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
-  const [connections, setConnections] = useState<any[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [selectedPartner, setSelectedPartner] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -24,7 +39,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
         if (res.ok) {
           const data = await res.json();
           // Filter only accepted connections
-          setConnections(data.connections.filter((c: any) => c.status === "accepted"));
+          setConnections(data.connections.filter((c: Connection) => c.status === "accepted"));
         }
       } catch (error) {
         console.error("Error fetching connections:", error);

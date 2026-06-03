@@ -53,13 +53,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, session });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Create Session Error:", error);
-    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
@@ -81,8 +82,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, sessions });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Get Sessions Error:", error);
-    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

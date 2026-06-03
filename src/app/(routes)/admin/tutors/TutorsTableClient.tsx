@@ -2,17 +2,10 @@
 
 import React, { useState } from "react";
 import {
-  CheckCircle,
-  XCircle,
-  MapPin,
   Clock,
   GraduationCap,
   Mail,
-  ChevronRight,
-  ShieldCheck,
-  ShieldX,
   Calendar,
-  Play,
   X,
   AlertCircle,
   Video
@@ -20,7 +13,6 @@ import {
 import { SearchBar } from "@/components/SearchBar";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { format } from "date-fns";
 import { UserStatusBadge } from "@/components/admin/UserStatusBadge";
 import { normalizeUserStatus } from "@/lib/user-status";
 

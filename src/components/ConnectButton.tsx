@@ -1,8 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { UserPlus, UserCheck, UserX, Loader2, MessageSquare } from "lucide-react";
+import { UserPlus, UserCheck, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "react-hot-toast";
+
+interface ConnectionUser {
+  _id: string;
+}
+
+interface Connection {
+  _id: string;
+  status: string;
+  student: ConnectionUser | string;
+  tutor: ConnectionUser | string;
+}
 
 interface ConnectButtonProps {
   targetUserId: string;
@@ -21,10 +32,11 @@ export const ConnectButton = ({ targetUserId, initialStatus, onStatusChange }: C
         const res = await fetch("/api/connections");
         if (res.ok) {
           const data = await res.json();
-          const conn = data.connections.find((c: any) => 
-            c.student._id === targetUserId || c.tutor._id === targetUserId ||
-            c.student === targetUserId || c.tutor === targetUserId
-          );
+          const conn = data.connections.find((c: Connection) => {
+            const studentId = typeof c.student === 'object' ? c.student._id : c.student;
+            const tutorId = typeof c.tutor === 'object' ? c.tutor._id : c.tutor;
+            return studentId === targetUserId || tutorId === targetUserId;
+          });
           if (conn) {
             setStatus(conn.status);
             setConnectionId(conn._id);
@@ -56,8 +68,9 @@ export const ConnectButton = ({ targetUserId, initialStatus, onStatusChange }: C
       setConnectionId(data.connection._id);
       toast.success("Connection request sent!");
       if (onStatusChange) onStatusChange("pending");
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to send request";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -81,8 +94,9 @@ export const ConnectButton = ({ targetUserId, initialStatus, onStatusChange }: C
       setStatus(newStatus);
       toast.success(`Connection ${newStatus}`);
       if (onStatusChange) onStatusChange(newStatus);
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update status";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

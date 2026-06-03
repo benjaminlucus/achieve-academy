@@ -8,6 +8,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { VerifiedTick } from "@/components/VerifiedTick";
 import { ConnectButton } from "@/components/ConnectButton";
 import { Toaster } from "react-hot-toast";
+import Image from "next/image";
 
 export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,9 +49,9 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
               {/* Card Header: Photo & Essential Info */}
               <div className="p-8 pb-0 flex gap-6">
                 <div className="relative">
-                  <div className="w-20 h-20 bg-dark-navy border-2 border-dark-navy flex items-center justify-center overflow-hidden shadow-[4px_4px_0px_0px_rgba(255,111,97,1)]">
+                  <div className="w-20 h-20 bg-dark-navy border-2 border-dark-navy flex items-center justify-center overflow-hidden shadow-[4px_4px_0px_0px_rgba(255,111,97,1)] relative">
                     {tutor.user?.profileImage ? (
-                      <img src={tutor.user.profileImage} alt={tutor.user.name} className="w-full h-full object-cover" />
+                      <Image src={tutor.user.profileImage} alt={tutor.user.name} fill className="object-cover" />
                     ) : (
                       <span className="text-3xl font-bold text-off-white uppercase">{tutor.user?.name?.charAt(0) || "T"}</span>
                     )}

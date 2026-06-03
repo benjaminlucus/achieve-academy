@@ -4,31 +4,34 @@ import React, { useEffect, useState } from "react";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { 
-  BookOpen, GraduationCap, DollarSign, Clock, Users, 
-  Calendar, Mail, MapPin, CheckCircle, ChevronRight, 
-  BarChart3, Settings, LogOut, LayoutDashboard, Search, Bell,
+  GraduationCap, Users, 
+  Mail, MapPin, 
   ShieldCheck, ShieldAlert, History, Star, Award, Zap,
-  MessageSquare, Video, Globe, Briefcase
+  Globe, Briefcase
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
-import { X, Check } from "lucide-react";
 import { ConnectButton } from "@/components/ConnectButton";
-import { toast, Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+
+interface TutorData {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  clerkId: string;
+  status: string;
+  isVerified: boolean;
+  verificationLevel: string;
+  [key: string]: any;
+}
 
 export default function TutorProfileView() {
   const { id } = useParams<{ id: string }>();
   const { user: clerkUser } = useUser();
-  const [tutorData, setTutorData] = useState<any>(null);
+  const [tutorData, setTutorData] = useState<TutorData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Booking Modal State
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [isBookingInProgress, setIsBookingInProgress] = useState(false);
 
   useEffect(() => {
     const fetchTutorData = async () => {
@@ -109,14 +112,13 @@ export default function TutorProfileView() {
             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-dark-navy/5 border border-gray-100 text-center flex flex-col items-center">
               <div className="relative mb-6">
                 <div className="w-40 h-40 rounded-[2.5rem] bg-dark-navy p-1 shadow-2xl rotate-3 group hover:rotate-0 transition-transform duration-500">
-                  <div className="w-full h-full rounded-[2.2rem] bg-white overflow-hidden -rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                  <div className="w-full h-full rounded-[2.2rem] bg-white overflow-hidden -rotate-3 group-hover:rotate-0 transition-transform duration-500 relative">
                     {tutorData.profileImage ? (
                       <Image
                         src={tutorData.profileImage}
                         alt={tutorData.name}
-                        width={160}
-                        height={160}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-4xl font-black text-dark-navy uppercase">

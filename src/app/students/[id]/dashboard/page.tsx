@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { 
-  User, Mail, MapPin, Clock, GraduationCap, 
-  BookOpen, Settings, Save, Edit2, 
-  X, Target, History, Award, BookCheck,
-  ChevronRight, Calendar, CreditCard, Zap, Trophy,
-  Star, Briefcase, TrendingUp, Pencil, Loader2
+  MapPin, Clock, GraduationCap, 
+  BookOpen, Edit2, 
+  Target, BookCheck,
+  Zap, Trophy,
+  TrendingUp, Pencil, Loader2
 } from "lucide-react";
 import { updateStudentProfile, updateProfileImage } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -20,7 +20,6 @@ import { toast, Toaster } from "react-hot-toast";
 
 export default function StudentPrivateDashboard() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [studentData, setStudentData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -93,7 +92,7 @@ export default function StudentPrivateDashboard() {
           setStudentData((prev: any) => ({ ...prev, profileImage: base64 }));
           toast.success("Profile image updated!");
         } else {
-          toast.error(res.error || "Failed to update image");
+          toast.error(typeof res.error === 'string' ? res.error : "Failed to update image");
         }
       } catch (error) {
         toast.error("Error uploading image");

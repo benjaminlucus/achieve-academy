@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Clock, Video, Play, ExternalLink, AlertCircle } from "lucide-react";
+import { Calendar, Video, Play, AlertCircle } from "lucide-react";
 import { format, formatDistanceToNow, isAfter, isBefore, addMinutes } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface InterviewData {
   status: string;

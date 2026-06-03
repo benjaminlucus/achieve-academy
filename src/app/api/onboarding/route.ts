@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import User from "@/database/models/user.model";
 import StudentProfile from "@/database/models/student.model";
 import TutorProfile from "@/database/models/tutor.model";
 
 import { connectDB } from "@/database/connect";
-import { getCurrentUser } from "@/lib/utils";
+
 export async function POST(req: Request) {
   try {
     await connectDB();

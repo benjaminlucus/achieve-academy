@@ -48,13 +48,17 @@ export default function AdminSidebar() {
   const { signOut } = useClerk();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsOpen(false);
+    }
+  }, [pathname, isOpen]);
 
   // Listen for external toggle events
   useEffect(() => {

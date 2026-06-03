@@ -20,6 +20,7 @@ export const SearchBar = ({
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -31,12 +32,14 @@ export const SearchBar = ({
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, status, isMounted, onSearch]);
+  }, [search, status, onSearch]);
 
   if (!isMounted) return (
-    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center opacity-50">
-      <div className="relative flex-1 w-full h-11 bg-gray-50 rounded-xl animate-pulse" />
-      <div className="w-full md:w-32 h-11 bg-gray-50 rounded-xl animate-pulse" />
+    <div>
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center opacity-50">
+        <div className="relative flex-1 w-full h-11 bg-gray-50 rounded-xl animate-pulse" />
+        <div className="w-full md:w-32 h-11 bg-gray-50 rounded-xl animate-pulse" />
+      </div>
     </div>
   );
 
