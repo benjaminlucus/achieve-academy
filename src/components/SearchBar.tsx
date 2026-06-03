@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Filter } from "lucide-react";
 
 export const SearchBar = ({
@@ -19,6 +19,7 @@ export const SearchBar = ({
   const [status, setStatus] = useState(initialStatus);
   const [mounted, setMounted] = useState(false);
 
+  // Use useEffect only to set mounted flag after hydration
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -31,7 +32,7 @@ export const SearchBar = ({
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, status, mounted]);
+  }, [search, status, mounted, onSearch]);
 
   if (!mounted) return (
     <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center opacity-50">
