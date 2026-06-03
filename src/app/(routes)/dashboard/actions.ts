@@ -152,3 +152,27 @@ export async function updateStudentProfile(userId: string, rawData: any) {
   revalidatePath(`/students/${userId}/dashboard`);
   return { success: true };
 }
+
+export async function updateProfileImage(userId: string, imageBase64: string) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const user = await User.findById(userId);
+    if (!user || user.clerkId !== clerkId) throw new Error("Unauthorized");
+
+    await User.findByIdAndUpdate(userId, { profileImage: imageBase64 });
+    
+    // Revalidate multiple possible paths
+    revalidatePath(`/tutors/${userId}/dashboard`);
+    revalidatePath(`/students/${userId}/dashboard`);
+    revalidatePath(`/dashboard`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Profile Image Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+

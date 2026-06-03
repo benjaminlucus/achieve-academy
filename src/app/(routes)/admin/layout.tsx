@@ -1,6 +1,6 @@
 import React from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import SidebarTrigger from "@/components/admin/SidebarTrigger";
+import MobileAdminMenuTrigger from "@/components/admin/MobileAdminMenuTrigger";
 
 export default function AdminLayout({
   children,
@@ -14,7 +14,7 @@ export default function AdminLayout({
         {/* Top Header/Status Bar */}
         <header className="mb-8 md:mb-14 flex flex-col md:flex-row md:items-center justify-between gap-6 pt-16 lg:pt-0">
           <div className="flex items-center gap-4">
-            <SidebarTrigger />
+            <MobileAdminMenuTrigger />
             <div className="space-y-2 md:space-y-3">
               <h1 className="text-3xl md:text-4xl font-black text-dark-navy tracking-tight uppercase">Admin Panel</h1>
               <p className="text-[10px] md:text-[11px] font-black text-steel-blue uppercase tracking-[0.2em] md:tracking-[0.4em] leading-relaxed">

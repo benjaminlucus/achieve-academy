@@ -5,10 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { 
   MapPin, GraduationCap, 
   DollarSign, Edit2, 
-  ShieldCheck, Briefcase,
-  Calendar, Star, Users, Clock as ClockIcon
+  ShieldCheck, Briefcase, 
+  Calendar, Star, Users, Clock as ClockIcon, Pencil, Loader2
 } from "lucide-react";
-import { updateTutorProfile } from "@/app/(routes)/dashboard/actions";
+import { updateTutorProfile, updateProfileImage } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { InterviewSection } from "@/components/dashboard/InterviewSection";
 import { SessionSection } from "@/components/dashboard/SessionSection";
@@ -24,6 +24,7 @@ export default function TutorPrivateDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -104,6 +105,37 @@ export default function TutorPrivateDashboard() {
     }
   };
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size must be less than 2MB");
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      try {
+        const res = await updateProfileImage(id, base64);
+        if (res.success) {
+          setTutorData((prev: any) => ({ ...prev, profileImage: base64 }));
+          toast.success("Profile image updated!");
+        } else {
+          toast.error(res.error || "Failed to update image");
+        }
+      } catch (error) {
+        toast.error("Error uploading image");
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+
   const handleAvailabilityChange = (day: string, value: string) => {
     setFormData((prev: any) => ({
       ...prev,
@@ -140,7 +172,7 @@ export default function TutorPrivateDashboard() {
           <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left relative z-10">
             <div className="relative group">
               <div className="w-28 h-28 rounded-3xl bg-dark-navy p-1 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                <div className="w-full h-full rounded-[1.4rem] bg-white overflow-hidden -rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                <div className="w-full h-full rounded-[1.4rem] bg-white overflow-hidden -rotate-3 group-hover:rotate-0 transition-transform duration-500 relative">
                   {tutorData.profileImage ? (
                     <Image src={tutorData.profileImage} alt={tutorData.name} width={112} height={112} className="object-cover w-full h-full" />
                   ) : (
@@ -148,10 +180,26 @@ export default function TutorPrivateDashboard() {
                       {tutorData.name.charAt(0)}
                     </div>
                   )}
+
+                  {/* Change Image Overlay */}
+                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handleImageChange}
+                      disabled={isUploading}
+                    />
+                    {isUploading ? (
+                      <Loader2 className="text-white animate-spin" size={24} />
+                    ) : (
+                      <Pencil className="text-white" size={24} />
+                    )}
+                  </label>
                 </div>
               </div>
               {tutorData.isVerified && (
-                <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-2xl border-4 border-white shadow-lg z-20">
+                <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-2xl border-4 border-white shadow-lg z-20 pointer-events-none">
                   <ShieldCheck size={20} />
                 </div>
               )}
