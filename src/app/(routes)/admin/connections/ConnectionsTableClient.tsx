@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
   Search, 
   MessageSquare, 
@@ -8,23 +8,20 @@ import {
   CheckCircle, 
   Clock, 
   Filter,
-  ArrowRight,
   MoreVertical,
-  Calendar,
   CreditCard,
   AlertCircle,
   Plus
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { format, differenceInDays, isAfter } from "date-fns";
+import { differenceInDays, isAfter } from "date-fns";
 import { toast, Toaster } from "react-hot-toast";
 
 export default function ConnectionsTableClient({ initialConnections }: any) {
   const [connections, setConnections] = useState(initialConnections);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const router = useRouter();
 
   const handleUpdateTrial = async (id: string, updates: any) => {
     try {
@@ -43,6 +40,7 @@ export default function ConnectionsTableClient({ initialConnections }: any) {
       }
     } catch (error) {
       toast.error("Failed to update connection");
+      return error;
     }
   };
 
