@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   MapPin, GraduationCap, 
   DollarSign, Edit2, 
   ShieldCheck, Briefcase,
-  Calendar, Star, Users
+  Calendar, Star, Users, Clock
 } from "lucide-react";
 import { updateTutorProfile } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
