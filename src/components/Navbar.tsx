@@ -32,7 +32,11 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 z-50 w-full bg-off-white/80 backdrop-blur-md border-b border-steel-blue/20 transition-all duration-300 ${pathname?.startsWith("/admin") ? 'lg:pl-[var(--sidebar-width,18rem)]' : ''}`}
-      style={mounted ? { '--sidebar-width': undefined } : { visibility: 'hidden' }}
+      style={
+        mounted
+          ? ({ ['--sidebar-width' as any]: undefined } as React.CSSProperties)
+          : ({ visibility: 'hidden' } as React.CSSProperties)
+      }
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
