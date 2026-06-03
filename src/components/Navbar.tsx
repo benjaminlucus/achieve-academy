@@ -78,7 +78,7 @@ export default function Navbar() {
                   <SignInButton mode="modal">
                     <button className="text-sm font-medium text-steel-blue hover:text-dark-navy transition-colors">
                       Sign In
-                    </button>
+                    </button> 
                   </SignInButton>
                   <SignUpButton mode="modal">
                     <button className="px-6 py-2 text-sm font-bold text-off-white bg-dark-navy hover:bg-coral transition-colors rounded-sm">
