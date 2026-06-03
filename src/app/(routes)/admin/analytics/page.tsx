@@ -1,9 +1,14 @@
 import { getCurrentUser, getAdminStatistics } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { BarChart3, Calendar, LineChart, PieChart, TrendingUp } from "lucide-react";
+import { BarChart3, LineChart, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+interface SubjectData {
+  name: string;
+  count: number;
+}
 
 export default async function AnalyticsPage() {
   const { userId } = await auth();
@@ -47,8 +52,8 @@ export default async function AnalyticsPage() {
   };
 
   const renderSubjectList = () => {
-    const total = analytics.popularSubjects.reduce((acc: number, s: any) => acc + s.count, 0) || 1;
-    return analytics.popularSubjects.map((sub: any, i: number) => {
+    const total = analytics.popularSubjects.reduce((acc: number, s: SubjectData) => acc + s.count, 0) || 1;
+    return analytics.popularSubjects.map((sub: SubjectData, i: number) => {
       const percentage = Math.round((sub.count / total) * 100);
       return (
         <div key={i} className="space-y-2">
@@ -63,9 +68,6 @@ export default async function AnalyticsPage() {
       );
     });
   };
-
-  const studentPercentage = Math.round((analytics.userDistribution.students / (data.totalUsers || 1)) * 100);
-  const tutorPercentage = 100 - studentPercentage;
 
   return (
     <div className="space-y-8 pb-12">
@@ -98,18 +100,16 @@ export default async function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Sessions Activity */}
+        {/* Sessions Chart */}
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-80">
           <div className="flex items-center justify-between mb-8">
              <div>
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Sessions Activity</h3>
-                <p className="text-[10px] font-bold text-dark-navy uppercase tracking-widest flex items-center gap-1 mt-1">
-                  <Calendar size={12} /> Monthly Volume
-                </p>
+                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Sessions Overview</h3>
+                <p className="text-[10px] font-bold text-dark-navy uppercase tracking-widest mt-1">Monthly Engagement</p>
              </div>
              <BarChart3 className="text-gray-300" size={24} />
           </div>
-          <div className="flex-grow flex items-end gap-2">
+          <div className="flex-grow flex items-end gap-3">
              {renderSessionBars()}
           </div>
           <div className="flex justify-between mt-4 px-2 text-[8px] font-black text-gray-400 uppercase tracking-widest">
@@ -117,42 +117,43 @@ export default async function AnalyticsPage() {
           </div>
         </div>
 
-        {/* User Distribution */}
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-80">
-           <div className="flex items-center justify-between mb-8">
-             <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">User Distribution</h3>
-             <PieChart className="text-gray-300" size={24} />
+        {/* Popular Subjects */}
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
+           <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Popular Subjects</h3>
+              <div className="px-3 py-1 bg-gray-50 rounded-lg text-[10px] font-black text-gray-400 uppercase tracking-widest">Live Demand</div>
            </div>
-           <div className="flex-grow flex items-center justify-center">
-              <div className="w-40 h-40 rounded-full border-[20px] border-dark-navy relative flex items-center justify-center shadow-inner">
-                 <div className="absolute inset-0 rounded-full border-[20px] border-coral border-t-transparent border-r-transparent -rotate-45" style={{ borderTopColor: 'transparent', borderRightColor: 'transparent', transform: `rotate(${studentPercentage * 3.6}deg)` }} />
-                 <div className="text-center">
-                    <p className="text-2xl font-black text-gray-900">{data.totalUsers}</p>
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Total Users</p>
-                 </div>
-              </div>
-           </div>
-           <div className="flex justify-center gap-6 mt-6">
-              <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 bg-dark-navy rounded-full" />
-                 <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Students ({studentPercentage}%)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 bg-coral rounded-full" />
-                 <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Tutors ({tutorPercentage}%)</span>
-              </div>
+           <div className="space-y-6">
+              {renderSubjectList()}
            </div>
         </div>
 
-        {/* Popular Subjects */}
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-80">
-           <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-8">Popular Subjects</h3>
-           <div className="space-y-6 flex-grow overflow-y-auto pr-2 custom-scrollbar">
-              {analytics.popularSubjects.length > 0 ? renderSubjectList() : (
-                <div className="h-full flex items-center justify-center text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  No session data available
-                </div>
-              )}
+        {/* Quick Stats Distribution */}
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center space-y-8">
+           <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">User Distribution</h3>
+              <div className="px-3 py-1 bg-dark-navy text-white rounded-lg text-[10px] font-black uppercase tracking-widest">Community</div>
+           </div>
+           
+           <div className="flex items-center gap-8">
+              <div className="flex-1 space-y-2">
+                 <div className="flex justify-between items-end">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Students</p>
+                    <p className="text-2xl font-black text-dark-navy">{analytics.userDistribution.students}</p>
+                 </div>
+                 <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden">
+                    <div className="h-full bg-dark-navy rounded-full" style={{ width: `${Math.round((analytics.userDistribution.students / (data.totalUsers || 1)) * 100)}%` }} />
+                 </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                 <div className="flex justify-between items-end">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tutors</p>
+                    <p className="text-2xl font-black text-coral">{analytics.userDistribution.tutors}</p>
+                 </div>
+                 <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden">
+                    <div className="h-full bg-coral rounded-full" style={{ width: `${100 - Math.round((analytics.userDistribution.students / (data.totalUsers || 1)) * 100)}%` }} />
+                 </div>
+              </div>
            </div>
         </div>
 

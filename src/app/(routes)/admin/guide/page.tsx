@@ -1,11 +1,8 @@
-import React from "react";
 import { 
   HelpCircle, 
   Users, 
-  UserCheck, 
   Calendar, 
   LinkIcon, 
-  MessageSquare, 
   CreditCard, 
   DollarSign, 
   BarChart3, 
@@ -25,8 +22,8 @@ export default function AdminGuidePage() {
       description: "Manage all registered users and handle the verification process for tutors and students.",
       points: [
         "Review new tutor and student applications in their respective tabs.",
-        "Change user status to 'Interview Scheduled' once you've contacted them.",
-        "Grant 'Verified' status only after a successful interview and document verification.",
+        "Change user status to &apos;Interview Scheduled&apos; once you&apos;ve contacted them.",
+        "Grant &apos;Verified&apos; status only after a successful interview and document verification.",
         "Verified users get a badge and are visible in public listings."
       ]
     },
@@ -37,7 +34,7 @@ export default function AdminGuidePage() {
       description: "Track and manage the interview process for potential tutors.",
       points: [
         "Use the Interviews tab to see who is waiting for an interview.",
-        "Update interview status to 'Completed' or 'Rejected' based on performance.",
+        "Update interview status to &apos;Completed&apos; or &apos;Rejected&apos; based on performance.",
         "Note: Teenagers are eligible but require a mandatory interview for safety.",
         "Interviews are currently manual—coordinate via email or chat."
       ]
@@ -62,7 +59,7 @@ export default function AdminGuidePage() {
       points: [
         "Verify student payments for subscriptions after the trial period.",
         "Manual verification of bank transfers or mobile wallet payments.",
-        "Once verified, the connection status updates to 'Active', restoring full access.",
+        "Once verified, the connection status updates to &apos;Active&apos;, restoring full access.",
         "Keep track of the 20% platform commission on all payments."
       ]
     },
@@ -129,7 +126,7 @@ export default function AdminGuidePage() {
           </div>
           <div>
             <h4 className="font-black text-dark-navy uppercase text-xs tracking-widest mb-1">Safety First</h4>
-            <p className="text-xs text-gray-600 leading-relaxed">Always conduct interviews for younger tutors. Check 'All Messages' periodically to maintain quality.</p>
+            <p className="text-xs text-gray-600 leading-relaxed">Always conduct interviews for younger tutors. Check &apos;All Messages&apos; periodically to maintain quality.</p>
           </div>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 p-6 rounded-3xl flex gap-4">

@@ -5,13 +5,16 @@ import { StudentSearchSection } from "./StudentSearchSection";
 
 export const dynamic = "force-dynamic";
 
-export default async function StudentsPage( props: any) {
+interface PageProps {
+  searchParams: Promise<{ q?: string; class?: string }>;
+}
+
+export default async function StudentsPage({ searchParams }: PageProps) {
   await connectDB();
 
-  const searchParams = props.searchParams || {};
-
-  const query = searchParams.q || "";
-  const classFilter = searchParams.class || "Class (All)";
+  const resolvedParams = await searchParams;
+  const query = resolvedParams.q || "";
+  const classFilter = resolvedParams.class || "Class (All)";
 
   // Basic fetch - ONLY show APPROVED (verified) users publicly
   const students = await StudentProfile.find({})
@@ -35,7 +38,7 @@ export default async function StudentsPage( props: any) {
       subjects.some((sub: string) => sub.toLowerCase().includes(query.toLowerCase()));
     
     const matchesClass = classFilter === "Class (All)" || 
-      s.whichClass === classFilter || s.whichClass === classFilter;
+      s.whichClass === classFilter;
 
     return matchesQuery && matchesClass;
   });

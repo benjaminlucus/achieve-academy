@@ -17,12 +17,32 @@ import Image from "next/image";
 import { differenceInDays, isAfter } from "date-fns";
 import { toast, Toaster } from "react-hot-toast";
 
-export default function ConnectionsTableClient({ initialConnections }: any) {
-  const [connections, setConnections] = useState(initialConnections);
+interface ConnectionUser {
+  _id: string;
+  name: string;
+  email: string;
+  profileImage?: string;
+}
+
+interface Connection {
+  _id: string;
+  student: ConnectionUser;
+  tutor: ConnectionUser;
+  status: string;
+  subscriptionStatus: string;
+  trialEndsAt: string | Date;
+}
+
+interface ConnectionsTableClientProps {
+  initialConnections: Connection[];
+}
+
+export default function ConnectionsTableClient({ initialConnections }: ConnectionsTableClientProps) {
+  const [connections, setConnections] = useState<Connection[]>(initialConnections);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const handleUpdateTrial = async (id: string, updates: any) => {
+  const handleUpdateTrial = async (id: string, updates: Record<string, unknown>) => {
     try {
       const res = await fetch(`/api/admin/connections/${id}/status`, {
         method: "PATCH",
@@ -32,8 +52,8 @@ export default function ConnectionsTableClient({ initialConnections }: any) {
       if (res.ok) {
         toast.success("Connection updated successfully");
         // Update local state
-        const updated = connections.map((c: any) => 
-          c._id === id ? { ...c, ...updates } : c
+        const updated = connections.map((c) => 
+          c._id === id ? { ...c, ...updates as Partial<Connection> } : c
         );
         setConnections(updated);
       }
@@ -43,7 +63,7 @@ export default function ConnectionsTableClient({ initialConnections }: any) {
     }
   };
 
-  const filteredConnections = connections.filter((conn: any) => {
+  const filteredConnections = connections.filter((conn) => {
     const studentName = conn.student?.name || "";
     const tutorName = conn.tutor?.name || "";
     const matchesSearch = studentName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -84,7 +104,7 @@ export default function ConnectionsTableClient({ initialConnections }: any) {
 
       {/* Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {filteredConnections.map((conn: any) => {
+        {filteredConnections.map((conn) => {
           const trialEndsAt = conn.trialEndsAt ? new Date(conn.trialEndsAt) : null;
           const isExpired = trialEndsAt && isAfter(new Date(), trialEndsAt);
           const daysLeft = trialEndsAt ? differenceInDays(trialEndsAt, new Date()) : null;
@@ -200,14 +220,6 @@ export default function ConnectionsTableClient({ initialConnections }: any) {
                     </button>
                   </div>
                 </div>
-                
-                {conn.status === 'accepted' && (
-                  <div className="flex items-center gap-4 text-[9px] font-bold text-gray-300 uppercase tracking-widest">
-                    <span>Started: {conn.acceptedAt ? new Date(conn.acceptedAt).toLocaleDateString() : 'N/A'}</span>
-                    <span>Ends: {trialEndsAt ? trialEndsAt.toLocaleDateString() : 'N/A'}</span>
-                    <span className="ml-auto">Last Active: {new Date(conn.lastActivity).toLocaleDateString()}</span>
-                  </div>
-                )}
               </div>
             </div>
           );

@@ -7,10 +7,8 @@ import {
   Trash2, 
   Eye, 
   EyeOff, 
-  Upload, 
   Loader2, 
   X,
-  MessageSquare,
   User,
   Shield
 } from "lucide-react";
@@ -176,7 +174,7 @@ export default function FeedbackClient() {
                 </div>
 
                 <p className="text-sm text-gray-600 leading-relaxed line-clamp-4 italic">
-                  "{f.text}"
+                  &quot;{f.text}&quot;
                 </p>
 
                 {f.screenshotUrl && (
@@ -203,9 +201,10 @@ export default function FeedbackClient() {
                     <Trash2 size={16} />
                   </button>
                 </div>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  {new Date(f.createdAt).toLocaleDateString()}
-                </span>
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full">
+                  <Shield size={10} className="text-gray-400" />
+                  <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Verified Log</span>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -215,7 +214,7 @@ export default function FeedbackClient() {
       {/* Add Feedback Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -224,107 +223,89 @@ export default function FeedbackClient() {
               className="absolute inset-0 bg-dark-navy/40 backdrop-blur-sm"
             />
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
             >
-              <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <div>
-                  <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight">Add New Feedback</h3>
-                  <p className="text-[10px] font-bold text-steel-blue uppercase tracking-[0.2em] mt-1">Manual testimonial entry</p>
+              <div className="p-8 md:p-10 space-y-8">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight">Add Platform Feedback</h3>
+                  <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
+                    <X size={20} />
+                  </button>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white rounded-xl transition-colors">
-                  <X size={20} className="text-gray-400" />
-                </button>
-              </div>
 
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User Name</label>
+                      <input 
+                        required
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all"
+                        value={form.userName}
+                        onChange={(e) => setForm({...form, userName: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</label>
+                      <select 
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all"
+                        value={form.userRole}
+                        onChange={(e) => setForm({...form, userRole: e.target.value})}
+                      >
+                        <option>Student</option>
+                        <option>Tutor</option>
+                        <option>Parent</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">User Name</label>
-                    <input 
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rating (1-5)</label>
+                    <div className="flex gap-4">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setForm({...form, rating: num})}
+                          className={`flex-1 py-3 rounded-xl border font-black transition-all ${form.rating >= num ? 'bg-amber-50 border-amber-200 text-amber-500' : 'bg-gray-50 border-gray-100 text-gray-300'}`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Feedback Text</label>
+                    <textarea 
                       required
-                      value={form.userName}
-                      onChange={(e) => setForm({...form, userName: e.target.value})}
-                      className="w-full px-5 py-3 rounded-2xl border border-gray-100 focus:border-coral outline-none text-sm font-bold text-dark-navy transition-all"
-                      placeholder="e.g. John Doe"
+                      rows={4}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all resize-none"
+                      value={form.text}
+                      onChange={(e) => setForm({...form, text: e.target.value})}
                     />
                   </div>
+
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">User Role</label>
-                    <select 
-                      value={form.userRole}
-                      onChange={(e) => setForm({...form, userRole: e.target.value})}
-                      className="w-full px-5 py-3 rounded-2xl border border-gray-100 focus:border-coral outline-none text-sm font-bold text-dark-navy transition-all appearance-none"
-                    >
-                      <option>Student</option>
-                      <option>Tutor</option>
-                      <option>Parent</option>
-                      <option>Other</option>
-                    </select>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Screenshot URL (Optional)</label>
+                    <input 
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all"
+                      value={form.screenshotUrl}
+                      onChange={(e) => setForm({...form, screenshotUrl: e.target.value})}
+                      placeholder="https://..."
+                    />
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Rating (Stars)</label>
-                  <div className="flex gap-3">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button 
-                        key={star}
-                        type="button"
-                        onClick={() => setForm({...form, rating: star})}
-                        className={`p-2 rounded-xl border transition-all ${form.rating >= star ? 'bg-amber-50 border-amber-200 text-amber-500' : 'bg-gray-50 border-gray-100 text-gray-300'}`}
-                      >
-                        <Star size={20} className={form.rating >= star ? 'fill-current' : ''} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Feedback Text</label>
-                  <textarea 
-                    required
-                    value={form.text}
-                    onChange={(e) => setForm({...form, text: e.target.value})}
-                    rows={4}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-100 focus:border-coral outline-none text-sm font-medium text-gray-600 transition-all resize-none"
-                    placeholder="Write the feedback here..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Screenshot URL (Optional)</label>
-                  <input 
-                    value={form.screenshotUrl}
-                    onChange={(e) => setForm({...form, screenshotUrl: e.target.value})}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-100 focus:border-coral outline-none text-sm font-medium text-gray-600 transition-all"
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 px-5 py-4 bg-gray-50 rounded-2xl border border-gray-100">
-                  <input 
-                    type="checkbox"
-                    id="isPublic"
-                    checked={form.isPublic}
-                    onChange={(e) => setForm({...form, isPublic: e.target.checked})}
-                    className="w-4 h-4 rounded border-gray-300 text-coral focus:ring-coral cursor-pointer"
-                  />
-                  <label htmlFor="isPublic" className="text-xs font-black text-dark-navy uppercase tracking-widest cursor-pointer">
-                    Display on public page
-                  </label>
-                </div>
-
-                <button 
-                  disabled={isSubmitting}
-                  className="w-full py-4 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-xl hover:shadow-coral/20 flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Shield size={16} />}
-                  Save Feedback
-                </button>
-              </form>
+                  <button 
+                    disabled={isSubmitting}
+                    className="w-full py-4 bg-coral text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-coral/90 transition-all shadow-lg shadow-coral/20 disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Processing..." : "Submit Feedback"}
+                  </button>
+                </form>
+              </div>
             </motion.div>
           </div>
         )}

@@ -6,7 +6,7 @@ import {
   MapPin, GraduationCap, 
   DollarSign, Edit2, 
   ShieldCheck, Briefcase,
-  Calendar, Star, Users, Clock
+  Calendar, Star, Users, Clock as ClockIcon
 } from "lucide-react";
 import { updateTutorProfile } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -198,7 +198,7 @@ export default function TutorPrivateDashboard() {
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-dark-navy/5 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-              <Clock size={24} />
+              <ClockIcon size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Hours</p>
             <p className="text-2xl font-black text-dark-navy">{tutorData.stats.completedSessions * 1.5}h</p>
