@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -52,13 +52,13 @@ export default function AdminSidebar() {
     setMounted(true);
   }, []);
 
-  // Close sidebar on route change (mobile)
-  useLayoutEffect(() => {
+  // Close sidebar on route change (mobile) - use useEffect since this is event-driven
+  useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
   // Listen for external toggle events
-  useLayoutEffect(() => {
+  useEffect(() => {
     const handleToggle = () => setIsOpen(prev => !prev);
     window.addEventListener('toggle-admin-sidebar', handleToggle);
     return () => window.removeEventListener('toggle-admin-sidebar', handleToggle);
