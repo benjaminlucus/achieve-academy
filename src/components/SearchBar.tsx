@@ -1,5 +1,5 @@
 "use client";
-import { useState, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter } from "lucide-react";
 
 export const SearchBar = ({
@@ -17,24 +17,23 @@ export const SearchBar = ({
 }) => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(initialStatus);
-  const [mounted, setMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Use useLayoutEffect for hydration flag to avoid cascading renders
-  useLayoutEffect(() => {
-    setMounted(true);
+  useEffect(() => {
+    setIsMounted(true);
   }, []);
 
   // 🔥 Debounce (important for performance)
-  useLayoutEffect(() => {
-    if (!mounted) return;
+  useEffect(() => {
+    if (!isMounted) return;
     const delay = setTimeout(() => {
       onSearch({ search, status });
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, status, mounted, onSearch]);
+  }, [search, status, isMounted, onSearch]);
 
-  if (!mounted) return (
+  if (!isMounted) return (
     <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center opacity-50">
       <div className="relative flex-1 w-full h-11 bg-gray-50 rounded-xl animate-pulse" />
       <div className="w-full md:w-32 h-11 bg-gray-50 rounded-xl animate-pulse" />
