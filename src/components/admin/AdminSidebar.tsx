@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useLayoutEffect, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -44,15 +44,14 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { signOut } = useClerk();
 
-  // Use useLayoutEffect for hydration flag to avoid cascading renders
-  useLayoutEffect(() => {
-    setMounted(true);
+  useEffect(() => {
+    setIsMounted(true);
   }, []);
 
-  // Close sidebar on route change (mobile) - use useEffect since this is event-driven
+  // Close sidebar on route change (mobile)
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
@@ -64,7 +63,7 @@ export default function AdminSidebar() {
     return () => window.removeEventListener('toggle-admin-sidebar', handleToggle);
   }, []);
 
-  if (!mounted) return null;
+  if (!isMounted) return null;
 
   return (
     <>
