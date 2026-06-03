@@ -39,8 +39,8 @@ interface Conversation {
 }
 
 interface ChatContainerProps {
-  currentUser: { _id: string };
-  initialConversations: Conversation[];
+  currentUser: any;
+  initialConversations: any[];
   isAdminView?: boolean;
 }
 
@@ -170,7 +170,7 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
               >
                 <div className="relative flex-shrink-0">
                   {otherUser.profileImage ? (
-                    <Image src={otherUser.profileImage} alt={otherUser.name} width={48} height={48} className="w-12 h-12 rounded-2xl object-cover" />
+                    <Image src={otherUser.profileImage as string} alt={otherUser.name} width={48} height={48} className="w-12 h-12 rounded-2xl object-cover" />
                   ) : (
                     <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black">
                       {otherUser.name.charAt(0)}
@@ -203,7 +203,7 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
             <div className="flex items-center gap-4">
               <div className="relative">
                 {getOtherParticipant(selectedConversation).profileImage && (
-                  <Image src={getOtherParticipant(selectedConversation).profileImage!} alt="User" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
+                  <Image src={getOtherParticipant(selectedConversation).profileImage as string} alt="User" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
                 )}
                 {!getOtherParticipant(selectedConversation).profileImage && (
                   <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
