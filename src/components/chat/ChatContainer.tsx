@@ -41,9 +41,10 @@ interface Conversation {
 interface ChatContainerProps {
   currentUser: { _id: string };
   initialConversations: Conversation[];
+  isAdminView?: boolean;
 }
 
-export default function ChatContainer({ currentUser, initialConversations }: ChatContainerProps) {
+export default function ChatContainer({ currentUser, initialConversations, isAdminView = false }: ChatContainerProps) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -201,9 +202,10 @@ export default function ChatContainer({ currentUser, initialConversations }: Cha
           <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between shadow-sm z-10">
             <div className="flex items-center gap-4">
               <div className="relative">
-                {getOtherParticipant(selectedConversation).profileImage ? (
-                  <Image src={getOtherParticipant(selectedConversation).profileImage} alt="User" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
-                ) : (
+                {getOtherParticipant(selectedConversation).profileImage && (
+                  <Image src={getOtherParticipant(selectedConversation).profileImage!} alt="User" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
+                )}
+                {!getOtherParticipant(selectedConversation).profileImage && (
                   <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
                     {getOtherParticipant(selectedConversation).name.charAt(0)}
                   </div>
