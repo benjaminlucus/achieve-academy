@@ -29,7 +29,7 @@ async function getPublicFeedbacks() {
     await connectDB();
     const feedbacks = await Feedback.find({ isPublic: true }).sort({ createdAt: -1 });
     return JSON.parse(JSON.stringify(feedbacks)) as FeedbackDocument[];
-  } catch (_error) {
+  } catch (error) {
     console.error("Error fetching feedback:", error);
     return [];
   }

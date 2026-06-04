@@ -60,7 +60,7 @@ export default function PayoutsTableClient() {
       if (data.success) {
         setPayouts(data.payouts);
       }
-    } catch (_error) {
+    } catch (error) {
       toast.error("Failed to fetch payout data");
     } finally {
       setIsLoading(false);

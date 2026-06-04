@@ -45,7 +45,7 @@ export default function StudentPrivateDashboard() {
             description: data.description || "",
           });
         }
-      } catch (_error) {
+      } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
@@ -65,7 +65,7 @@ export default function StudentPrivateDashboard() {
         const data = await res.json();
         setStudentData(data);
       }
-    } catch (_error) {
+    } catch (error) {
       console.error("Error saving data:", error);
       toast.error("Failed to save changes.");
     } finally {
@@ -94,7 +94,7 @@ export default function StudentPrivateDashboard() {
         } else {
           toast.error(typeof res.error === 'string' ? res.error : "Failed to update image");
         }
-      } catch (_error) {
+      } catch (error) {
         toast.error("Error uploading image");
       } finally {
         setIsUploading(false);

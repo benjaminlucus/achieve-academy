@@ -60,7 +60,7 @@ const OnboardingForm = () => {
       if (res.ok) {
         router.push('/dashboard');
       }
-    } catch (_error) {
+    } catch (error) {
       console.error("Onboarding failed", error);
     } finally {
       setLoading(false);

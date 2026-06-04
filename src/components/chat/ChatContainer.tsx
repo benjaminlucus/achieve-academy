@@ -111,7 +111,7 @@ export default function ChatContainer({
             .map((m) => m._id);
           if (unreadIds.length > 0) markAsRead(unreadIds);
         }
-      } catch (_error) {
+      } catch (error) {
         console.error("Fetch Messages Error:", error);
       }
     };

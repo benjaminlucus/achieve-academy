@@ -200,7 +200,7 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
 
       toast.success(`Interview marked as ${status}`);
       setInterviews(prev => prev.map(i => i.id === id ? { ...i, status } : i));
-    } catch (_error) {
+    } catch (error) {
       toast.error("Error updating interview status");
     }
   };

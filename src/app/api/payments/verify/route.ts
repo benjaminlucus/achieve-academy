@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       paymentId: result.paymentId,
     });
   } catch (error: unknown) {
-    const authRes = authErrorResponse(_error);
+    const authRes = authErrorResponse(error);
     if (authRes) return authRes;
 
     if (error instanceof Error && (error as Error & { status?: number }).status === 429) {

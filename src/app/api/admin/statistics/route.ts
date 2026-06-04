@@ -8,8 +8,8 @@ export async function GET() {
     await requireAdmin();
     const stats = await getAdminStatistics();
     return NextResponse.json(stats);
-  } catch (_error) {
-    const authRes = authErrorResponse(_error);
+  } catch (error) {
+    const authRes = authErrorResponse(error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/statistics" });
     return NextResponse.json({ error: "Failed to fetch statistics" }, { status: 500 });

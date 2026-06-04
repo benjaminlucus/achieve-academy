@@ -26,7 +26,7 @@ export const sendEmail = async ({ to, subject, html }: EmailOptions) => {
       html,
     });
 
-    if (_error) {
+    if (error) {
       console.error("Resend Email Error:", error);
       return { success: false, error: error.message };
     }

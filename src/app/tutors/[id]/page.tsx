@@ -41,7 +41,7 @@ export default function TutorProfileView() {
           const data = await res.json();
           setTutorData(data);
         }
-      } catch (_error) {
+      } catch (error) {
         console.error("Error fetching tutor data:", error);
       } finally {
         setIsLoading(false);

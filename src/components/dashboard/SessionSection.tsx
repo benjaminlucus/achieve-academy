@@ -38,7 +38,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
           const data = await res.json();
           setSessions(data.sessions);
         }
-      } catch (_error) {
+      } catch (error) {
         console.error("Error fetching sessions:", error);
       } finally {
         setIsLoading(false);

@@ -42,7 +42,7 @@ export const ConnectButton = ({ targetUserId, initialStatus, onStatusChange }: C
             setConnectionId(conn._id);
           }
         }
-      } catch (_error) {
+      } catch (error) {
         console.error("Error checking connection:", error);
       }
     };

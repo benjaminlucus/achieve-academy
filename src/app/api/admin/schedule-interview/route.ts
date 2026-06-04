@@ -104,8 +104,8 @@ export async function POST(req: Request) {
       emailSent: emailResult.success,
       data: { scheduledAt: scheduledDate, interviewLink },
     });
-  } catch (_error) {
-    const authRes = authErrorResponse(_error);
+  } catch (error) {
+    const authRes = authErrorResponse(error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/schedule-interview" });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

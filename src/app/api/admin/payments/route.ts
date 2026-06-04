@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
       payments: formattedPayments,
       pagination: paginationMeta(total, { page, limit, skip }),
     });
-  } catch (_error) {
-    const authRes = authErrorResponse(_error);
+  } catch (error) {
+    const authRes = authErrorResponse(error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/payments" });
     return NextResponse.json({ error: "Failed to fetch payment data" }, { status: 500 });

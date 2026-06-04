@@ -53,7 +53,7 @@ export default function FeedbackClient() {
       if (data.success) {
         setFeedbacks(data.feedbacks);
       }
-    } catch (_error) {
+    } catch (error) {
       toast.error("Failed to fetch feedbacks");
     } finally {
       setIsLoading(false);
@@ -85,7 +85,7 @@ export default function FeedbackClient() {
       } else {
         toast.error(data.error || "Failed to add feedback");
       }
-    } catch (_error) {
+    } catch (error) {
       toast.error("Something went wrong");
     } finally {
       setIsSubmitting(false);
@@ -103,7 +103,7 @@ export default function FeedbackClient() {
         toast.success(`Feedback ${!currentStatus ? 'is now public' : 'is now hidden'}`);
         fetchFeedbacks();
       }
-    } catch (_error) {
+    } catch (error) {
       toast.error("Failed to update status");
     }
   };
@@ -118,7 +118,7 @@ export default function FeedbackClient() {
         toast.success("Feedback deleted");
         fetchFeedbacks();
       }
-    } catch (_error) {
+    } catch (error) {
       toast.error("Failed to delete");
     }
   };

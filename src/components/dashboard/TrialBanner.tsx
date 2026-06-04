@@ -40,7 +40,7 @@ export const TrialBanner = ({ userRole }: TrialBannerProps) => {
           );
           setConnections(trialConnections);
         }
-      } catch (_error) {
+      } catch (error) {
         console.error("Error fetching trial status:", error);
       } finally {
         setIsLoading(false);

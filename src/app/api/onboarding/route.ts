@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     console.log("Onboarding successful for user:", newUser);
 
     return NextResponse.json({ success: true, message: "Onboarding completed successfully", user: newUser });
-  } catch (_error) {
+  } catch (error) {
     console.error("Onboarding API Error:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

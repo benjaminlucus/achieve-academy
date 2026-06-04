@@ -34,8 +34,8 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true, message: "Interview status updated" });
-  } catch (_error) {
-    const authRes = authErrorResponse(_error);
+  } catch (error) {
+    const authRes = authErrorResponse(error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/interviews" });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
