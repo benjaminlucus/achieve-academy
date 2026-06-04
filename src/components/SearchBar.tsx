@@ -19,6 +19,7 @@ export const SearchBar = ({
   const [status, setStatus] = useState(initialStatus);
   const [isMounted, setIsMounted] = useState(false);
 
+  // Use useEffect only to set mounted flag after hydration
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
@@ -32,7 +33,7 @@ export const SearchBar = ({
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, status, onSearch]);
+  }, [search, status, mounted]);
 
   if (!isMounted) return (
     <div>
