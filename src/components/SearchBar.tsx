@@ -33,7 +33,7 @@ export const SearchBar = ({
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, status, mounted]);
+  }, [search, status, isMounted]);
 
   if (!isMounted) return (
     <div>
