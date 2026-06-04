@@ -66,7 +66,7 @@ export default function TutorPrivateDashboard() {
             }
           });
         }
-      } catch (error) {
+      } catch (_error) {
         console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
@@ -96,7 +96,7 @@ export default function TutorPrivateDashboard() {
         const data = await res.json();
         setTutorData(data);
       }
-    } catch (error) {
+    } catch (_error) {
       console.error("Error saving data:", error);
       toast.error("Failed to save changes.");
     } finally {
@@ -125,7 +125,7 @@ export default function TutorPrivateDashboard() {
         } else {
           toast.error(res.error || "Failed to update image");
         }
-      } catch (error) {
+      } catch (_error) {
         toast.error("Error uploading image");
       } finally {
         setIsUploading(false);

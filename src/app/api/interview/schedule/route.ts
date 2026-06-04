@@ -9,8 +9,8 @@ export async function POST() {
       { error: "Use POST /api/admin/schedule-interview" },
       { status: 410 }
     );
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

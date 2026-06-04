@@ -66,7 +66,7 @@ export default function StudentsTableClient({ initialStudents = [] }: { initialS
       
       toast.success(`Student status updated to ${status}`);
       router.refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error updating status");
     }
   };

@@ -76,8 +76,8 @@ export async function PATCH(
       success: true,
       message: `Status updated from ${oldStatus} to ${status}`,
     });
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/users/status" });
     return NextResponse.json({ error: "Failed to update status" }, { status: 500 });

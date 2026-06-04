@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, feedback });
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -71,8 +71,8 @@ export async function PATCH(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, feedback });
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -92,8 +92,8 @@ export async function DELETE(req: NextRequest) {
 
     await Feedback.findByIdAndDelete(id);
     return NextResponse.json({ success: true, message: "Feedback deleted" });
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

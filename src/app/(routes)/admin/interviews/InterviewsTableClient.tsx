@@ -20,6 +20,7 @@ import { format, formatDistanceToNow, isAfter, isBefore, addMinutes } from "date
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
 import { toast } from "react-hot-toast";
+import Image from "next/image";
 
 interface Interview {
   id: string;
@@ -99,7 +100,7 @@ const InterviewCard = ({ interview, onStatusChange }: { interview: Interview; on
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg shadow-inner overflow-hidden">
               {interview.user.profileImage ? (
-                <img src={interview.user.profileImage} alt={interview.user.name || "User"} className="w-full h-full object-cover" />
+                <Image src={interview.user.profileImage} alt={interview.user.name || "User"} className="w-full h-full object-cover" />
               ) : (
                 (interview.user.name || "U").charAt(0)
               )}
@@ -199,7 +200,7 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
 
       toast.success(`Interview marked as ${status}`);
       setInterviews(prev => prev.map(i => i.id === id ? { ...i, status } : i));
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error updating interview status");
     }
   };

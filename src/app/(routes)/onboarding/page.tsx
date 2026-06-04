@@ -97,7 +97,7 @@ export default function OnboardingPage() {
         setStep(role === "tutor" ? "availability" : "details");
       }
     } catch (error: unknown) {
-      console.error(error);
+      console.error(_error);
       const errorMessage = error instanceof Error ? error.message : "Something went wrong";
       alert(`An error occurred: ${errorMessage}`);
       setIsPending(false);
@@ -136,7 +136,7 @@ export default function OnboardingPage() {
             alert(`Admin onboarding failed: ${result?.error || "Unknown error"}`);
             setIsPending(false);
           }
-        } catch (error) {
+        } catch (_error) {
           alert("Admin onboarding failed. Check your connection.");
           setIsPending(false);
         }

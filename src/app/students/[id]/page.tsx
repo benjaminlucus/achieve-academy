@@ -36,7 +36,7 @@ export default function StudentProfileView() {
           const data = await res.json();
           setStudentData(data);
         }
-      } catch (error) {
+      } catch (_error) {
         console.error("Error fetching student data:", error);
       } finally {
         setIsLoading(false);

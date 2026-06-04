@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { X, Calendar, Clock, BookOpen, DollarSign, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 

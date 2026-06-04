@@ -41,8 +41,8 @@ export async function GET(req: NextRequest) {
       tutors: formattedTutors,
       pagination: paginationMeta(total, { page, limit, skip }),
     });
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/tutors" });
     return NextResponse.json({ error: "Failed to fetch tutors" }, { status: 500 });

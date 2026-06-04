@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { pusherClient } from "@/lib/pusher";
-import { 
-  Send, 
-  Paperclip, 
-  Mic, 
-  Video, 
-  Phone, 
-  MoreVertical, 
+import {
+  Send,
+  Paperclip,
+  Mic,
+  Video,
+  Phone,
+  MoreVertical,
   Search,
   Check,
   CheckCheck
@@ -39,12 +39,16 @@ interface Conversation {
 }
 
 interface ChatContainerProps {
-  currentUser: any;
-  initialConversations: any[];
-  isAdminView?: boolean;
+  currentUser: { _id: string };
+  initialConversations: Conversation[];
+  isAdminView?: boolean; 
 }
 
-export default function ChatContainer({ currentUser, initialConversations, isAdminView = false }: ChatContainerProps) {
+export default function ChatContainer({
+  currentUser,
+  initialConversations,
+  isAdminView = false 
+}: ChatContainerProps) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,7 +58,7 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
   // Subscribe to user-specific channel for new conversation updates
   useEffect(() => {
     const channel = pusherClient.subscribe(`user-${currentUser._id}`);
-    
+
     channel.bind("conversation-update", (data: { conversationId: string, lastMessage: Message }) => {
       setConversations((prev) => {
         const index = prev.findIndex((c) => c._id === data.conversationId);
@@ -77,7 +81,7 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
     if (!selectedConversation) return;
 
     const channel = pusherClient.subscribe(`chat-${selectedConversation._id}`);
-    
+
     channel.bind("new-message", (message: Message) => {
       setMessages((prev) => [...prev, message]);
       if (message.sender !== currentUser._id) {
@@ -100,14 +104,14 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
         if (res.ok) {
           const data: Message[] = await res.json();
           setMessages(data);
-          
+
           // Mark unread messages as read
           const unreadIds = data
             .filter((m) => !m.isRead && m.sender !== currentUser._id)
             .map((m) => m._id);
           if (unreadIds.length > 0) markAsRead(unreadIds);
         }
-      } catch (error) {
+      } catch (_error) {
         console.error("Fetch Messages Error:", error);
       }
     };
@@ -151,19 +155,19 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
           <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Messages</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              placeholder="Search conversations..." 
+            <input
+              placeholder="Search conversations..."
               className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-dark-navy focus:outline-none focus:border-dark-navy/20"
             />
           </div>
         </div>
-        
+
         <div className="flex-grow overflow-y-auto custom-scrollbar">
           {conversations.map((conv) => {
             const otherUser = getOtherParticipant(conv);
             const isActive = selectedConversation?._id === conv._id;
             return (
-              <button 
+              <button
                 key={conv._id}
                 onClick={() => setSelectedConversation(conv)}
                 className={`w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-all border-b border-gray-50/50 ${isActive ? 'bg-gray-50' : ''}`}
@@ -232,9 +236,8 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
               return (
                 <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                   <div className={`max-w-[75%] space-y-1 ${isMine ? 'items-end' : 'items-start'}`}>
-                    <div className={`p-4 rounded-[1.5rem] shadow-sm text-sm ${
-                      isMine ? 'bg-dark-navy text-white rounded-tr-none' : 'bg-white text-dark-navy rounded-tl-none border border-gray-100'
-                    }`}>
+                    <div className={`p-4 rounded-[1.5rem] shadow-sm text-sm ${isMine ? 'bg-dark-navy text-white rounded-tr-none' : 'bg-white text-dark-navy rounded-tl-none border border-gray-100'
+                      }`}>
                       {msg.messageType === 'text' && <p className="font-medium leading-relaxed">{msg.content}</p>}
                     </div>
                     <div className={`flex items-center gap-2 px-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
@@ -256,10 +259,10 @@ export default function ChatContainer({ currentUser, initialConversations, isAdm
           <div className="p-4 bg-white border-t border-gray-100">
             <form onSubmit={handleSendMessage} className="flex items-center gap-3">
               <button type="button" className="p-3 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all"><Paperclip size={20} /></button>
-              <input 
+              <input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Type a message..." 
+                placeholder="Type a message..."
                 className="flex-grow px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-dark-navy focus:outline-none focus:border-dark-navy/20"
               />
               {inputText.trim() ? (

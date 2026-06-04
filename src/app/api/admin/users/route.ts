@@ -37,8 +37,8 @@ export async function GET(req: NextRequest) {
       users: formattedUsers,
       pagination: paginationMeta(total, { page, limit, skip }),
     });
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/users" });
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });

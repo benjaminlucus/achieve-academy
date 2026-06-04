@@ -57,9 +57,8 @@ export default function ConnectionsTableClient({ initialConnections }: Connectio
         );
         setConnections(updated);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update connection");
-      return error;
     }
   };
 

@@ -35,8 +35,8 @@ export async function GET(
       .limit(50);
 
     return NextResponse.json(messages);
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     if (error instanceof Error && (error as Error & { status?: number }).status === 429) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });

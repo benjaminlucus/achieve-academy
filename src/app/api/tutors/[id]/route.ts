@@ -127,7 +127,7 @@ export async function GET(req: any, { params }: any) {
         };
 
         return NextResponse.json(tutorData);
-    } catch (error) {
+    } catch (_error) {
         console.error("Error fetching tutor:", error);
         return NextResponse.json({ error: "Failed to fetch tutor" }, { status: 500 });
     }

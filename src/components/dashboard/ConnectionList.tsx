@@ -41,7 +41,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
           // Filter only accepted connections
           setConnections(data.connections.filter((c: Connection) => c.status === "accepted"));
         }
-      } catch (error) {
+      } catch (_error) {
         console.error("Error fetching connections:", error);
       } finally {
         setIsLoading(false);

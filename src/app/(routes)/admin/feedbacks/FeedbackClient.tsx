@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 interface Feedback {
   _id: string;
@@ -52,7 +53,7 @@ export default function FeedbackClient() {
       if (data.success) {
         setFeedbacks(data.feedbacks);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to fetch feedbacks");
     } finally {
       setIsLoading(false);
@@ -84,7 +85,7 @@ export default function FeedbackClient() {
       } else {
         toast.error(data.error || "Failed to add feedback");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Something went wrong");
     } finally {
       setIsSubmitting(false);
@@ -102,7 +103,7 @@ export default function FeedbackClient() {
         toast.success(`Feedback ${!currentStatus ? 'is now public' : 'is now hidden'}`);
         fetchFeedbacks();
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update status");
     }
   };
@@ -117,7 +118,7 @@ export default function FeedbackClient() {
         toast.success("Feedback deleted");
         fetchFeedbacks();
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete");
     }
   };
@@ -179,7 +180,7 @@ export default function FeedbackClient() {
 
                 {f.screenshotUrl && (
                   <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-100">
-                    <img src={f.screenshotUrl} alt="Feedback Screenshot" className="object-cover w-full h-full" />
+                    <Image src={f.screenshotUrl} alt="Feedback Screenshot" className="object-cover w-full h-full" />
                   </div>
                 )}
               </div>

@@ -45,7 +45,7 @@ export async function updateVerificationLevel(userId: string) {
       // Downgrade if no longer eligible? 
       // For now, let's keep it simple and just upgrade.
     }
-  } catch (error) {
+  } catch (_error) {
     console.error("Error updating verification level:", error);
   }
 }
@@ -69,7 +69,7 @@ export async function checkConnectionAccess(connectionId: string) {
     }
 
     return { hasAccess: true, status: connection.subscriptionStatus };
-  } catch (error) {
+  } catch (_error) {
     console.error("Error checking connection access:", error);
     return { hasAccess: false, reason: "Error checking access" };
   }
@@ -102,7 +102,7 @@ export async function getAllInterviews() {
     }));
 
     return JSON.parse(JSON.stringify(formattedInterviews));
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching interview data:", error);
     return [];
   }
@@ -125,7 +125,7 @@ export async function getCurrentUser(userId?: string) {
     const serialized = JSON.parse(JSON.stringify(databaseUser));
     serialized.status = normalizeUserStatus(serialized.status);
     return serialized;
-  } catch (error) {
+  } catch (_error) {
     logger.error("get_current_user_failed", {
       message: error instanceof Error ? error.message : "unknown",
     });
@@ -138,7 +138,7 @@ export async function getTotalUserCount() {
     await connectDB();
     const count = await User.countDocuments();
     return count;
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching total user count:", error);
     return 0;
   }
@@ -161,7 +161,7 @@ export async function getTotalUsers() {
     }));
 
     return JSON.parse(JSON.stringify(formattedUsers));
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching user data:", error);
     return [];
   }
@@ -189,7 +189,7 @@ export async function getAllTutors() {
     }));
 
     return JSON.parse(JSON.stringify(formattedTutors));
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching tutor data:", error);
     return [];
   }
@@ -217,7 +217,7 @@ export async function createPaymentRecord(sessionId: string, amount: number, mon
     });
 
     return JSON.parse(JSON.stringify(payment));
-  } catch (error) {
+  } catch (_error) {
     logger.error("create_payment_record_failed", {
       message: error instanceof Error ? error.message : "unknown",
     });
@@ -270,7 +270,7 @@ export async function getTotalPayments() {
       },
       payments: formattedPayments
     }));
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching payments data:", error);
     return { stats: {}, payments: [] };
   }
@@ -366,7 +366,7 @@ export async function getAdminStatistics() {
         }
       }
     }));
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching statistics:", error);
     return {
       totalStudents: 0,
@@ -406,7 +406,7 @@ export async function getAllStudents() {
     }));
 
     return JSON.parse(JSON.stringify(formattedStudents));
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching student data:", error);
     return [];
   }
@@ -432,7 +432,7 @@ export async function getAllSessions() {
     }));
 
     return JSON.parse(JSON.stringify(formattedSessions));
-  } catch (error) {
+  } catch (_error) {
     console.error("Error fetching sessions:", error);
     return [];
   }

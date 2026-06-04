@@ -58,8 +58,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, payouts: filteredData });
 
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/payouts GET" });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -134,8 +134,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, payout });
 
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/payouts POST" });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

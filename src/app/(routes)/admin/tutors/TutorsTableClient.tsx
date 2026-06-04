@@ -64,7 +64,7 @@ export default function TutorsTableClient({ initialTutors = [] }: { initialTutor
       
       toast.success(`Tutor status updated to ${status}`);
       router.refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error updating status");
     }
   };

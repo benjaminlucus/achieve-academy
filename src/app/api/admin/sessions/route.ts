@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
       sessions: formattedSessions,
       pagination: paginationMeta(total, { page, limit, skip }),
     });
-  } catch (error) {
-    const authRes = authErrorResponse(error);
+  } catch (_error) {
+    const authRes = authErrorResponse(_error);
     if (authRes) return authRes;
     captureException(error, { route: "admin/sessions" });
     return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });

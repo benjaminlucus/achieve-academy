@@ -28,7 +28,7 @@ export async function writeAuditLog(params: {
       sessionId: params.sessionId?.toString(),
       paymentId: params.paymentId?.toString(),
     });
-  } catch (error) {
+  } catch (_error) {
     logger.error("audit_log_failed", {
       action: params.action,
       message: error instanceof Error ? error.message : "unknown",
