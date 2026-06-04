@@ -16,10 +16,6 @@ const nextConfig: NextConfigWithESLint = {
     // Tells the build tool to keep going even if there are type mismatches
     ignoreBuildErrors: true, 
   },
-  eslint: {
-    // 💡 This tells GitHub Actions to ignore lint warnings and finish building successfully
-    ignoreDuringBuilds: true,
-  },
 };
 
 
