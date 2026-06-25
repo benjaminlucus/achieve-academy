@@ -108,30 +108,112 @@ export async function getAllInterviews() {
   }
 }
 
-export async function getCurrentUser(userId?: string) {
+export async function getAdminPaymentsData() {
   try {
-    if (!userId) return null;
-    
+    await connectDB();
+    const filter = {};
+    const [payments, allPaid, allPending] = await Promise.all([
+      Payment.find(filter)
+        .populate("student", "name")
+        .populate("tutor", "name")
+        .sort({ createdAt: -1 }),
+      Payment.find({ status: "paid" }).select("amount commission tutorEarning").lean(),
+      Payment.find({ status: "pending" }).select("tutorEarning").lean(),
+    ]);
+
+    const totalRevenue = allPaid.reduce((sum, p) => sum + ((p as any).amount || 0), 0);
+    const commissionEarned = allPaid.reduce((sum, p) => sum + ((p as any).commission || 0), 0);
+    const tutorEarnings = allPaid.reduce((sum, p) => sum + ((p as any).tutorEarning || 0), 0);
+    const pendingPayouts = allPending.reduce((sum, p) => sum + ((p as any).tutorEarning || 0), 0);
+
+    const formattedPayments = payments.map((p) => ({
+      id: p._id.toString(),
+      user: (p.student as { name?: string })?.name,
+      amount: `$${p.amount}`,
+      commission: `$${p.commission}`,
+      tutorEarning: `$${p.tutorEarning}`,
+      status: p.status,
+      date: p.createdAt,
+    }));
+
+    return {
+      stats: {
+        totalRevenue,
+        commissionEarned,
+        tutorEarnings,
+        pendingPayouts,
+      },
+      payments: formattedPayments,
+    };
+  } catch (error) {
+    console.error("Error fetching admin payments data:", error);
+    return {
+      stats: { totalRevenue: 0, commissionEarned: 0, tutorEarnings: 0, pendingPayouts: 0 },
+      payments: [],
+    };
+  }
+}
+
+export async function getCurrentUser(userId?: string) {
+  if (!userId) {
+    console.warn("[getCurrentUser] No userId provided");
+    return null;
+  }
+
+  try {
     await connectDB();
 
+    console.log("[getCurrentUser] Searching user:", userId);
+
     const databaseUser = await User.findOne({
-      clerkId: userId
+      clerkId: userId,
     }).lean();
-    
+
+    console.log("[getCurrentUser] Query result:", {
+      found: !!databaseUser,
+      clerkId: databaseUser?.clerkId,
+      mongoId: databaseUser?._id?.toString(),
+      role: databaseUser?.role,
+      isOnboarded: databaseUser?.isOnboarded,
+    });
+
     if (!databaseUser) {
+      console.warn(
+        `[getCurrentUser] User not found for Clerk ID: ${userId}`
+      );
+
+      const totalUsers = await User.countDocuments();
+      console.log(
+        `[getCurrentUser] Total users in collection: ${totalUsers}`
+      );
+
+      const sampleUsers = await User.find({})
+        .select("clerkId role isOnboarded")
+        .limit(5)
+        .lean();
+
+      console.log("[getCurrentUser] Sample users:", sampleUsers);
+
       return null;
     }
 
     const serialized = JSON.parse(JSON.stringify(databaseUser));
-    serialized.status = normalizeUserStatus(serialized.status);
+
+    try {
+      serialized.status = normalizeUserStatus(serialized.status);
+    } catch (e) {
+      console.warn("[getCurrentUser] Failed to normalize status, defaulting to applied", e);
+      serialized.status = "applied";
+    }
+
     return serialized;
   } catch (error) {
-    logger.error("get_current_user_failed", {
-      message: error instanceof Error ? error.message : "unknown",
-    });
-    return null;
+    console.error("[getCurrentUser] Failed:", error);
+    throw error;
   }
 }
+
+
 
 export async function getTotalUserCount() {
   try {
@@ -373,6 +455,7 @@ export async function getAdminStatistics() {
       totalTutors: 0,
       totalSessions: 0,
       totalRevenue: 0,
+      totalPayouts: 0,
       totalUsers: 0,
       pendingPayments: 0,
       pendingPayouts: 0,

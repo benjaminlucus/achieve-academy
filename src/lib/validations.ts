@@ -23,8 +23,8 @@ export const onboardingSchema = z.object({
   })).optional(),
   payoutDetails: z.object({
     method: z.enum(["JazzCash", "Easypaisa", "Bank Transfer"]),
-    accountTitle: z.string().min(2),
-    accountNumber: z.string().min(5),
+    accountTitle: z.string().optional().or(z.literal("")),
+    accountNumber: z.string().optional().or(z.literal("")),
     bankName: z.string().optional(),
     iban: z.string().optional(),
   }).optional(),
@@ -73,8 +73,8 @@ export const tutorProfileSchema = z.object({
   })).optional(),
   payoutDetails: z.object({
     method: z.enum(["JazzCash", "Easypaisa", "Bank Transfer"]),
-    accountTitle: z.string().min(2),
-    accountNumber: z.string().min(5),
+    accountTitle: z.string().optional().or(z.literal("")),
+    accountNumber: z.string().optional().or(z.literal("")),
     bankName: z.string().optional(),
     iban: z.string().optional(),
   }).optional(),

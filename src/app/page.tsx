@@ -9,7 +9,7 @@ import Link from "next/link";
 export default async function Home() {
   // const { userId } = await auth();
   // const user = await getCurrentUser(userId || undefined);
-
+  console.log("Mongo URI:", process.env.MONGODB_URI);
   return (
     <div className="flex flex-col w-full min-h-screen">
       <Hero />

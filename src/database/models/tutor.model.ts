@@ -17,7 +17,7 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
   hourlyRate: Number,
   monthlyRate: Number,
 
-  description: String,
+  bio: String,
 
   languages: [String],
 

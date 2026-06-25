@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/utils";
+import { getCurrentUser, getAdminPaymentsData } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import PaymentsTableClient from "./PaymentsTableClient";
@@ -13,18 +13,7 @@ export default async function AdminPaymentsPage() {
     return redirect("/admin");
   }
 
-  const res = await fetch(`${process.env.NEXT_URL}/api/admin/payments`, {
-    cache: "no-store"
-  });
-
-  const data = await res.json();
-  const allPayments = data.payments || [];
-  const stats = data.stats || {
-    totalRevenue: 0,
-    commissionEarned: 0,
-    tutorEarnings: 0,
-    pendingPayouts: 0
-  };
+  const { payments, stats } = await getAdminPaymentsData();
 
   return (
     <div className="space-y-8 pb-12">
@@ -36,7 +25,7 @@ export default async function AdminPaymentsPage() {
         </div>
       </div>
 
-      <PaymentsTableClient initialPayments={allPayments} stats={stats} />
+      <PaymentsTableClient initialPayments={payments} stats={stats} />
     </div>
   );
 }

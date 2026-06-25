@@ -27,25 +27,46 @@ export async function connectDB() {
     throw new Error("Please define the MONGODB_URI environment variable inside .env");
   }
 
-  if (cached!.conn) {
-    return cached!.conn;
+  // If we already have a connection, return it
+  if (cached.conn) {
+    console.log("[MongoDB] Reusing existing connection");
+    return cached.conn;
   }
 
-  if (!cached!.promise) {
-    cached!.promise = mongoose.connect(MONGODB_URI, {
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
-    })
+  // If we don't have a promise yet, create a new one
+  if (!cached.promise) {
+    console.log("[MongoDB] Creating new connection");
+    cached.promise = mongoose
+      .connect(MONGODB_URI, {
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      })
       .then((m) => {
-        console.log("Successfully connected to MongoDB");
+        console.log("[MongoDB] Successfully connected");
         return m;
       })
       .catch((err) => {
-        console.error("Error connecting to MongoDB:", err);
+        console.error("[MongoDB] Connection failed:", err);
+        // Reset the promise so that next attempt can try again (prevents getting stuck in failed state)
+        cached.promise = null;
+        if (
+          err.message.includes("ETIMEOUT") ||
+          err.message.includes("ServerSelectionError")
+        ) {
+          console.error(
+            "[MongoDB] This is likely an IP whitelisting issue! Please go to MongoDB Atlas > Network Access and add your current IP address."
+          );
+        }
         throw err;
       });
   }
 
-  cached!.conn = await cached!.promise;
-  return cached!.conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null; // Reset promise on failure
+    throw error;
+  }
 }

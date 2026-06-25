@@ -24,14 +24,21 @@ export async function GET(req: any, { params }: any) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const isOwner = requestingUser._id.toString() === tutorId;
+        // Try to find by user ID first, then by tutor profile ID
+        let tutor = await TutorProfile.findOne({ user: tutorId }).populate("user");
+        if (!tutor) {
+            tutor = await TutorProfile.findById(tutorId).populate("user");
+        }
+
+        if (!tutor) {
+            return NextResponse.json({ error: "Tutor not found" }, { status: 404 });
+        }
+
+        const isOwner = requestingUser._id.toString() === tutor.user?._id?.toString();
         const isAdmin = requestingUser.role === "admin";
 
         if (!isOwner && !isAdmin) {
             // If not owner or admin, return limited public info
-            const tutor = await TutorProfile.findOne({ user: tutorId }).populate("user", "name profileImage status country");
-            if (!tutor) return NextResponse.json({ error: "Tutor not found" }, { status: 404 });
-            
             return NextResponse.json({
                 name: tutor.user.name,
                 profileImage: tutor.user.profileImage,
@@ -40,13 +47,6 @@ export async function GET(req: any, { params }: any) {
                 bio: tutor.bio,
                 isVerified: tutor.isVerified
             });
-        }
-
-        const tutor = await TutorProfile.findOne({ user: tutorId })
-            .populate("user");
-
-        if (!tutor) {
-            return NextResponse.json({ error: "Tutor not found" }, { status: 404 });
         }
 
         const sessions = await Session.find({ tutor: tutorId })

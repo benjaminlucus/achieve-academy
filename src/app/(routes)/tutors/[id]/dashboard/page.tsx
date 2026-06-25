@@ -6,9 +6,11 @@ import {
   MapPin, GraduationCap, 
   DollarSign, Edit2, 
   ShieldCheck, Briefcase, 
-  Calendar, Star, Users, Clock as ClockIcon, Pencil, Loader2
+  Calendar, Star, Users, Clock as ClockIcon, Pencil, Loader2,
+  Wallet, Building2, Smartphone, Video, X
 } from "lucide-react";
 import { updateTutorProfile, updateProfileImage } from "@/app/(routes)/dashboard/actions";
+import Link from "next/link";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { InterviewSection } from "@/components/dashboard/InterviewSection";
 import { SessionSection } from "@/components/dashboard/SessionSection";
@@ -57,7 +59,7 @@ export default function TutorPrivateDashboard() {
             skills: data.skills?.join(", ") || "",
             languages: data.languages?.join(", ") || "",
             availability: initialAvailability,
-            payoutDetails: data.payoutDetails || {
+            payoutDetails: (data.payoutDetails && Object.keys(data.payoutDetails).length > 0) ? data.payoutDetails : {
               method: 'JazzCash',
               accountTitle: '',
               accountNumber: '',
@@ -144,6 +146,16 @@ export default function TutorPrivateDashboard() {
     }));
   };
 
+  const handlePayoutChange = (field: string, value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      payoutDetails: {
+        ...prev.payoutDetails,
+        [field]: value
+      }
+    }));
+  };
+
   if (isLoading) return (
     <div className="min-h-screen bg-off-white flex items-center justify-center">
       <div className="w-16 h-16 border-4 border-dark-navy border-t-coral rounded-full animate-spin"></div>
@@ -215,8 +227,33 @@ export default function TutorPrivateDashboard() {
                 <StatusBadge status={tutorData.status} />
               </div>
             </div>
+
           </div>
-          <div className="flex gap-4 w-full md:w-auto relative z-10">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto relative z-10">
+            {tutorData.zoomConnected ? (
+              <div className="flex items-center gap-3">
+                <div className="px-6 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                    <Video size={14} /> Zoom Active
+                  </span>
+                </div>
+                <button 
+                  onClick={() => {/* Disconnect logic for later */}}
+                  className="p-4 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-100 transition-all border border-rose-100"
+                  title="Disconnect Zoom"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <Link 
+                href="/api/auth/zoom"
+                className="flex-1 md:flex-none px-6 py-4 bg-dark-navy text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-dark-navy/90 transition-all shadow-xl shadow-dark-navy/20 flex items-center justify-center gap-3"
+              >
+                <Video size={16} /> Connect Zoom
+              </Link>
+            )}
             {isEditing ? (
               <>
                 <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-8 py-4 bg-gray-50 text-dark-navy font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all border border-dark-navy/5">
@@ -241,28 +278,28 @@ export default function TutorPrivateDashboard() {
               <Users size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Students</p>
-            <p className="text-2xl font-black text-dark-navy">{tutorData.stats.totalStudents}</p>
+            <p className="text-2xl font-black text-dark-navy">{tutorData.stats?.totalStudents ?? 0}</p>
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-dark-navy/5 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <ClockIcon size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Hours</p>
-            <p className="text-2xl font-black text-dark-navy">{tutorData.stats.completedSessions * 1.5}h</p>
+            <p className="text-2xl font-black text-dark-navy">{(tutorData.stats?.completedSessions ?? 0) * 1.5}h</p>
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-dark-navy/5 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <Star size={24} className="fill-current" />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Rating</p>
-            <p className="text-2xl font-black text-dark-navy">{tutorData.stats.rating}</p>
+            <p className="text-2xl font-black text-dark-navy">{tutorData.stats?.rating ?? 0}</p>
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-dark-navy/5 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <DollarSign size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Rate</p>
-            <p className="text-2xl font-black text-dark-navy">${tutorData.hourlyRate}/h</p>
+            <p className="text-2xl font-black text-dark-navy">${tutorData.hourlyRate ?? 0}/h</p>
           </div>
         </div>
 
@@ -335,6 +372,7 @@ export default function TutorPrivateDashboard() {
             {/* Connections */}
             <ConnectionList userRole="tutor" myId={id} />
 
+
             {/* Availability */}
             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-8">
               <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest flex items-center gap-3">
@@ -371,6 +409,98 @@ export default function TutorPrivateDashboard() {
 
         </div>
       </div>
+
+        {/* Payout Details */}
+            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-10">
+              <div className="flex items-center justify-between border-b border-gray-50 pb-6">
+                <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Payout Information</h2>
+                <Wallet className="text-coral" size={24} />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-10">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Payout Method</label>
+                  {isEditing ? (
+                    <select 
+                      className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all appearance-none"
+                      value={formData.payoutDetails.method}
+                      onChange={(e) => handlePayoutChange('method', e.target.value)}
+                    >
+                      <option value="JazzCash">JazzCash</option>
+                      <option value="Easypaisa">Easypaisa</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                  ) : (
+                    <div className="flex items-center gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-coral shadow-sm">
+                        {tutorData.payoutDetails?.method === 'Bank Transfer' ? <Building2 size={20} /> : <Smartphone size={20} />}
+                      </div>
+                      <p className="text-dark-navy font-bold text-lg">{tutorData.payoutDetails?.method || "Not set"}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Account Title</label>
+                  {isEditing ? (
+                    <input 
+                      className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
+                      placeholder="Full Name on Account"
+                      value={formData.payoutDetails.accountTitle}
+                      onChange={(e) => handlePayoutChange('accountTitle', e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                      {tutorData.payoutDetails?.accountTitle || "Not provided"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-10">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Account Number</label>
+                  {isEditing ? (
+                    <input 
+                      className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
+                      placeholder="03XXXXXXXXX or Bank Acc #"
+                      value={formData.payoutDetails.accountNumber}
+                      onChange={(e) => handlePayoutChange('accountNumber', e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                      {tutorData.payoutDetails?.accountNumber || "Not provided"}
+                    </p>
+                  )}
+                </div>
+
+                {((isEditing && formData.payoutDetails.method === 'Bank Transfer') || (!isEditing && tutorData.payoutDetails?.method === 'Bank Transfer')) && (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                    <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Bank Name & IBAN</label>
+                    {isEditing ? (
+                      <div className="flex gap-4">
+                        <input 
+                          className="flex-1 p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
+                          placeholder="Bank Name"
+                          value={formData.payoutDetails.bankName}
+                          onChange={(e) => handlePayoutChange('bankName', e.target.value)}
+                        />
+                        <input 
+                          className="flex-1 p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
+                          placeholder="IBAN"
+                          value={formData.payoutDetails.iban}
+                          onChange={(e) => handlePayoutChange('iban', e.target.value)}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                        {tutorData.payoutDetails?.bankName} - {tutorData.payoutDetails?.iban}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
     </div>
   );
 }

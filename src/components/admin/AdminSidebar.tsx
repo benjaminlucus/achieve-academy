@@ -86,7 +86,7 @@ export default function AdminSidebar() {
           {/* Collapse Toggle Button (Desktop Only) */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex absolute -right-3 top-10 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-400 hover:text-dark-navy hover:border-dark-navy transition-all z-10"
+            className="hidden lg:flex absolute -right-3 top-10 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-400 hover:text-deep-black hover:border-deep-black transition-all z-10"
             style={{ transform: isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             <ChevronRight size={14} />
@@ -95,8 +95,8 @@ export default function AdminSidebar() {
           {/* Logo Section */}
           <div className={`p-6 border-b border-gray-50 transition-all duration-300 flex items-center justify-between ${isCollapsed ? 'px-4' : ''}`}>
             <Link href="/" className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 bg-dark-navy rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg shadow-dark-navy/10">
-                <span className="text-white font-bold text-xl">A</span>
+              <div className="w-10 h-10 bg-deep-black rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg shadow-deep-black/10">
+                <span className="text-white font-bold text-xl">R</span>
               </div>
               {!isCollapsed && (
                 <span className="font-black text-gray-900 tracking-tight whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-300 uppercase text-sm">
@@ -107,7 +107,7 @@ export default function AdminSidebar() {
             
             {/* Mobile Close Button */}
             <button 
-              className="lg:hidden p-2 text-gray-400 hover:text-dark-navy transition-colors"
+              className="lg:hidden p-2 text-gray-400 hover:text-deep-black transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <X size={20} />
@@ -125,20 +125,20 @@ export default function AdminSidebar() {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all group relative
                     ${isActive 
-                      ? 'bg-gray-50 text-dark-navy shadow-sm border border-gray-100' 
+                      ? 'bg-gray-50 text-deep-black shadow-sm border border-gray-100' 
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}
                     ${isCollapsed ? 'justify-center px-0' : ''}
                   `}
                   title={isCollapsed ? item.label : ''}
                 >
-                  <item.icon size={18} className={`flex-shrink-0 ${isActive ? 'text-coral' : 'text-gray-400 group-hover:text-dark-navy transition-colors'}`} />
+                  <item.icon size={18} className={`flex-shrink-0 ${isActive ? 'text-purple-primary' : 'text-gray-400 group-hover:text-deep-black transition-colors'}`} />
                   {!isCollapsed && (
                     <span className="whitespace-nowrap animate-in fade-in duration-300 uppercase tracking-tight text-[11px]">
                       {item.label}
                     </span>
                   )}
                   {isActive && !isCollapsed && (
-                    <div className="absolute left-0 w-1 h-6 bg-coral rounded-r-full" />
+                    <div className="absolute left-0 w-1 h-6 bg-purple-primary rounded-r-full" />
                   )}
                 </Link>
               );
@@ -174,7 +174,7 @@ export default function AdminSidebar() {
       {/* Overlay for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-[45] bg-dark-navy/20 backdrop-blur-sm lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 z-[45] bg-deep-black/20 backdrop-blur-sm lg:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}

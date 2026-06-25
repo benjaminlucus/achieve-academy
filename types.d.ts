@@ -82,7 +82,6 @@ export interface ITutorProfile extends Document {
   education: string;
   hourlyRate: number;
   monthlyRate: number;
-  description?: string;
   bio?: string;
   languages: string[];
   rating: number;

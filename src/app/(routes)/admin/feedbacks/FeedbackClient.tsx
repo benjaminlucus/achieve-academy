@@ -129,12 +129,12 @@ export default function FeedbackClient() {
       
       <div className="flex justify-between items-center">
         <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm">
-          <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Total Feedbacks</p>
-          <p className="text-xl font-black text-dark-navy">{feedbacks.length}</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Feedbacks</p>
+          <p className="text-xl font-black text-deep-black">{feedbacks.length}</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-dark-navy text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-coral transition-all shadow-lg hover:shadow-coral/20"
+          className="flex items-center gap-2 px-6 py-3 bg-deep-black text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-purple-primary transition-all shadow-lg hover:shadow-purple-primary/20"
         >
           <Plus size={16} /> Add Feedback
         </button>
@@ -142,7 +142,7 @@ export default function FeedbackClient() {
 
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-coral" size={40} />
+          <Loader2 className="animate-spin text-purple-primary" size={40} />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -155,12 +155,12 @@ export default function FeedbackClient() {
               <div className="p-6 space-y-4 flex-grow">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-dark-navy">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-deep-black">
                       <User size={20} />
                     </div>
                     <div>
-                      <h4 className="font-black text-dark-navy text-sm uppercase tracking-tight">{f.userName}</h4>
-                      <p className="text-[10px] font-bold text-coral uppercase tracking-widest">{f.userRole}</p>
+                      <h4 className="font-black text-deep-black text-sm uppercase tracking-tight">{f.userName}</h4>
+                      <p className="text-[10px] font-bold text-purple-primary uppercase tracking-widest">{f.userRole}</p>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -221,7 +221,7 @@ export default function FeedbackClient() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-dark-navy/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-deep-black/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -231,7 +231,7 @@ export default function FeedbackClient() {
             >
               <div className="p-8 md:p-10 space-y-8">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight">Add Platform Feedback</h3>
+                  <h3 className="text-xl font-black text-deep-black uppercase tracking-tight">Add Platform Feedback</h3>
                   <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
                     <X size={20} />
                   </button>
@@ -243,7 +243,7 @@ export default function FeedbackClient() {
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User Name</label>
                       <input 
                         required
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all"
                         value={form.userName}
                         onChange={(e) => setForm({...form, userName: e.target.value})}
                       />
@@ -251,7 +251,7 @@ export default function FeedbackClient() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</label>
                       <select 
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all"
                         value={form.userRole}
                         onChange={(e) => setForm({...form, userRole: e.target.value})}
                       >
@@ -283,7 +283,7 @@ export default function FeedbackClient() {
                     <textarea 
                       required
                       rows={4}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all resize-none"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all resize-none"
                       value={form.text}
                       onChange={(e) => setForm({...form, text: e.target.value})}
                     />
@@ -292,7 +292,7 @@ export default function FeedbackClient() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Screenshot URL (Optional)</label>
                     <input 
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-coral/30 transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all"
                       value={form.screenshotUrl}
                       onChange={(e) => setForm({...form, screenshotUrl: e.target.value})}
                       placeholder="https://..."
@@ -301,7 +301,7 @@ export default function FeedbackClient() {
 
                   <button 
                     disabled={isSubmitting}
-                    className="w-full py-4 bg-coral text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-coral/90 transition-all shadow-lg shadow-coral/20 disabled:opacity-50"
+                    className="w-full py-4 bg-purple-primary text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-purple-primary/90 transition-all shadow-lg shadow-purple-primary/20 disabled:opacity-50"
                   >
                     {isSubmitting ? "Processing..." : "Submit Feedback"}
                   </button>

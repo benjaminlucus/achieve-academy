@@ -24,27 +24,27 @@ export async function GET(req: any, { params }: any) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const isOwner = requestingUser._id.toString() === studentId;
+    // Try to find by user ID first, then by student profile ID
+    let student = await StudentProfile.findOne({ user: studentId }).populate("user");
+    if (!student) {
+      student = await StudentProfile.findById(studentId).populate("user");
+    }
+
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
+
+    const isOwner = requestingUser._id.toString() === student.user?._id?.toString();
     const isAdmin = requestingUser.role === "admin";
 
     if (!isOwner && !isAdmin) {
       // If not owner or admin, return limited public info
-      const student = await StudentProfile.findOne({ user: studentId }).populate("user", "name profileImage status country");
-      if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
-      
       return NextResponse.json({
         name: student.user.name,
         profileImage: student.user.profileImage,
         whichClass: student.whichClass,
         subjects: student.subjects,
       });
-    }
-
-    const student = await StudentProfile.findOne({ user: studentId })
-      .populate("user");
-
-    if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
     const sessions = await Session.find({ student: studentId })

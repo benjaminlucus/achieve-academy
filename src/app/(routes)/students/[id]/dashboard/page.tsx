@@ -199,28 +199,28 @@ export default function StudentPrivateDashboard() {
               <Clock size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Hours Learned</p>
-            <p className="text-2xl font-black text-dark-navy">{studentData.stats.hoursLearned}h</p>
+            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.hoursLearned ?? 0}h</p>
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <BookOpen size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Active Courses</p>
-            <p className="text-2xl font-black text-dark-navy">{studentData.stats.activeCourses}</p>
+            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.activeCourses ?? 0}</p>
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <Zap size={24} className="fill-current" />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">XP Points</p>
-            <p className="text-2xl font-black text-dark-navy">450</p>
+            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.xpPoints ?? 0}</p>
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <TrendingUp size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Streak</p>
-            <p className="text-2xl font-black text-dark-navy">5 Days</p>
+            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.streak ?? 0} Days</p>
           </div>
         </div>
 
@@ -290,20 +290,20 @@ export default function StudentPrivateDashboard() {
                 <div>
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
                     <span>Course Completion</span>
-                    <span>75%</span>
+                    <span>{studentData.stats?.courseCompletion ?? 0}%</span>
                   </div>
                   <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-coral rounded-full" style={{ width: '75%' }} />
+                    <div className="h-full bg-coral rounded-full" style={{ width: `${studentData.stats?.courseCompletion ?? 0}%` }} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
                     <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-1">XP Points</p>
-                    <p className="text-xl font-black">450</p>
+                    <p className="text-xl font-black">{studentData.stats?.xpPoints ?? 0}</p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
                     <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-1">Rank</p>
-                    <p className="text-xl font-black">#12</p>
+                    <p className="text-xl font-black">#{studentData.stats?.rank ?? "-"}</p>
                   </div>
                 </div>
               </div>
