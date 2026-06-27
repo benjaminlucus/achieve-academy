@@ -29,7 +29,7 @@ interface Tutor {
   status: string;
 }
 
-export default function TutorsTableClient({ initialTutors = [] }: { initialTutors?: Tutor[] }) {
+export default function TutorsTableClient({ initialTutors = [], adminZoomConnected = false }: { initialTutors?: Tutor[], adminZoomConnected?: boolean }) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
@@ -70,8 +70,13 @@ export default function TutorsTableClient({ initialTutors = [] }: { initialTutor
   };
 
   const handleSchedule = async () => {
-    if (!date || !zoomLink) {
-      toast.error("Please fill in all fields");
+    if (!date) {
+      toast.error("Please select a date and time");
+      return;
+    }
+    const shouldAutoCreate = adminZoomConnected;
+    if (!shouldAutoCreate && !zoomLink) {
+      toast.error("Please connect your Zoom account or provide a Zoom link");
       return;
     }
 
@@ -83,7 +88,8 @@ export default function TutorsTableClient({ initialTutors = [] }: { initialTutor
         body: JSON.stringify({
           userId: selectedTutor?.userId || selectedTutor?.id,
           scheduledAt: new Date(date).toISOString(),
-          interviewLink: zoomLink,
+          interviewLink: shouldAutoCreate ? undefined : zoomLink,
+          autoCreateZoom: shouldAutoCreate,
           notes
         }),
       });
@@ -231,17 +237,28 @@ export default function TutorsTableClient({ initialTutors = [] }: { initialTutor
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest ml-1 flex items-center gap-2">
-                  <Video size={12} /> Zoom Meeting Link
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://zoom.us/j/..."
-                  className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/20 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
-                  onChange={(e) => setZoomLink(e.target.value)}
-                />
-              </div>
+              {adminZoomConnected && (
+                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <span className="text-[11px] font-black text-emerald-700 uppercase tracking-widest">
+                    Zoom Connected - Meeting will be auto-created
+                  </span>
+                </div>
+              )}
+
+              {!adminZoomConnected && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <Video size={12} /> Zoom Meeting Link
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://zoom.us/j/..."
+                    className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/20 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all"
+                    onChange={(e) => setZoomLink(e.target.value)}
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-steel-blue uppercase tracking-widest ml-1 flex items-center gap-2">

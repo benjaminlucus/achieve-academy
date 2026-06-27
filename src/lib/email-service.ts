@@ -214,4 +214,47 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  interviewApproved: (name: string) => ({
+    subject: `Your interview was approved! - ${APP_NAME}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #10b981; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Great news! Your interview went well, and you've been <strong>approved</strong> as a verified user of ${APP_NAME}.</p>
+        
+        <div style="background-color: #f0fdf4; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #dcfce7;">
+          <p style="margin: 0; color: #166534; font-size: 16px; font-weight: 500;">You can now log in and start using the platform fully!</p>
+          <div style="margin-top: 20px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="background-color: #10b981; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Go to Dashboard</a>
+          </div>
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">Welcome to the community! We're excited to have you on board.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  interviewRejected: (name: string) => ({
+    subject: `Update on your interview - ${APP_NAME}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #ef4444; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Thank you for taking the time to interview with us! After careful consideration, we regret that we cannot approve your application at this time.</p>
+        
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">We appreciate your interest in ${APP_NAME} and wish you all the best in your future endeavors.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
 };

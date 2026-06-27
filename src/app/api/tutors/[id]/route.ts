@@ -3,8 +3,10 @@ import { connectDB } from "@/database/connect";
 import TutorProfile from "@/database/models/tutor.model";
 import Session from "@/database/models/session.model";
 import Payment from "@/database/models/payment.model";
+import Interview from "@/database/models/interview.model";
 import { auth } from "@clerk/nextjs/server";
 import User from "@/database/models/user.model";
+import mongoose from "mongoose";
 
 export async function GET(req: any, { params }: any) {
     try {
@@ -24,10 +26,20 @@ export async function GET(req: any, { params }: any) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Try to find by user ID first, then by tutor profile ID
-        let tutor = await TutorProfile.findOne({ user: tutorId }).populate("user");
-        if (!tutor) {
+        // Try to find tutor by multiple methods
+        let tutor: any = null;
+        
+        // 1. Try by user ID
+        tutor = await TutorProfile.findOne({ user: tutorId }).populate("user");
+        
+        // 2. Try by tutor profile ID
+        if (!tutor && mongoose.Types.ObjectId.isValid(tutorId)) {
             tutor = await TutorProfile.findById(tutorId).populate("user");
+        }
+        
+        // 3. Try by user ID (as ObjectId)
+        if (!tutor && mongoose.Types.ObjectId.isValid(tutorId)) {
+            tutor = await TutorProfile.findOne({ user: new mongoose.Types.ObjectId(tutorId) }).populate("user");
         }
 
         if (!tutor) {
@@ -40,21 +52,25 @@ export async function GET(req: any, { params }: any) {
         if (!isOwner && !isAdmin) {
             // If not owner or admin, return limited public info
             return NextResponse.json({
-                name: tutor.user.name,
-                profileImage: tutor.user.profileImage,
-                subjects: tutor.subjects,
-                hourlyRate: tutor.hourlyRate,
-                bio: tutor.bio,
-                isVerified: tutor.isVerified
+                name: tutor.user?.name || "Tutor",
+                profileImage: tutor.user?.profileImage,
+                subjects: tutor.subjects || [],
+                hourlyRate: tutor.hourlyRate || 0,
+                bio: tutor.bio || "",
+                isVerified: tutor.isVerified || false
             });
         }
 
-        const sessions = await Session.find({ tutor: tutorId })
+        const sessions = await Session.find({ tutor: tutor._id })
             .populate("student", "name")
             .sort({ createdAt: -1 });
 
-        const payments = await Payment.find({ tutor: tutorId })
+        const payments = await Payment.find({ tutor: tutor._id })
             .sort({ createdAt: -1 });
+
+        // Fetch interview data
+        const interview = await Interview.findOne({ userId: tutor.user?._id })
+            .sort({ scheduledAt: -1 });
 
         const completedSessions = sessions.filter(s => s.status === "completed");
 
@@ -66,7 +82,7 @@ export async function GET(req: any, { params }: any) {
             return total;
         }, 0);
 
-        const activeStudents = [...new Set(sessions.map(s => s.student?._id.toString()))].length;
+        const activeStudents = [...new Set(sessions.filter(s => s.student).map(s => s.student._id.toString()))].length;
 
         // 4. Merge sessions and payments for activity history
         const sessionHistory = sessions.map(s => ({
@@ -94,24 +110,25 @@ export async function GET(req: any, { params }: any) {
             .slice(0, 10);
 
         const tutorData = {
-            clerkId: tutor.user.clerkId,
-            name: tutor.user.name,
-            email: tutor.user.email,
-            status: tutor.user.status,
-            subjects: tutor.subjects,
-            experienceYears: tutor.experienceYears,
-            education: tutor.education,
-            hourlyRate: tutor.hourlyRate,
-            bio: tutor.bio,
-            isVerified: tutor.isVerified,
-            location: tutor.user.country || "Not specified",
-            profileImage: tutor.user.profileImage,
+            _id: tutor._id,
+            clerkId: tutor.user?.clerkId,
+            name: tutor.user?.name || "Tutor",
+            email: tutor.user?.email,
+            status: tutor.user?.status || "pending",
+            subjects: tutor.subjects || [],
+            experienceYears: tutor.experienceYears || 0,
+            education: tutor.education || "",
+            hourlyRate: tutor.hourlyRate || 0,
+            bio: tutor.bio || "",
+            isVerified: tutor.isVerified || false,
+            location: tutor.user?.country || "Not specified",
+            profileImage: tutor.user?.profileImage,
 
-            // Interview Info
-            interviewDate: tutor.user.interviewDate,
-            interviewLink: tutor.user.interviewLink,
-            interviewTimezone: tutor.user.interviewTimezone,
-            meetingProvider: tutor.user.meetingProvider,
+            // Interview Info from Interview model
+            interviewDate: interview?.scheduledAt || tutor.user?.interviewDate,
+            interviewLink: interview?.studentJoinLink || tutor.user?.interviewLink,
+            interviewTimezone: interview?.timezone || tutor.user?.interviewTimezone,
+            meetingProvider: "Zoom",
 
             stats: {
                 hoursTaught: Number(hoursTaught.toFixed(1)),
@@ -122,7 +139,7 @@ export async function GET(req: any, { params }: any) {
             },
 
             availability: tutor.availability || [],
-            payoutDetails: tutor.payoutDetails,
+            payoutDetails: tutor.payoutDetails || { method: "JazzCash" },
             history
         };
 

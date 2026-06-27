@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { DashboardCard } from "@/components/dashboard/DashboardCard";
+import { useEffect, useState } from "react";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { 
-  GraduationCap, Users, 
-  Mail, MapPin, 
+  GraduationCap, Users,  
   ShieldCheck, ShieldAlert, History, Star, Award, Zap,
   Globe, Briefcase
 } from "lucide-react";
@@ -40,6 +38,7 @@ export default function TutorProfileView() {
         if (res.ok) {
           const data = await res.json();
           setTutorData(data);
+          console.log("Tutor Data: ", tutorData)
         }
       } catch (error) {
         console.error("Error fetching tutor data:", error);
@@ -154,7 +153,7 @@ export default function TutorProfileView() {
                   <span className="text-[10px] font-black text-steel-blue uppercase tracking-widest">Rating</span>
                   <div className="flex items-center gap-1">
                     <Star size={14} className="fill-amber-400 text-amber-400" />
-                    <span className="text-lg font-black text-dark-navy">{tutorData.stats.rating}</span>
+                    <span className="text-lg font-black text-dark-navy>">hi</span>
                   </div>
                 </div>
               </div>

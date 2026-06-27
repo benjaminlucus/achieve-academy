@@ -4,7 +4,7 @@ import User from "@/database/models/user.model";
 import Interview from "@/database/models/interview.model";
 import { interviewScheduleSchema } from "@/lib/validations";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
-import { formatManualZoomMeeting, isValidZoomUrl } from "@/lib/zoom-service";
+import { formatManualZoomMeeting, isValidZoomUrl, createZoomMeeting } from "@/lib/zoom-service";
 import { authErrorResponse, requireAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
@@ -23,11 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { userId, scheduledAt, interviewLink, interviewHostLink, notes } = validation.data;
-
-    if (!isValidZoomUrl(interviewLink)) {
-      return NextResponse.json({ error: "Invalid Zoom meeting URL" }, { status: 400 });
-    }
+    const { userId, scheduledAt, interviewLink, interviewHostLink, notes, autoCreateZoom } = validation.data;
 
     await connectDB();
 
@@ -37,13 +33,27 @@ export async function POST(req: Request) {
     }
 
     const scheduledDate = new Date(scheduledAt);
-    const meetingDetails = formatManualZoomMeeting(interviewLink);
+    let meetingDetails;
+    
+    if (autoCreateZoom && admin.zoomConnected) {
+      // Automatically create Zoom meeting
+      const topic = `Interview with ${user.name || "User"}`;
+      meetingDetails = await createZoomMeeting(admin.clerkId, topic, scheduledDate, 30);
+    } else if (interviewLink) {
+      // Use manual link
+      if (!isValidZoomUrl(interviewLink)) {
+        return NextResponse.json({ error: "Invalid Zoom meeting URL" }, { status: 400 });
+      }
+      meetingDetails = formatManualZoomMeeting(interviewLink);
+    } else {
+      return NextResponse.json({ error: "Please provide a Zoom link or enable auto-create" }, { status: 400 });
+    }
 
     await User.findByIdAndUpdate(userId, {
       status: "interview_scheduled",
       interviewDate: scheduledDate,
-      interviewLink,
-      interviewHostLink: interviewHostLink || interviewLink,
+      interviewLink: meetingDetails.joinUrl,
+      interviewHostLink: meetingDetails.hostUrl,
       meetingId: meetingDetails.meetingId,
       meetingProvider: "zoom",
       meetingNotes: notes,
@@ -52,12 +62,13 @@ export async function POST(req: Request) {
     await Interview.create({
       userId: user._id,
       scheduledAt: scheduledDate,
-      studentJoinLink: interviewLink,
-      hostJoinLink: interviewHostLink || interviewLink,
+      studentJoinLink: meetingDetails.joinUrl,
+      hostJoinLink: meetingDetails.hostUrl,
       meetingId: meetingDetails.meetingId,
       meetingProvider: "zoom",
       notes,
       status: "scheduled",
+      interviewResult: "pending",
     });
 
     await writeAuditLog({
@@ -80,7 +91,7 @@ export async function POST(req: Request) {
     const emailTemplate = emailTemplates.interviewScheduled(
       user.name || "there",
       formattedDate,
-      interviewLink
+      meetingDetails.joinUrl
     );
 
     const emailResult = await sendEmail({
@@ -102,7 +113,7 @@ export async function POST(req: Request) {
         ? "Interview scheduled and email sent successfully"
         : "Interview scheduled; email could not be sent (check logs)",
       emailSent: emailResult.success,
-      data: { scheduledAt: scheduledDate, interviewLink },
+      data: { scheduledAt: scheduledDate, interviewLink: meetingDetails.joinUrl },
     });
   } catch (error) {
     const authRes = authErrorResponse(error);

@@ -51,6 +51,16 @@ const UserSchema = new Schema<IUser>(
     timezone: String,
 
     lastLogin: Date,
+
+    // Zoom OAuth Fields
+    zoomConnected: {
+      type: Boolean,
+      default: false,
+    },
+    zoomUserId: String,
+    zoomEncryptedAccessToken: String,
+    zoomEncryptedRefreshToken: String,
+    zoomTokenExpiresAt: Date,
   },
   { timestamps: true }
 );

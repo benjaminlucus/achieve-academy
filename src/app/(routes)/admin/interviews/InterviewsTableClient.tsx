@@ -33,6 +33,7 @@ interface Interview {
   status: string;
   notes: string;
   duration: number;
+  interviewResult?: "pending" | "approved" | "rejected";
 }
 
 const Countdown = ({ targetDate }: { targetDate: string }) => {
@@ -74,11 +75,14 @@ const Countdown = ({ targetDate }: { targetDate: string }) => {
   );
 };
 
-const InterviewCard = ({ interview, onStatusChange }: { interview: Interview; onStatusChange: (id: string, status: string) => void }) => {
+const InterviewCard = ({ interview, onStatusChange, onResultChange }: { interview: Interview; onStatusChange: (id: string, status: string) => void; onResultChange: (id: string, result: "approved" | "rejected") => void }) => {
   const isLive = isBefore(new Date(interview.scheduledAt), new Date()) && 
                  isAfter(addMinutes(new Date(interview.scheduledAt), 30), new Date());
   
   const isCompleted = interview.status === "completed";
+  const isEnded = isBefore(addMinutes(new Date(interview.scheduledAt), 30), new Date());
+  const hasResult = interview.interviewResult === "approved" || interview.interviewResult === "rejected";
+  const showResultButtons = (isCompleted || isEnded) && !hasResult;
 
   return (
     <motion.div 
@@ -104,7 +108,18 @@ const InterviewCard = ({ interview, onStatusChange }: { interview: Interview; on
               <p className="text-xs font-medium text-gray-400">{interview.user.email}</p>
             </div>
           </div>
-          <Countdown targetDate={interview.scheduledAt} />
+          <div className="flex flex-col items-end gap-2">
+            <Countdown targetDate={interview.scheduledAt} />
+            {hasResult && (
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
+                interview.interviewResult === "approved" 
+                  ? 'bg-emerald-100 text-emerald-600' 
+                  : 'bg-rose-100 text-rose-600'
+              }`}>
+                {interview.interviewResult}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Middle Section: Time & Links */}
@@ -134,34 +149,53 @@ const InterviewCard = ({ interview, onStatusChange }: { interview: Interview; on
 
         {/* Bottom Section: Actions */}
         <div className="flex items-center gap-2 pt-4 border-t border-gray-50">
-          <a 
-            href={interview.hostJoinLink} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className={`flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              isCompleted ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
-              'bg-dark-navy text-white hover:bg-coral shadow-sm'
-            }`}
-          >
-            <Play size={14} fill="currentColor" /> Join Meeting
-          </a>
-          
-          {!isCompleted && (
-            <button 
-              onClick={() => onStatusChange(interview.id, "completed")}
-              className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-              title="Mark as Completed"
-            >
-              <CheckCircle size={18} />
-            </button>
-          )}
+          {!showResultButtons ? (
+            <>
+              <a 
+                href={interview.hostJoinLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className={`flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  isCompleted ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
+                  'bg-dark-navy text-white hover:bg-coral shadow-sm'
+                }`}
+              >
+                <Play size={14} fill="currentColor" /> Join Meeting
+              </a>
+              
+              {!isCompleted && (
+                <button 
+                  onClick={() => onStatusChange(interview.id, "completed")}
+                  className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                  title="Mark as Completed"
+                >
+                  <CheckCircle size={18} />
+                </button>
+              )}
 
-          <button 
-            className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-100 transition-all"
-            title="Options"
-          >
-            <MoreVertical size={18} />
-          </button>
+              <button 
+                className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-100 transition-all"
+                title="Options"
+              >
+                <MoreVertical size={18} />
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => onResultChange(interview.id, "rejected")}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+              >
+                Reject
+              </button>
+              <button 
+                onClick={() => onResultChange(interview.id, "approved")}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+              >
+                Approve
+              </button>
+            </>
+          )}
         </div>
       </div>
       
@@ -196,6 +230,23 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
       setInterviews(prev => prev.map(i => i.id === id ? { ...i, status } : i));
     } catch (error) {
       toast.error("Error updating interview status");
+    }
+  };
+
+  const handleResultChange = async (id: string, result: "approved" | "rejected") => {
+    try {
+      const res = await fetch(`/api/admin/interviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ interviewResult: result }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update result");
+
+      toast.success(`Interview ${result} successfully`);
+      setInterviews(prev => prev.map(i => i.id === id ? { ...i, interviewResult: result } : i));
+    } catch (error) {
+      toast.error("Error updating interview result");
     }
   };
 
@@ -261,6 +312,7 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
                 key={interview.id} 
                 interview={interview} 
                 onStatusChange={handleStatusChange}
+                onResultChange={handleResultChange}
               />
             ))
           ) : (

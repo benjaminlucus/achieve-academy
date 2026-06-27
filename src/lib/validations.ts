@@ -42,9 +42,10 @@ export const zoomUrlSchema = z.string().url().refine((url) => {
 export const interviewScheduleSchema = z.object({
   userId: z.string(),
   scheduledAt: z.string().datetime(),
-  interviewLink: zoomUrlSchema,
+  interviewLink: zoomUrlSchema.optional(),
   interviewHostLink: zoomUrlSchema.optional(),
   notes: z.string().optional(),
+  autoCreateZoom: z.boolean().optional().default(false),
 });
 
 export const studentProfileSchema = z.object({

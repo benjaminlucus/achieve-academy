@@ -83,23 +83,24 @@ export async function getAllInterviews() {
       .sort({ scheduledAt: -1 });
 
     const formattedInterviews = interviews.map(i => ({
-      id: i._id.toString(),
-      user: {
-        id: i.userId?._id?.toString(),
-        name: i.userId?.name,
-        email: i.userId?.email,
-        profileImage: i.userId?.profileImage,
-        status: i.userId?.status,
-      },
-      scheduledAt: i.scheduledAt,
-      timezone: i.timezone,
-      studentJoinLink: i.studentJoinLink,
-      hostJoinLink: i.hostJoinLink,
-      meetingId: i.meetingId,
-      status: i.status,
-      notes: i.notes,
-      duration: i.duration,
-    }));
+    id: i._id.toString(),
+    user: {
+      id: i.userId?._id?.toString(),
+      name: i.userId?.name,
+      email: i.userId?.email,
+      profileImage: i.userId?.profileImage,
+      status: i.userId?.status,
+    },
+    scheduledAt: i.scheduledAt,
+    timezone: i.timezone,
+    studentJoinLink: i.studentJoinLink,
+    hostJoinLink: i.hostJoinLink,
+    meetingId: i.meetingId,
+    status: i.status,
+    notes: i.notes,
+    duration: i.duration,
+    interviewResult: i.interviewResult,
+  }));
 
     return JSON.parse(JSON.stringify(formattedInterviews));
   } catch (error) {

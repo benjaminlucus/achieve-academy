@@ -19,7 +19,8 @@ import {
   Link as LinkIcon,
   MessageSquare,
   HelpCircle,
-  MessageCircle
+  MessageCircle,
+  Video
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
@@ -40,7 +41,11 @@ const sidebarItems = [
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  zoomConnected?: boolean;
+}
+
+export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -144,6 +149,35 @@ export default function AdminSidebar() {
               );
             })}
           </nav>
+
+          {/* Zoom Connection Section */}
+          <div className="p-4 border-t border-gray-50">
+            {zoomConnected ? (
+              <div className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl ${isCollapsed ? 'justify-center' : ''}`}>
+                <div className="w-6 h-6 bg-emerald-50 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                </div>
+                {!isCollapsed && (
+                  <span className="text-[10px] font-bold uppercase tracking-tight text-emerald-700">
+                    Zoom Connected
+                  </span>
+                )}
+              </div>
+            ) : (
+              <Link 
+                href="/api/auth/zoom" 
+                className={`flex items-center gap-3 w-full px-4 py-3 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-xl transition-all group ${isCollapsed ? 'justify-center px-0' : ''}`}
+                title={isCollapsed ? "Connect Zoom" : ""}
+              >
+                <Video size={18} className="flex-shrink-0" />
+                {!isCollapsed && (
+                  <span className="whitespace-nowrap animate-in fade-in duration-300 uppercase tracking-tight text-[11px] font-bold">
+                    Connect Zoom
+                  </span>
+                )}
+              </Link>
+            )}
+          </div>
 
           {/* Logout Section */}
           <div className="p-4 border-t border-gray-50">

@@ -39,6 +39,12 @@ const InterviewSchema = new Schema(
 
     notes: String,
     completedAt: Date,
+    
+    interviewResult: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

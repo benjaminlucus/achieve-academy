@@ -1,15 +1,28 @@
 import React from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import MobileAdminMenuTrigger from "@/components/admin/MobileAdminMenuTrigger";
+import { getCurrentUser } from "@/lib/utils";
+import { auth } from "@clerk/nextjs/server";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { userId } = await auth();
+  let zoomConnected = false;
+  try {
+    const currentUser = await getCurrentUser(userId ?? undefined);
+    if (currentUser) {
+      zoomConnected = !!currentUser.zoomConnected;
+    }
+  } catch (err) {
+    console.error("Failed to fetch admin user data", err);
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50/50 isolate">
-      <AdminSidebar />
+      <AdminSidebar zoomConnected={zoomConnected} />
       <main className="flex-1 lg:pl-72 p-4 md:p-8 lg:p-12 overflow-y-auto">
         {/* Top Header/Status Bar */}
         <header className="mb-8 md:mb-14 flex flex-col md:flex-row md:items-center justify-between gap-6 pt-16 lg:pt-0">

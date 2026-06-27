@@ -3,6 +3,7 @@ import { connectDB } from "@/database/connect";
 import StudentProfile from "@/database/models/student.model";
 import Session from "@/database/models/session.model";
 import Payment from "@/database/models/payment.model";
+import Interview from "@/database/models/interview.model";
 import { auth } from "@clerk/nextjs/server";
 import User from "@/database/models/user.model";
 
@@ -54,6 +55,10 @@ export async function GET(req: any, { params }: any) {
     const payments = await Payment.find({ student: studentId })
       .sort({ createdAt: -1 });
 
+    // Fetch interview data
+    const interview = await Interview.findOne({ userId: student.user?._id })
+      .sort({ scheduledAt: -1 });
+
     const completedSessions = sessions.filter(s => s.status === "completed");
 
     const hoursLearned = completedSessions.reduce((total, s: any) => {
@@ -101,11 +106,11 @@ export async function GET(req: any, { params }: any) {
       subjects: student.subjects,
       location: `${student.user.country}`,
 
-      // Interview Info
-      interviewDate: student.user.interviewDate,
-      interviewLink: student.user.interviewLink,
-      interviewTimezone: student.user.interviewTimezone,
-      meetingProvider: student.user.meetingProvider,
+      // Interview Info from Interview model
+      interviewDate: interview?.scheduledAt || student.user.interviewDate,
+      interviewLink: interview?.studentJoinLink || student.user.interviewLink,
+      interviewTimezone: interview?.timezone || student.user.interviewTimezone,
+      meetingProvider: "Zoom",
 
       stats: {
         hoursLearned: Number(hoursLearned.toFixed(1)),

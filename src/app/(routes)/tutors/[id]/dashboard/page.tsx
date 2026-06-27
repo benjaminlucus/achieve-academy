@@ -230,30 +230,6 @@ export default function TutorPrivateDashboard() {
 
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto relative z-10">
-            {tutorData.zoomConnected ? (
-              <div className="flex items-center gap-3">
-                <div className="px-6 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                    <Video size={14} /> Zoom Active
-                  </span>
-                </div>
-                <button 
-                  onClick={() => {/* Disconnect logic for later */}}
-                  className="p-4 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-100 transition-all border border-rose-100"
-                  title="Disconnect Zoom"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            ) : (
-              <Link 
-                href="/api/auth/zoom"
-                className="flex-1 md:flex-none px-6 py-4 bg-dark-navy text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-dark-navy/90 transition-all shadow-xl shadow-dark-navy/20 flex items-center justify-center gap-3"
-              >
-                <Video size={16} /> Connect Zoom
-              </Link>
-            )}
             {isEditing ? (
               <>
                 <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-8 py-4 bg-gray-50 text-dark-navy font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all border border-dark-navy/5">
@@ -345,8 +321,8 @@ export default function TutorPrivateDashboard() {
                   <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.subjects} onChange={(e) => setFormData({...formData, subjects: e.target.value})} />
                 ) : (
                   <div className="flex flex-wrap gap-3 p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                    {tutorData.subjects.map((s: string) => (
-                      <span key={s} className="px-5 py-2 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl">{s}</span>
+                    {(tutorData.subjects || []).map((s: string, i: number) => (
+                      <span key={i} className="px-5 py-2 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl">{s}</span>
                     ))}
                   </div>
                 )}
@@ -396,8 +372,8 @@ export default function TutorPrivateDashboard() {
                     <div key={a.day} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
                       <span className="text-xs font-bold text-steel-blue uppercase">{a.day}</span>
                       <div className="flex flex-wrap justify-end gap-1">
-                        {a.time.map((t: string) => (
-                          <span key={t} className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg uppercase">{t}</span>
+                        {(a.time || []).map((t: string, i: number) => (
+                          <span key={i} className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg uppercase">{t}</span>
                         ))}
                       </div>
                     </div>

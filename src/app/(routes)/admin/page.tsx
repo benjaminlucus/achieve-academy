@@ -11,6 +11,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   MoreVertical,
+  Video,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { getCurrentUser, getTotalPayments, getTotalUsers, getAdminStatistics } from "@/lib/utils";
@@ -55,6 +57,35 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-8 md:space-y-14 pb-20">
+
+        {/* Zoom Connection Status */}
+        <div className="bg-white p-6 md:p-10 rounded-[2rem] border-2 border-dark-navy shadow-[8px_8px_0px_0px_rgba(43,65,98,1)] flex flex-col lg:flex-row items-center justify-between gap-8 md:gap-10 mb-10">
+          <div className="space-y-2 md:space-y-3 text-center lg:text-left">
+            <h2 className="text-xl md:text-2xl font-black text-dark-navy uppercase tracking-tight">Zoom Connection</h2>
+            <p className="text-[10px] md:text-[11px] font-bold text-steel-blue uppercase tracking-[0.2em]">
+              {user.zoomConnected ? "Auto-create Zoom meetings for interviews" : "Connect your Zoom account to auto-create meetings"}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+            {user.zoomConnected ? (
+              <div className="flex items-center gap-3">
+                <div className="px-6 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                    <Video size={14} /> Zoom Active
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <Link 
+                href="/api/auth/zoom"
+                className="flex-1 md:flex-none px-6 py-4 bg-dark-navy text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-dark-navy/90 transition-all shadow-xl shadow-dark-navy/20 flex items-center justify-center gap-3"
+              >
+                <Video size={16} /> Connect Zoom
+              </Link>
+            )}
+          </div>
+        </div>
 
         <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border-2 border-dark-navy shadow-[8px_8px_0px_0px_rgba(43,65,98,1)] md:shadow-[12px_12px_0px_0px_rgba(43,65,98,1)] flex flex-col lg:flex-row items-center justify-between gap-8 md:gap-10 mb-10 md:mb-16">
           <div className="space-y-2 md:space-y-3 text-center lg:text-left">

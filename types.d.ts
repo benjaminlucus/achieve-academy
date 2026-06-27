@@ -24,6 +24,12 @@ export interface IUser extends Document {
   meetingNotes?: string;
   interviewCompletedAt?: Date;
   createdAt: Date;
+  // Zoom OAuth Fields
+  zoomConnected?: boolean;
+  zoomUserId?: string;
+  zoomEncryptedAccessToken?: string;
+  zoomEncryptedRefreshToken?: string;
+  zoomTokenExpiresAt?: Date;
 }
 
 export interface IUserFlag extends Document {
