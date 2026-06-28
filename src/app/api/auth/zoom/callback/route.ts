@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
-import connectDB from "@/database/connect";
+import { connectDB } from "@/database/connect";
 import User from "@/database/models/user.model";
 import { encrypt } from "@/lib/encryption";
 import { logger } from "@/lib/logger";

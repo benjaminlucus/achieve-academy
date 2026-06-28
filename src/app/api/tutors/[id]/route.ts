@@ -110,7 +110,8 @@ export async function GET(req: any, { params }: any) {
             .slice(0, 10);
 
         const tutorData = {
-            _id: tutor._id,
+            _id: tutor.user._id.toString(),
+            profileId: tutor._id.toString(),
             clerkId: tutor.user?.clerkId,
             name: tutor.user?.name || "Tutor",
             email: tutor.user?.email,

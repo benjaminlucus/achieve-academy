@@ -97,6 +97,7 @@ export async function GET(req: any, { params }: any) {
       .slice(0, 10); // Keep last 10 activities
 
     const studentData = {
+      _id: student.user._id.toString(),
       clerkId: student.user.clerkId,
       name: student.user.name,
       email: student.user.email,

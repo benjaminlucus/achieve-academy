@@ -1,11 +1,12 @@
 import { Eye, ShieldAlert, UserCog } from 'lucide-react';
-import React from 'react'
+import React from 'react';
+import Link from 'next/link';
 
-const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number }) => {
+const AllUsersTable = ({ users, totalCount }: { users: any[], totalCount: number }) => {
     return (
         <div className="space-y-4">
             {/* Desktop Table View */}
-            <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all">
+            <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
@@ -32,9 +33,9 @@ const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
+                                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLowerCase() === 'tutor'
                                             ? 'bg-blue-50 text-blue-600 border-blue-100'
-                                            : user.role.toLocaleLowerCase() === 'admin'
+                                            : user.role.toLowerCase() === 'admin'
                                                 ? 'bg-orange-50 text-orange-600 border-orange-100'
                                                 : 'bg-purple-50 text-purple-600 border-purple-100'
                                             }`}>
@@ -45,24 +46,27 @@ const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number
                                         {user.joined}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "active"
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLowerCase() === "verified"
                                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                            : 'bg-rose-50 text-rose-600 border-rose-100'
+                                            : user.status.toLowerCase() === "blocked"
+                                                ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                : 'bg-amber-50 text-amber-600 border-amber-100'
                                             }`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                                             <span className="text-[10px] font-black uppercase">{user.status}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="View Profile">
+                                            <Link
+                                                href={`/admin/users/${user.id}`}
+                                                className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all"
+                                                title="View Profile"
+                                            >
                                                 <Eye size={16} />
-                                            </button>
-                                            <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="Change Role">
+                                            </Link>
+                                            <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
                                                 <UserCog size={16} />
-                                            </button>
-                                            <button className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" title="Ban User">
-                                                <ShieldAlert size={16} />
                                             </button>
                                         </div>
                                     </td>
@@ -87,11 +91,13 @@ const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number
                                     <p className="text-xs font-medium text-gray-400">{user.email}</p>
                                 </div>
                             </div>
-                            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "active"
+                            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${user.status.toLowerCase() === "verified"
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                : 'bg-rose-50 text-rose-600 border-rose-100'
+                                : user.status.toLowerCase() === "blocked"
+                                    ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                    : 'bg-amber-50 text-amber-600 border-amber-100'
                                 }`}>
-                                <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                                 <span className="text-[10px] font-black uppercase">{user.status}</span>
                             </div>
                         </div>
@@ -99,9 +105,9 @@ const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number
                         <div className="flex items-center justify-between pt-2">
                             <div className="space-y-1">
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</p>
-                                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
+                                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLowerCase() === 'tutor'
                                     ? 'bg-blue-50 text-blue-600 border-blue-100'
-                                    : user.role.toLocaleLowerCase() === 'admin'
+                                    : user.role.toLowerCase() === 'admin'
                                         ? 'bg-orange-50 text-orange-600 border-orange-100'
                                         : 'bg-purple-50 text-purple-600 border-purple-100'
                                     }`}>
@@ -115,14 +121,14 @@ const AllUsersTable = ({ users, totalCount }: { users: any[]; totalCount: number
                         </div>
 
                         <div className="pt-4 flex items-center gap-2 border-t border-gray-50">
-                            <button className="flex-1 py-3 bg-gray-50 text-gray-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-dark-navy hover:text-white transition-all flex items-center justify-center gap-2">
+                            <Link
+                                href={`/admin/users/${user.id}`}
+                                className="flex-1 py-3 bg-gray-50 text-gray-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-dark-navy hover:text-white transition-all flex items-center justify-center gap-2"
+                            >
                                 <Eye size={14} /> Profile
-                            </button>
+                            </Link>
                             <button className="flex-1 py-3 bg-gray-50 text-gray-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-dark-navy hover:text-white transition-all flex items-center justify-center gap-2">
                                 <UserCog size={14} /> Role
-                            </button>
-                            <button className="p-3 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all">
-                                <ShieldAlert size={18} />
                             </button>
                         </div>
                     </div>

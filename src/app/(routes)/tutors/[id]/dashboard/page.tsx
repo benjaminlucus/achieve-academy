@@ -16,6 +16,7 @@ import { InterviewSection } from "@/components/dashboard/InterviewSection";
 import { SessionSection } from "@/components/dashboard/SessionSection";
 import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
 
@@ -27,14 +28,19 @@ export default function TutorPrivateDashboard() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [conversations, setConversations] = useState<any[]>([]);
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`/api/tutors/${id}`);
-        if (res.ok) {
-          const data = await res.json();
+        const [tutorRes, convRes] = await Promise.all([
+          fetch(`/api/tutors/${id}`),
+          fetch(`/api/conversations`)
+        ]);
+        
+        if (tutorRes.ok) {
+          const data = await tutorRes.json();
           setTutorData(data);
           
           const initialAvailability = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => {
@@ -67,6 +73,11 @@ export default function TutorPrivateDashboard() {
               iban: '',
             }
           });
+        }
+        
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          setConversations(convData.conversations);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -171,6 +182,7 @@ export default function TutorPrivateDashboard() {
   return (
     <div className="bg-[#F8F9FA] min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
       <Toaster />
+      <ChatInitializer initialConversations={conversations} />
       <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Trial Status Banner */}

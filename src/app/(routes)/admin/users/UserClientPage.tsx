@@ -1,15 +1,19 @@
 "use client";
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link';
 import {
     UserPlus,
     ShieldAlert,
     UserCog,
     Eye,
+    CheckCircle,
+    Loader2,
 } from "lucide-react";
 import { SearchBar } from '@/components/SearchBar';
 import { ITEMS_PER_PAGE } from '@/lib/constants';
 import { CreateUserDialog } from './CreateUserDialog';
+import { toast } from 'react-hot-toast';
 
 const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number }) => {
     const [filters, setFilters] = useState({
@@ -18,6 +22,29 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
     });
     const [page, setPage] = useState(1);
     const [open, setOpen] = useState(false);
+    const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+    const handleStatusChange = async (userId: string, newStatus: string) => {
+        setUpdatingUserId(userId);
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to update status");
+            }
+
+            toast.success(`Status updated to ${newStatus}`);
+            window.location.reload();
+        } catch (error) {
+            toast.error("Failed to update status");
+        } finally {
+            setUpdatingUserId(null);
+        }
+    };
 
     const filteredUsers = users.filter((user) => {
         const matchesSearch =
@@ -29,6 +56,8 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
             matchesStatus = ["applied", "reviewing", "interview_pending"].includes(user.status.toLowerCase());
         } else if (filters.status === "Scheduled Interview") {
             matchesStatus = user.status.toLowerCase() === "interview_scheduled";
+        } else if (filters.status === "Approved") {
+            matchesStatus = user.status.toLowerCase() === "verified";
         } else if (filters.status !== "All Status") {
             matchesStatus = user.status.toLowerCase() === filters.status.toLowerCase();
         }
@@ -130,25 +159,45 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                         {user.joined}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "active"
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
                                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                            : 'bg-rose-50 text-rose-600 border-rose-100'
+                                            : user.status.toLocaleLowerCase() === "blocked"
+                                                ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                : 'bg-yellow-50 text-yellow-600 border-yellow-100'
                                             }`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
                                             <span className="text-[10px] font-black uppercase">{user.status}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="View Profile">
+                                            <Link href={`/admin/users/${user.id}`} className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="View Profile">
                                                 <Eye size={16} />
-                                            </button>
-                                            <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
-                                                <UserCog size={16} />
-                                            </button>
-                                            <button className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" title="Ban User">
-                                                <ShieldAlert size={16} />
-                                            </button>
+                                            </Link>
+                                            {user.status.toLocaleLowerCase() === "blocked" ? (
+                                                <button 
+                                                    onClick={() => handleStatusChange(user.id, "verified")}
+                                                    disabled={updatingUserId === user.id}
+                                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1" 
+                                                    title="Unblock User"
+                                                >
+                                                    {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
+                                                        <UserCog size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleStatusChange(user.id, "blocked")}
+                                                        disabled={updatingUserId === user.id}
+                                                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1" 
+                                                        title="Block User"
+                                                    >
+                                                        {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

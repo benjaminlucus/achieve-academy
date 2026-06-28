@@ -15,6 +15,7 @@ import { InterviewSection } from "@/components/dashboard/InterviewSection";
 import { SessionSection } from "@/components/dashboard/SessionSection";
 import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
 
@@ -26,13 +27,18 @@ export default function StudentPrivateDashboard() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [conversations, setConversations] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`/api/students/${id}`);
-        if (res.ok) {
-          const data = await res.json();
+        const [studentRes, convRes] = await Promise.all([
+          fetch(`/api/students/${id}`),
+          fetch(`/api/conversations`)
+        ]);
+
+        if (studentRes.ok) {
+          const data = await studentRes.json();
           setStudentData(data);
           setFormData({
             name: data.name,
@@ -44,6 +50,11 @@ export default function StudentPrivateDashboard() {
             subjects: data.subjects.join(", "),
             description: data.description || "",
           });
+        }
+
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          setConversations(convData.conversations);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -119,6 +130,7 @@ export default function StudentPrivateDashboard() {
   return (
     <div className="bg-[#F8F9FA] min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
       <Toaster />
+      <ChatInitializer initialConversations={conversations} />
       <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Trial Status Banner */}

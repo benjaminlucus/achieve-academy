@@ -17,6 +17,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Check if sender is onboarded and verified
+    if (!sender.isOnboarded) {
+      return NextResponse.json({ error: "Please complete your onboarding first." }, { status: 403 });
+    }
+
+    if (sender.status !== "verified") {
+      return NextResponse.json({ error: "Your account is currently awaiting verification. You can wait until verification which takes 3 to 4 working days" }, { status: 403 });
+    }
+
     const { targetUserId } = await req.json();
     if (!targetUserId) {
       return NextResponse.json({ error: "Target user ID is required" }, { status: 400 });
@@ -93,7 +102,10 @@ export async function GET(req: NextRequest) {
       .populate("tutor", "name email profileImage status verificationLevel")
       .sort({ lastActivity: -1 });
 
-    return NextResponse.json({ success: true, connections });
+    return NextResponse.json({
+      success: true,
+      connections: JSON.parse(JSON.stringify(connections)),
+    });
 
   } catch (error: any) {
     console.error("Get Connections Error:", error);

@@ -3,6 +3,7 @@ import { connectDB } from "@/database/connect";
 import Message from "@/database/models/message.model";
 import Conversation from "@/database/models/conversation.model";
 import { authErrorResponse, requireUser } from "@/lib/auth";
+import { canAccessConversation } from "@/lib/chat-permissions";
 import { rateLimitOrThrow } from "@/lib/rate-limit";
 import { captureException } from "@/lib/monitoring";
 
@@ -23,10 +24,8 @@ export async function GET(
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
 
-    const isParticipant = conversation.participants.some(
-      (p: { toString(): string }) => p.toString() === user._id.toString()
-    );
-    if (!isParticipant && user.role !== "admin") {
+    const hasAccess = await canAccessConversation(user, conversationId);
+    if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

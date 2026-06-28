@@ -1,24 +1,32 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send, Loader2, MessageSquare, ShieldCheck, Zap } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
+
+const iconMap: Record<string, React.ComponentType<any>> = {
+  MessageSquare,
+  ShieldCheck,
+  Zap
+};
 
 const supportCategories = [
   {
     title: "General Support",
     description: "Questions about your account or platform features.",
-    icon: MessageSquare,
+    iconKey: "MessageSquare",
   },
   {
     title: "Billing & Payouts",
     description: "Inquiries regarding payments, commissions, or payouts.",
-    icon: ShieldCheck,
+    iconKey: "ShieldCheck",
   },
   {
     title: "Technical Issues",
     description: "Report bugs or technical difficulties with the site.",
-    icon: Zap,
+    iconKey: "Zap",
   },
 ];
 
@@ -59,15 +67,18 @@ export default function ContactPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-12 mb-20">
-          {supportCategories.map((cat, i) => (
-            <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-dark-navy/5 shadow-sm hover:shadow-md transition-all group">
-              <div className="w-14 h-14 rounded-2xl bg-dark-navy flex items-center justify-center text-white group-hover:bg-coral transition-colors mb-6">
-                <cat.icon size={28} />
+          {supportCategories.map((cat, i) => {
+            const IconComponent = iconMap[cat.iconKey];
+            return (
+              <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-dark-navy/5 shadow-sm hover:shadow-md transition-all group">
+                <div className="w-14 h-14 rounded-2xl bg-dark-navy flex items-center justify-center text-white group-hover:bg-coral transition-colors mb-6">
+                  {IconComponent && <IconComponent size={28} />}
+                </div>
+                <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-2">{cat.title}</h3>
+                <p className="text-steel-blue font-medium text-sm leading-relaxed">{cat.description}</p>
               </div>
-              <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-2">{cat.title}</h3>
-              <p className="text-steel-blue font-medium text-sm leading-relaxed">{cat.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start">

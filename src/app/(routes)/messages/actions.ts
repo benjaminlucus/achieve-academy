@@ -11,6 +11,10 @@ import mongoose from "mongoose";
 import { pusherServer } from "@/lib/pusher";
 import { addDays } from "date-fns";
 import { checkConnectionAccess } from "@/lib/utils";
+import {
+  canAccessConversation,
+} from "@/lib/chat-permissions";
+import { getChatChannelName, getUserChannelName } from "@/lib/chat-channels";
 
 // --- Connection Actions ---
 
@@ -44,6 +48,8 @@ export async function requestConnection(targetUserId: string) {
     );
 
     revalidatePath("/dashboard");
+    revalidatePath("/students");
+    revalidatePath("/tutors");
     return { success: true, connectionId: connection._id.toString() };
   } catch (error: any) {
     console.error("Request Connection Error:", error);
@@ -96,20 +102,37 @@ export async function updateConnectionStatus(connectionId: string, status: "acce
 
     // If accepted, ensure a conversation exists
     if (status === "accepted") {
-      await Conversation.findOneAndUpdate(
-        { 
-          participants: { $all: [connection.student, connection.tutor] },
-          connection: connection._id
-        },
-        { 
-          participants: [connection.student, connection.tutor],
-          connection: connection._id
-        },
-        { upsert: true }
-      );
+      let conversation = await Conversation.findOne({
+        participants: { $all: [connection.student, connection.tutor] }
+      });
+      
+      if (conversation) {
+        if (conversation.connection?.toString() !== connection._id.toString()) {
+          conversation.connection = connection._id;
+          await conversation.save();
+        }
+      } else {
+        try {
+          await Conversation.create({
+            participants: [connection.student, connection.tutor],
+            connection: connection._id
+          });
+        } catch (err) {
+          // Concurrent creation fallback
+          const existing = await Conversation.findOne({
+            participants: { $all: [connection.student, connection.tutor] }
+          });
+          if (existing && existing.connection?.toString() !== connection._id.toString()) {
+            existing.connection = connection._id;
+            await existing.save();
+          }
+        }
+      }
     }
 
     revalidatePath("/messages");
+    revalidatePath("/students");
+    revalidatePath("/tutors");
     return { success: true };
   } catch (error: any) {
     console.error("Update Connection Error:", error);
@@ -138,10 +161,12 @@ export async function sendMessage(data: {
     const conversation = await Conversation.findById(data.conversationId);
     if (!conversation) throw new Error("Conversation not found");
 
-    const isParticipant = conversation.participants.some(
-      (p: mongoose.Types.ObjectId) => p.toString() === currentUser._id.toString()
-    );
-    if (!isParticipant) throw new Error("Forbidden");
+    const hasAccess = await canAccessConversation(currentUser, data.conversationId);
+    if (!hasAccess) throw new Error("Forbidden");
+
+    if (currentUser.role === "admin") {
+      throw new Error("Admins cannot send messages in monitored conversations");
+    }
 
     // Check trial/payment access
     if (conversation.connection) {
@@ -178,12 +203,10 @@ export async function sendMessage(data: {
       await Connection.findByIdAndUpdate(conversation.connection, { lastActivity: new Date() });
     }
 
-    // Trigger Pusher event for real-time delivery
-    const channelName = `chat-${conversation._id.toString()}`;
+    const channelName = getChatChannelName(conversation._id.toString());
     await pusherServer.trigger(channelName, "new-message", message);
 
-    // Also trigger for the receiver's list update
-    await pusherServer.trigger(`user-${receiverId.toString()}`, "conversation-update", {
+    await pusherServer.trigger(getUserChannelName(receiverId.toString()), "conversation-update", {
       conversationId: conversation._id.toString(),
       lastMessage: message
     });

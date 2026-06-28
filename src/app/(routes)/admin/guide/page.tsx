@@ -1,3 +1,8 @@
+"use client";
+
+export const dynamic = "force-dynamic";
+
+import React from "react";
 import { 
   HelpCircle, 
   Users, 
@@ -13,35 +18,44 @@ import {
   Info
 } from "lucide-react";
 
+const iconMap: Record<string, React.ComponentType<any>> = {
+  Users,
+  Calendar,
+  LinkIcon,
+  CreditCard,
+  DollarSign,
+  BarChart3
+};
+
 export default function AdminGuidePage() {
   const guideSections = [
     {
       title: "User Management & Verification",
-      icon: Users,
+      iconKey: "Users",
       color: "bg-blue-50 text-blue-600 border-blue-100",
       description: "Manage all registered users and handle the verification process for tutors and students.",
       points: [
         "Review new tutor and student applications in their respective tabs.",
-        "Change user status to &apos;Interview Scheduled&apos; once you&apos;ve contacted them.",
-        "Grant &apos;Verified&apos; status only after a successful interview and document verification.",
+        "Change user status to 'Interview Scheduled' once you've contacted them.",
+        "Grant 'Verified' status only after a successful interview and document verification.",
         "Verified users get a badge and are visible in public listings."
       ]
     },
     {
       title: "Interviews & Onboarding",
-      icon: Calendar,
+      iconKey: "Calendar",
       color: "bg-amber-50 text-amber-600 border-amber-100",
       description: "Track and manage the interview process for potential tutors.",
       points: [
         "Use the Interviews tab to see who is waiting for an interview.",
-        "Update interview status to &apos;Completed&apos; or &apos;Rejected&apos; based on performance.",
+        "Update interview status to 'Completed' or 'Rejected' based on performance.",
         "Note: Teenagers are eligible but require a mandatory interview for safety.",
         "Interviews are currently manual—coordinate via email or chat."
       ]
     },
     {
       title: "Connections & Trials",
-      icon: LinkIcon,
+      iconKey: "LinkIcon",
       color: "bg-purple-50 text-purple-600 border-purple-100",
       description: "Monitor the relationships between tutors and students.",
       points: [
@@ -53,19 +67,19 @@ export default function AdminGuidePage() {
     },
     {
       title: "Payments & Financials",
-      icon: CreditCard,
+      iconKey: "CreditCard",
       color: "bg-emerald-50 text-emerald-600 border-emerald-100",
       description: "Oversee platform revenue and student subscriptions.",
       points: [
         "Verify student payments for subscriptions after the trial period.",
         "Manual verification of bank transfers or mobile wallet payments.",
-        "Once verified, the connection status updates to &apos;Active&apos;, restoring full access.",
+        "Once verified, the connection status updates to 'Active', restoring full access.",
         "Keep track of the 20% platform commission on all payments."
       ]
     },
     {
       title: "Tutor Payouts",
-      icon: DollarSign,
+      iconKey: "DollarSign",
       color: "bg-rose-50 text-rose-600 border-rose-100",
       description: "Manage manual payouts to tutors via JazzCash, Easypaisa, or Bank Transfer.",
       points: [
@@ -77,7 +91,7 @@ export default function AdminGuidePage() {
     },
     {
       title: "Analytics & Monitoring",
-      icon: BarChart3,
+      iconKey: "BarChart3",
       color: "bg-indigo-50 text-indigo-600 border-indigo-100",
       description: "Get insights into platform growth and activity.",
       points: [
@@ -126,7 +140,7 @@ export default function AdminGuidePage() {
           </div>
           <div>
             <h4 className="font-black text-dark-navy uppercase text-xs tracking-widest mb-1">Safety First</h4>
-            <p className="text-xs text-gray-600 leading-relaxed">Always conduct interviews for younger tutors. Check &apos;All Messages&apos; periodically to maintain quality.</p>
+            <p className="text-xs text-gray-600 leading-relaxed">Always conduct interviews for younger tutors. Check 'All Messages' periodically to maintain quality.</p>
           </div>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 p-6 rounded-3xl flex gap-4">
@@ -142,41 +156,44 @@ export default function AdminGuidePage() {
 
       {/* Main Guide Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {guideSections.map((section, index) => (
-          <div key={index} className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
-            <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className={`p-4 rounded-2xl border ${section.color} group-hover:scale-110 transition-transform`}>
-                  <section.icon size={28} />
+        {guideSections.map((section, index) => {
+          const IconComponent = iconMap[section.iconKey];
+          return (
+            <div key={index} className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
+              <div className="p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className={`p-4 rounded-2xl border ${section.color} group-hover:scale-110 transition-transform`}>
+                    {IconComponent && <IconComponent size={28} />}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight">{section.title}</h3>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">Operational Guide</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight">{section.title}</h3>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">Operational Guide</p>
+                
+                <p className="text-sm text-gray-600 mb-8 leading-relaxed italic">
+                  {section.description}
+                </p>
+
+                <div className="space-y-4">
+                  {section.points.map((point, pIndex) => (
+                    <div key={pIndex} className="flex gap-3 items-start group/point">
+                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-coral group-hover/point:scale-150 transition-transform flex-shrink-0" />
+                      <p className="text-sm text-gray-700 font-medium leading-snug">{point}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
               
-              <p className="text-sm text-gray-600 mb-8 leading-relaxed italic">
-                {section.description}
-              </p>
-
-              <div className="space-y-4">
-                {section.points.map((point, pIndex) => (
-                  <div key={pIndex} className="flex gap-3 items-start group/point">
-                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-coral group-hover/point:scale-150 transition-transform flex-shrink-0" />
-                    <p className="text-sm text-gray-700 font-medium leading-snug">{point}</p>
-                  </div>
-                ))}
+              <div className="bg-gray-50/50 p-4 px-8 border-t border-gray-50 flex items-center justify-between">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Module {index + 1}</span>
+                <div className="flex items-center gap-1 text-[10px] font-black text-coral uppercase tracking-widest group-hover:translate-x-1 transition-transform cursor-default">
+                  Documentation <Info size={12} />
+                </div>
               </div>
             </div>
-            
-            <div className="bg-gray-50/50 p-4 px-8 border-t border-gray-50 flex items-center justify-between">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Module {index + 1}</span>
-              <div className="flex items-center gap-1 text-[10px] font-black text-coral uppercase tracking-widest group-hover:translate-x-1 transition-transform cursor-default">
-                Documentation <Info size={12} />
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Footer Note */}

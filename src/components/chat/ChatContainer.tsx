@@ -1,287 +1,278 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { pusherClient } from "@/lib/pusher";
+import { getPusherClient } from "@/lib/pusher";
+import { getChatChannelName, getUserChannelName } from "@/lib/chat-channels";
 import {
-  Send,
-  Paperclip,
-  Mic,
   Video,
   Phone,
   MoreVertical,
   Search,
-  Check,
-  CheckCheck
 } from "lucide-react";
 import { sendMessage, markAsRead } from "@/app/(routes)/messages/actions";
-import Image from "next/image";
-
-interface Participant {
-  _id: string;
-  name: string;
-  profileImage?: string;
-}
-
-interface Message {
-  _id: string;
-  sender: string;
-  content: string;
-  messageType: string;
-  createdAt: string | Date;
-  isRead: boolean;
-}
-
-interface Conversation {
-  _id: string;
-  participants: Participant[];
-  lastMessage?: Message;
-  updatedAt: string | Date;
-}
+import ConversationList from "@/components/chat/ConversationList";
+import MessageBubble from "@/components/chat/MessageBubble";
+import { ChatInput } from "@/components/chat/ChatInput";
+import type { ChatConversation, ChatMessage, ChatUser } from "@/types/chat";
 
 interface ChatContainerProps {
-  currentUser: { _id: string };
-  initialConversations: Conversation[];
-  isAdminView?: boolean; 
+  currentUser: ChatUser;
+  initialConversations: ChatConversation[];
+  isAdminView?: boolean;
+}
+
+function getOtherParticipant(conversation: ChatConversation, currentUserId: string) {
+  return conversation.participants.find(
+    (p) => String(p._id) !== String(currentUserId)
+  );
+}
+
+function getAdminConversationTitle(conversation: ChatConversation) {
+  const student = conversation.participants.find((p) => p.role === "student");
+  const tutor = conversation.participants.find((p) => p.role === "tutor");
+  if (student && tutor) return `${student.name} ↔ ${tutor.name}`;
+  return conversation.participants.map((p) => p.name).join(" ↔ ");
 }
 
 export default function ChatContainer({
   currentUser,
   initialConversations,
-  isAdminView = false 
+  isAdminView = false,
 }: ChatContainerProps) {
-  const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<ChatConversation[]>(initialConversations);
+  const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Subscribe to user-specific channel for new conversation updates
   useEffect(() => {
-    const channel = pusherClient.subscribe(`user-${currentUser._id}`);
-
-    channel.bind("conversation-update", (data: { conversationId: string, lastMessage: Message }) => {
+    const pusherClient = getPusherClient();
+    const channel = pusherClient.subscribe(getUserChannelName(currentUser._id));
+    channel.bind("conversation-update", (data: { conversationId: string; lastMessage: ChatMessage }) => {
       setConversations((prev) => {
         const index = prev.findIndex((c) => c._id === data.conversationId);
         if (index !== -1) {
           const updated = [...prev];
           updated[index] = { ...updated[index], lastMessage: data.lastMessage, updatedAt: new Date() };
-          return updated.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          return updated.sort(
+            (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
         }
         return prev;
       });
     });
-
     return () => {
-      pusherClient.unsubscribe(`user-${currentUser._id}`);
+      getPusherClient().unsubscribe(getUserChannelName(currentUser._id));
     };
   }, [currentUser._id]);
 
-  // Subscribe to conversation-specific channel for real-time messages
   useEffect(() => {
     if (!selectedConversation) return;
-
-    const channel = pusherClient.subscribe(`chat-${selectedConversation._id}`);
-
-    channel.bind("new-message", (message: Message) => {
-      setMessages((prev) => [...prev, message]);
-      if (message.sender !== currentUser._id) {
+    const pusherClient = getPusherClient();
+    const channelName = getChatChannelName(selectedConversation._id);
+    const channel = pusherClient.subscribe(channelName);
+    channel.bind("new-message", (message: ChatMessage) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m._id === message._id)) return prev;
+        return [...prev, message];
+      });
+      if (!isAdminView && message.sender !== currentUser._id) {
         markAsRead([message._id]);
       }
     });
-
     return () => {
-      pusherClient.unsubscribe(`chat-${selectedConversation._id}`);
+      getPusherClient().unsubscribe(channelName);
     };
-  }, [selectedConversation, currentUser._id]);
+  }, [selectedConversation, currentUser._id, isAdminView]);
 
-  // Fetch messages when a conversation is selected
   useEffect(() => {
     if (!selectedConversation) return;
-
     const fetchMessages = async () => {
       try {
         const res = await fetch(`/api/messages/${selectedConversation._id}`);
         if (res.ok) {
-          const data: Message[] = await res.json();
+          const data: ChatMessage[] = await res.json();
           setMessages(data);
-
-          // Mark unread messages as read
-          const unreadIds = data
-            .filter((m) => !m.isRead && m.sender !== currentUser._id)
-            .map((m) => m._id);
-          if (unreadIds.length > 0) markAsRead(unreadIds);
+          if (!isAdminView) {
+            const unreadIds = data
+              .filter((m) => !m.isRead && m.sender !== currentUser._id)
+              .map((m) => m._id);
+            if (unreadIds.length > 0) markAsRead(unreadIds);
+          }
         }
       } catch (error) {
         console.error("Fetch Messages Error:", error);
       }
     };
-
     fetchMessages();
-  }, [selectedConversation, currentUser._id]);
+  }, [selectedConversation, currentUser._id, isAdminView]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || !selectedConversation) return;
-
+    if (!inputText.trim() || !selectedConversation || isAdminView) return;
     const text = inputText;
     setInputText("");
-
     const res = await sendMessage({
       conversationId: selectedConversation._id,
       content: text,
-      messageType: "text"
+      messageType: "text",
     });
-
-    if (!res.success) {
-      alert("Failed to send message");
+    if (res.success && res.message) {
+      setMessages((prev) => {
+        if (prev.some((m) => m._id === res.message._id)) return prev;
+        return [...prev, res.message as ChatMessage];
+      });
+    } else if (!res.success) {
+      alert(res.error || "Failed to send message");
       setInputText(text);
     }
   };
 
-  const getOtherParticipant = (conversation: Conversation) => {
-    return conversation.participants.find((p) => p._id !== currentUser._id) as Participant;
+  const filteredConversations = conversations.filter((conv) => {
+    if (isAdminView) {
+      const label = getAdminConversationTitle(conv).toLowerCase();
+      const lastMsg = conv.lastMessage?.content?.toLowerCase() || "";
+      return label.includes(searchTerm.toLowerCase()) || lastMsg.includes(searchTerm.toLowerCase());
+    }
+    const otherUser = getOtherParticipant(conv, currentUser._id);
+    const name = otherUser?.name || "";
+    const lastMsg = conv.lastMessage?.content || "";
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lastMsg.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const headerTitle = selectedConversation
+    ? isAdminView
+      ? getAdminConversationTitle(selectedConversation)
+      : getOtherParticipant(selectedConversation, currentUser._id)?.name || "Chat"
+    : isAdminView
+      ? "Global Monitoring"
+      : "Messages";
+
+  const getSenderName = (senderId: string) => {
+    const participant = selectedConversation?.participants.find((p) => p._id === senderId);
+    return participant?.name;
   };
 
   return (
     <div className="flex h-full overflow-hidden border-t border-gray-100">
-      {/* Sidebar: Conversation List */}
       <div className="w-full md:w-80 lg:w-96 border-r border-gray-100 bg-white flex flex-col h-full">
         <div className="p-6 border-b border-gray-50 space-y-4">
-          <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Messages</h2>
+          <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">
+            {headerTitle}
+          </h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
-              placeholder="Search conversations..."
+              placeholder={isAdminView ? "Search all conversations..." : "Search conversations..."}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-dark-navy focus:outline-none focus:border-dark-navy/20"
             />
           </div>
         </div>
 
         <div className="flex-grow overflow-y-auto custom-scrollbar">
-          {conversations.map((conv) => {
-            const otherUser = getOtherParticipant(conv);
-            const isActive = selectedConversation?._id === conv._id;
-            return (
-              <button
-                key={conv._id}
-                onClick={() => setSelectedConversation(conv)}
-                className={`w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-all border-b border-gray-50/50 ${isActive ? 'bg-gray-50' : ''}`}
-              >
-                <div className="relative flex-shrink-0">
-                  {otherUser.profileImage ? (
-                    <Image src={otherUser.profileImage as string} alt={otherUser.name} width={48} height={48} className="w-12 h-12 rounded-2xl object-cover" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black">
-                      {otherUser.name.charAt(0)}
-                    </div>
-                  )}
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
-                </div>
-                <div className="flex-grow text-left min-w-0">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-sm font-black text-dark-navy uppercase truncate">{otherUser.name}</h3>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase">
-                      {conv.lastMessage ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                    </span>
-                  </div>
-                  <p className="text-xs text-steel-blue truncate mt-1">
-                    {conv.lastMessage?.content || "No messages yet"}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
+          <ConversationList
+            conversations={filteredConversations}
+            currentUser={currentUser}
+            selectedConversationId={selectedConversation?._id}
+            isAdminView={isAdminView}
+            onSelect={setSelectedConversation}
+            emptyMessage={
+              isAdminView
+                ? "No active conversations on the platform"
+                : "Start chatting with your connections"
+            }
+          />
         </div>
       </div>
 
-      {/* Main: Chat Window */}
       {selectedConversation ? (
         <div className="flex-grow flex flex-col bg-gray-50/50 relative">
-          {/* Chat Header */}
           <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between shadow-sm z-10">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                {getOtherParticipant(selectedConversation).profileImage && (
-                  <Image src={getOtherParticipant(selectedConversation).profileImage as string} alt="User" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
-                )}
-                {!getOtherParticipant(selectedConversation).profileImage && (
-                  <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
-                    {getOtherParticipant(selectedConversation).name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-dark-navy uppercase tracking-tight">{getOtherParticipant(selectedConversation).name}</h3>
-                <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Online
-                </p>
-              </div>
+            <div>
+              <h3 className="text-sm font-black text-dark-navy uppercase tracking-tight">
+                {isAdminView
+                  ? getAdminConversationTitle(selectedConversation)
+                  : getOtherParticipant(selectedConversation, currentUser._id)?.name}
+              </h3>
+              <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">
+                {isAdminView ? "Read-only monitoring" : "Online"}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2.5 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all"><Phone size={20} /></button>
-              <button className="p-2.5 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all"><Video size={20} /></button>
-              <button className="p-2.5 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all"><MoreVertical size={20} /></button>
-            </div>
+            {!isAdminView && (
+              <div className="flex items-center gap-2">
+                <button className="p-2.5 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all">
+                  <Phone size={20} />
+                </button>
+                <button className="p-2.5 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all">
+                  <Video size={20} />
+                </button>
+                <button className="p-2.5 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all">
+                  <MoreVertical size={20} />
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Messages Area */}
           <div className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar">
-            {messages.map((msg) => {
-              const isMine = msg.sender === currentUser._id;
-              return (
-                <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                  <div className={`max-w-[75%] space-y-1 ${isMine ? 'items-end' : 'items-start'}`}>
-                    <div className={`p-4 rounded-[1.5rem] shadow-sm text-sm ${isMine ? 'bg-dark-navy text-white rounded-tr-none' : 'bg-white text-dark-navy rounded-tl-none border border-gray-100'
-                      }`}>
-                      {msg.messageType === 'text' && <p className="font-medium leading-relaxed">{msg.content}</p>}
-                    </div>
-                    <div className={`flex items-center gap-2 px-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                      <span className="text-[9px] font-bold text-gray-400 uppercase">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      {isMine && (
-                        msg.isRead ? <CheckCheck size={12} className="text-blue-500" /> : <Check size={12} className="text-gray-300" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm font-black text-dark-navy uppercase tracking-tight">
+                  Start the conversation
+                </p>
+                <p className="text-xs text-steel-blue mt-2">
+                  Type a message or pick an emoji to get started.
+                </p>
+              </div>
+            )}
+            {messages.map((msg) => (
+              <MessageBubble
+                key={msg._id}
+                message={msg}
+                isMine={!isAdminView && String(msg.sender) === currentUser._id}
+                showSenderName={isAdminView ? getSenderName(String(msg.sender)) : undefined}
+              />
+            ))}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
           <div className="p-4 bg-white border-t border-gray-100">
-            <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-              <button type="button" className="p-3 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all"><Paperclip size={20} /></button>
-              <input
+            {isAdminView ? (
+              <p className="text-xs font-bold text-steel-blue uppercase tracking-widest text-center py-2">
+                Monitoring mode — read only
+              </p>
+            ) : (
+              <ChatInput
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-grow px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-dark-navy focus:outline-none focus:border-dark-navy/20"
+                onChange={setInputText}
+                onSubmit={handleSendMessage}
               />
-              {inputText.trim() ? (
-                <button type="submit" className="p-3 bg-dark-navy text-white rounded-xl hover:bg-coral transition-all shadow-lg active:scale-95"><Send size={20} /></button>
-              ) : (
-                <button type="button" className="p-3 text-gray-400 hover:text-dark-navy hover:bg-gray-50 rounded-xl transition-all"><Mic size={20} /></button>
-              )}
-            </form>
+            )}
           </div>
         </div>
-
       ) : (
         <div className="flex-grow flex flex-col items-center justify-center bg-gray-50/30 text-center p-10 space-y-6">
           <div className="w-24 h-24 bg-dark-navy/5 rounded-[2.5rem] flex items-center justify-center text-dark-navy/20">
-            <Send size={48} />
+            <MoreVertical size={48} />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-dark-navy uppercase tracking-tight">Your Messages</h2>
-            <p className="text-sm font-bold text-steel-blue uppercase tracking-widest max-w-xs">Select a conversation to start chatting with tutors or students.</p>
+            <h2 className="text-2xl font-black text-dark-navy uppercase tracking-tight">
+              {isAdminView ? "Platform Chat Monitor" : "Your Messages"}
+            </h2>
+            <p className="text-sm font-bold text-steel-blue uppercase tracking-widest max-w-xs">
+              {isAdminView
+                ? "Select a conversation to monitor messages across the platform."
+                : "Select a conversation to start chatting with tutors or students."}
+            </p>
           </div>
         </div>
       )}

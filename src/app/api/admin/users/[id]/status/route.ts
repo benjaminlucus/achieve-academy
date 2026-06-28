@@ -11,11 +11,11 @@ import { captureException } from "@/lib/monitoring";
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ userId: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireAdmin();
-    const { userId } = await context.params;
+    const { id: userId } = await context.params;
     const { status, reason } = await req.json();
 
     if (!status || !isValidUserStatus(status)) {

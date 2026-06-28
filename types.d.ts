@@ -135,3 +135,21 @@ export interface IPayment extends Document {
   paidAt: Date;
   createdAt: Date;
 }
+
+export interface IScheduledMeeting extends Document {
+  connection: mongoose.Types.ObjectId;
+  student: mongoose.Types.ObjectId;
+  tutor: mongoose.Types.ObjectId;
+  title: string;
+  date: Date;
+  time: string;
+  duration: number;
+  notes?: string;
+  meetingId: string;
+  joinUrl: string;
+  hostUrl: string;
+  provider: "zoom";
+  status: "scheduled" | "completed" | "cancelled";
+  createdAt: Date;
+  updatedAt: Date;
+}

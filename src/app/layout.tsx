@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ChatProvider } from "@/lib/chat-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,11 +38,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-off-white font-sans text-dark-navy">
         <ClerkProvider afterSignOutUrl="/">
-          <Navbar />
-          <main className="flex-grow pt-20">
-            {children}
-          </main>
-          <Footer />
+          <ChatProvider>
+            <Navbar />
+            <main className="flex-grow pt-20">
+              {children}
+            </main>
+            <Footer />
+          </ChatProvider>
         </ClerkProvider>
       </body>
     </html>

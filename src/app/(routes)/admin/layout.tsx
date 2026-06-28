@@ -1,6 +1,7 @@
 import React from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import MobileAdminMenuTrigger from "@/components/admin/MobileAdminMenuTrigger";
+import AdminChatInitializer from "@/components/chat/AdminChatInitializer";
 import { getCurrentUser } from "@/lib/utils";
 import { auth } from "@clerk/nextjs/server";
 
@@ -11,10 +12,14 @@ export default async function AdminLayout({
 }) {
   const { userId } = await auth();
   let zoomConnected = false;
+  let adminUser: { _id: string; role: string } | null = null;
   try {
     const currentUser = await getCurrentUser(userId ?? undefined);
     if (currentUser) {
       zoomConnected = !!currentUser.zoomConnected;
+      if (currentUser.role === "admin") {
+        adminUser = { _id: currentUser._id, role: "admin" };
+      }
     }
   } catch (err) {
     console.error("Failed to fetch admin user data", err);
@@ -22,6 +27,7 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50/50 isolate">
+      <AdminChatInitializer adminUser={adminUser} />
       <AdminSidebar zoomConnected={zoomConnected} />
       <main className="flex-1 lg:pl-72 p-4 md:p-8 lg:p-12 overflow-y-auto">
         {/* Top Header/Status Bar */}
