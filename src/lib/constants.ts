@@ -3,6 +3,43 @@ export const ITEMS_PER_PAGE = 20;
 /** Platform commission on tutor earnings (20%). */
 export const PLATFORM_COMMISSION_RATE = 0.2;
 
+/** Payment methods for manual payments */
+export const PAYMENT_METHODS = {
+  BANK_TRANSFER: "Bank Transfer",
+  EASYPAISA: "Easypaisa",
+  JAZZCASH: "JazzCash"
+} as const;
+
+export type PaymentMethod = typeof PAYMENT_METHODS[keyof typeof PAYMENT_METHODS];
+
+/** Payment statuses for manual payment flow */
+export const PAYMENT_STATUSES = {
+  AWAITING_PAYMENT: "awaiting_payment",
+  SUBMITTED: "submitted",
+  UNDER_REVIEW: "under_review",
+  CONFIRMED: "confirmed",
+  REJECTED: "rejected"
+} as const;
+
+/** Payment method details (can be configured via environment variables later) */
+export const PAYMENT_METHOD_DETAILS = {
+  [PAYMENT_METHODS.BANK_TRANSFER]: {
+    accountName: "Encrusted Academy",
+    accountNumber: "0123456789",
+    bankName: "Habib Bank Limited"
+  },
+  [PAYMENT_METHODS.EASYPAISA]: {
+    accountName: "Encrusted Academy",
+    accountNumber: "03001234567",
+    walletName: "Easypaisa"
+  },
+  [PAYMENT_METHODS.JAZZCASH]: {
+    accountName: "Encrusted Academy",
+    accountNumber: "03101234567",
+    walletName: "JazzCash"
+  }
+};
+
 export const allCountries = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
     "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",

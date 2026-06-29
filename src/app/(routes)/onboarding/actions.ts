@@ -10,18 +10,14 @@ import { onboardingSchema } from "@/lib/validations";
 
 export async function completeOnboarding(rawData: any) {
   const startTime = Date.now();
-  console.log("=== [Onboarding] Started ===");
-  console.log("[Onboarding] Raw data:", rawData);
 
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    console.log("[Onboarding] Clerk userId:", userId);
 
     // Step 1: Validate incoming data
     const validatedData = onboardingSchema.parse(rawData);
-    console.log("[Onboarding] Validated data:", validatedData);
 
     // Step 2: Parallel fetch Clerk user and connect to DB
     const [clerkUser] = await Promise.all([
@@ -29,7 +25,6 @@ export async function completeOnboarding(rawData: any) {
       connectDB(),
     ]);
     if (!clerkUser) throw new Error("Clerk user not found");
-    console.log("[Onboarding] Clerk user fetched:", clerkUser.id);
 
     const role = validatedData.role;
 
@@ -39,13 +34,11 @@ export async function completeOnboarding(rawData: any) {
       if (validatedData.secretPin !== serverPin) {
         throw new Error("Invalid admin PIN");
       }
-      console.log("[Onboarding] Admin PIN verified successfully");
     }
 
     // Step 4: Find existing user or get new _id
     const existingUser = await User.findOne({ clerkId: userId }, { _id: 1 });
     const mongoId = existingUser?._id || new mongoose.Types.ObjectId();
-    console.log("[Onboarding] MongoDB _id:", mongoId.toString());
 
     // Step 5: Prepare all data updates
     const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -85,7 +78,6 @@ export async function completeOnboarding(rawData: any) {
           )
         : role === "tutor"
         ? (async () => {
-            console.log("[Onboarding] Saving Tutor Profile with bio:", validatedData.bio);
             return await TutorProfile.findOneAndUpdate(
               { user: mongoId },
               {
@@ -124,23 +116,15 @@ export async function completeOnboarding(rawData: any) {
     });
 
     // Step 6: Run all updates in parallel for speed
-    console.log("[Onboarding] Executing parallel updates...");
     const [updatedUser] = await Promise.all([
       userUpdatePromise,
       profilePromise,
       clerkMetadataPromise,
     ]);
 
-    console.log("[Onboarding] Parallel updates completed successfully");
 
     // Step 7: VERIFY the user was saved correctly (critical!)
     const verifyUser = await getCurrentUser(userId);
-    console.log("[Onboarding] Verification complete:", {
-      mongoFound: !!verifyUser,
-      mongoId: verifyUser?._id?.toString(),
-      mongoOnboarded: verifyUser?.isOnboarded,
-      mongoRole: verifyUser?.role,
-    });
 
     if (!verifyUser) {
       throw new Error("Failed to verify user was created in MongoDB");
@@ -154,9 +138,6 @@ export async function completeOnboarding(rawData: any) {
       throw new Error("User role was not saved in MongoDB");
     }
 
-    console.log(
-      `=== [Onboarding] Completed in ${Date.now() - startTime}ms ===`
-    );
     return { success: true };
   } catch (error: any) {
     console.error("[Onboarding] Error:", error);

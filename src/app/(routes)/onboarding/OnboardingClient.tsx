@@ -45,8 +45,6 @@ export default function OnboardingClient() {
   const [loadingText, setLoadingText] = useState("Setting up your profile...");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  console.log("[OnboardingClient] Clerk user loaded:", isLoaded, !!user);
-
   const handleRoleSelect = (selectedRole: "student" | "tutor") => {
     setRole(selectedRole);
     setStep("location");
@@ -85,7 +83,6 @@ export default function OnboardingClient() {
   };
 
   const finishOnboarding = async (finalData: any) => {
-    console.log("[OnboardingClient] Submitting data:", finalData);
     setIsPending(true);
     setErrorMessage(null);
     setLoadingText("Connecting...");

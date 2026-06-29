@@ -115,11 +115,11 @@ export async function getAdminPaymentsData() {
     const filter = {};
     const [payments, allPaid, allPending] = await Promise.all([
       Payment.find(filter)
-        .populate("student", "name")
-        .populate("tutor", "name")
+        .populate("student", "name email")
+        .populate("tutor", "name email")
         .sort({ createdAt: -1 }),
-      Payment.find({ status: "paid" }).select("amount commission tutorEarning").lean(),
-      Payment.find({ status: "pending" }).select("tutorEarning").lean(),
+      Payment.find({ $or: [{ status: "paid" }, { status: "confirmed" }] }).select("amount commission tutorEarning").lean(),
+      Payment.find({ status: { $in: ["pending", "awaiting_payment", "submitted", "under_review"] } }).select("tutorEarning").lean(),
     ]);
 
     const totalRevenue = allPaid.reduce((sum, p) => sum + ((p as any).amount || 0), 0);
@@ -129,12 +129,21 @@ export async function getAdminPaymentsData() {
 
     const formattedPayments = payments.map((p) => ({
       id: p._id.toString(),
-      user: (p.student as { name?: string })?.name,
-      amount: `$${p.amount}`,
-      commission: `$${p.commission}`,
-      tutorEarning: `$${p.tutorEarning}`,
+      student: p.student,
+      tutor: p.tutor,
+      amount: p.amount,
+      commission: p.commission,
+      tutorEarning: p.tutorEarning,
       status: p.status,
       date: p.createdAt,
+      paymentMethod: p.paymentMethod,
+      transactionId: p.transactionId,
+      screenshot: p.screenshot,
+      notes: p.notes,
+      rejectionReason: p.rejectionReason,
+      history: p.history,
+      monthNumber: p.monthNumber,
+      session: p.session,
     }));
 
     return {
@@ -164,19 +173,10 @@ export async function getCurrentUser(userId?: string) {
   try {
     await connectDB();
 
-    console.log("[getCurrentUser] Searching user:", userId);
 
     const databaseUser = await User.findOne({
       clerkId: userId,
     }).lean();
-
-    console.log("[getCurrentUser] Query result:", {
-      found: !!databaseUser,
-      clerkId: databaseUser?.clerkId,
-      mongoId: databaseUser?._id?.toString(),
-      role: databaseUser?.role,
-      isOnboarded: databaseUser?.isOnboarded,
-    });
 
     if (!databaseUser) {
       console.warn(
@@ -184,16 +184,11 @@ export async function getCurrentUser(userId?: string) {
       );
 
       const totalUsers = await User.countDocuments();
-      console.log(
-        `[getCurrentUser] Total users in collection: ${totalUsers}`
-      );
 
       const sampleUsers = await User.find({})
         .select("clerkId role isOnboarded")
         .limit(5)
         .lean();
-
-      console.log("[getCurrentUser] Sample users:", sampleUsers);
 
       return null;
     }

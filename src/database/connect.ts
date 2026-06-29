@@ -16,11 +16,15 @@ declare global {
   var mongooseCache: MongooseCache | undefined;
 }
 
-let cached = global.mongooseCache;
+// Initialize cached safely
+const getCached = (): MongooseCache => {
+  if (!global.mongooseCache) {
+    global.mongooseCache = { conn: null, promise: null };
+  }
+  return global.mongooseCache;
+};
 
-if (!cached) {
-  cached = global.mongooseCache = { conn: null, promise: null };
-}
+const cached = getCached();
 
 export async function connectDB() {
   if (!MONGODB_URI) {
@@ -29,13 +33,11 @@ export async function connectDB() {
 
   // If we already have a connection, return it
   if (cached.conn) {
-    console.log("[MongoDB] Reusing existing connection");
     return cached.conn;
   }
 
   // If we don't have a promise yet, create a new one
   if (!cached.promise) {
-    console.log("[MongoDB] Creating new connection");
     cached.promise = mongoose
       .connect(MONGODB_URI, {
         bufferCommands: false,
@@ -43,7 +45,6 @@ export async function connectDB() {
         socketTimeoutMS: 45000,
       })
       .then((m) => {
-        console.log("[MongoDB] Successfully connected");
         return m;
       })
       .catch((err) => {

@@ -4,7 +4,7 @@ import User from "@/database/models/user.model";
 import Interview from "@/database/models/interview.model";
 import { interviewScheduleSchema } from "@/lib/validations";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
-import { formatManualZoomMeeting, isValidZoomUrl, createZoomMeeting } from "@/lib/zoom-service";
+import { createZoomMeeting } from "@/lib/zoom-service";
 import { authErrorResponse, requireAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { logger } from "@/lib/logger";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { userId, scheduledAt, interviewLink, interviewHostLink, notes, autoCreateZoom } = validation.data;
+    const { userId, scheduledAt, notes } = validation.data;
 
     await connectDB();
 
@@ -33,21 +33,9 @@ export async function POST(req: Request) {
     }
 
     const scheduledDate = new Date(scheduledAt);
-    let meetingDetails;
-    
-    if (autoCreateZoom && admin.zoomConnected) {
-      // Automatically create Zoom meeting
-      const topic = `Interview with ${user.name || "User"}`;
-      meetingDetails = await createZoomMeeting(admin.clerkId, topic, scheduledDate, 30);
-    } else if (interviewLink) {
-      // Use manual link
-      if (!isValidZoomUrl(interviewLink)) {
-        return NextResponse.json({ error: "Invalid Zoom meeting URL" }, { status: 400 });
-      }
-      meetingDetails = formatManualZoomMeeting(interviewLink);
-    } else {
-      return NextResponse.json({ error: "Please provide a Zoom link or enable auto-create" }, { status: 400 });
-    }
+    // Always auto-create the meeting (Zoom with fallback to Jitsi)
+    const topic = `Interview with ${user.name || "User"}`;
+    const meetingDetails = await createZoomMeeting(topic, scheduledDate, 30);
 
     await User.findByIdAndUpdate(userId, {
       status: "interview_scheduled",

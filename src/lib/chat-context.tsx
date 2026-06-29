@@ -1,10 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import FloatingChatButton from "@/components/chat/FloatingChatButton";
 import type { ChatConversation } from "@/types/chat";
 import { toast } from "react-hot-toast";
+import { getPusherClient } from "@/lib/pusher";
 
 interface ChatContextType {
   isSidebarOpen: boolean;
@@ -17,12 +18,13 @@ interface ChatContextType {
   setHasUnreadMessages: (hasUnread: boolean) => void;
   isAdminView: boolean;
   setIsAdminView: (isAdmin: boolean) => void;
-  openAdminMonitor: () => Promise<void>;
+  openAdminMonitor: (options?: { studentId?: string; tutorId?: string }) => Promise<void>;
   openChat: (options?: { partnerId?: string; conversationId?: string }) => Promise<void>;
   refreshConversations: () => Promise<ChatConversation[]>;
   pendingPartnerId: string | null;
   pendingConversationId: string | null;
   clearPendingSelection: () => void;
+  onlineUserIds: string[];
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -39,6 +41,41 @@ export function ChatProvider({
   const [isAdminView, setIsAdminView] = useState(false);
   const [pendingPartnerId, setPendingPartnerId] = useState<string | null>(null);
   const [pendingConversationId, setPendingConversationId] = useState<string | null>(null);
+  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    try {
+      const pusher = getPusherClient();
+      const presenceChannel = pusher.subscribe("presence-online-users");
+
+      presenceChannel.bind("pusher:subscription_succeeded", (members: any) => {
+        const ids: string[] = [];
+        members.each((member: any) => {
+          ids.push(member.id);
+        });
+        setOnlineUserIds(ids);
+      });
+
+      presenceChannel.bind("pusher:member_added", (member: any) => {
+        setOnlineUserIds((prev) => {
+          if (prev.includes(member.id)) return prev;
+          return [...prev, member.id];
+        });
+      });
+
+      presenceChannel.bind("pusher:member_removed", (member: any) => {
+        setOnlineUserIds((prev) => prev.filter((id) => id !== member.id));
+      });
+
+      return () => {
+        pusher.unsubscribe("presence-online-users");
+      };
+    } catch (err) {
+      console.warn("Failed to subscribe to presence channel:", err);
+    }
+  }, [currentUser]);
 
   const refreshConversations = useCallback(async () => {
     try {
@@ -59,11 +96,28 @@ export function ChatProvider({
     setPendingConversationId(null);
   }, []);
 
-  const openAdminMonitor = useCallback(async () => {
-    await refreshConversations();
-    setIsAdminView(true);
-    setIsSidebarOpen(true);
-  }, [refreshConversations]);
+  const openAdminMonitor = useCallback(
+    async (options?: { studentId?: string; tutorId?: string }) => {
+      const conversations = await refreshConversations();
+      setIsAdminView(true);
+      if (options?.studentId && options?.tutorId) {
+        const match = conversations.find(
+          (c) =>
+            c.participants.some((p) => String(p._id) === String(options.studentId)) &&
+            c.participants.some((p) => String(p._id) === String(options.tutorId))
+        );
+        if (match) {
+          setPendingConversationId(match._id);
+        } else {
+          setPendingConversationId(null);
+        }
+      } else {
+        setPendingConversationId(null);
+      }
+      setIsSidebarOpen(true);
+    },
+    [refreshConversations]
+  );
 
   const openChat = useCallback(
     async (options?: { partnerId?: string; conversationId?: string }) => {
@@ -110,6 +164,7 @@ export function ChatProvider({
         pendingPartnerId,
         pendingConversationId,
         clearPendingSelection,
+        onlineUserIds,
       }}
     >
       {children}

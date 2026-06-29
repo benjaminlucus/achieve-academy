@@ -129,11 +129,27 @@ export interface IPayment extends Document {
   commission: number;
   tutorEarning: number;
   monthNumber: number;
-  status: "pending" | "paid" | "failed";
-  paymentMethod: string;
-  transactionId: string;
-  paidAt: Date;
+  status: 
+    | "pending" // legacy, for old payments
+    | "awaiting_payment"
+    | "submitted"
+    | "under_review"
+    | "confirmed"
+    | "rejected";
+  paymentMethod?: string;
+  transactionId?: string;
+  screenshot?: string; // URL to payment proof
+  notes?: string;
+  rejectionReason?: string;
+  history: {
+    action: string;
+    timestamp: Date;
+    adminId?: mongoose.Types.ObjectId;
+    notes?: string;
+  }[];
+  paidAt?: Date;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IScheduledMeeting extends Document {

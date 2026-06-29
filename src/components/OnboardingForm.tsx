@@ -56,7 +56,6 @@ const OnboardingForm = () => {
         body: JSON.stringify(formData),
       });
 
-      console.log(res)
       if (res.ok) {
         router.push('/dashboard');
       }

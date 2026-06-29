@@ -24,22 +24,37 @@ import {
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
-const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+const sidebarItems: Array<{
+  icon: typeof LayoutDashboard;
+  label: string;
+  href: string;
+  countKey?: keyof SidebarCounts;
+}> = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/admin", countKey: "reportsPending" },
   { icon: Users, label: "Users", href: "/admin/users" },
-  { icon: UserCheck, label: "Tutors Approval", href: "/admin/tutors" },
-  { icon: GraduationCap, label: "Students Approval", href: "/admin/students" },
-  { icon: Calendar, label: "Interviews", href: "/admin/interviews" },
-  { icon: LinkIcon, label: "Connections", href: "/admin/connections" },
+  { icon: UserCheck, label: "Tutors Approval", href: "/admin/tutors", countKey: "tutorsPending" },
+  { icon: GraduationCap, label: "Students Approval", href: "/admin/students", countKey: "studentsPending" },
+  { icon: Calendar, label: "Interviews", href: "/admin/interviews", countKey: "interviewsScheduled" },
+  { icon: LinkIcon, label: "Connections", href: "/admin/connections", countKey: "connectionsPending" },
   { icon: MessageSquare, label: "All Messages", href: "/admin/messages" },
   { icon: Calendar, label: "Sessions", href: "/admin/sessions" },
-  { icon: CreditCard, label: "Payments", href: "/admin/payments" },
-  { icon: DollarSign, label: "Tutor Payouts", href: "/admin/payouts" },
+  { icon: CreditCard, label: "Payments", href: "/admin/payments", countKey: "paymentsPending" },
+  { icon: DollarSign, label: "Tutor Payouts", href: "/admin/payouts", countKey: "payoutsPending" },
   { icon: MessageCircle, label: "Feedbacks", href: "/admin/feedbacks" },
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   { icon: HelpCircle, label: "Admin Guide", href: "/admin/guide" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
+
+interface SidebarCounts {
+  tutorsPending: number;
+  studentsPending: number;
+  interviewsScheduled: number;
+  connectionsPending: number;
+  paymentsPending: number;
+  payoutsPending: number;
+  reportsPending: number;
+}
 
 interface AdminSidebarProps {
   zoomConnected?: boolean;
@@ -50,11 +65,28 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [counts, setCounts] = useState<SidebarCounts | null>(null);
   const { signOut } = useClerk();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await fetch("/api/admin/sidebar-counts");
+        if (res.ok) {
+          setCounts(await res.json());
+        }
+      } catch {
+        // Non-critical — badges stay hidden on failure
+      }
+    };
+    void fetchCounts();
+    const interval = setInterval(fetchCounts, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   // Close sidebar on route change (mobile)
@@ -123,6 +155,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
           <nav className="flex-grow p-4 space-y-1 overflow-y-auto custom-scrollbar pt-8 lg:pt-6">
             {sidebarItems.map((item) => {
               const isActive = pathname === item.href;
+              const badgeCount = item.countKey && counts ? counts[item.countKey] : 0;
               return (
                 <Link
                   key={item.href}
@@ -138,8 +171,13 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
                 >
                   <item.icon size={18} className={`flex-shrink-0 ${isActive ? 'text-purple-primary' : 'text-gray-400 group-hover:text-deep-black transition-colors'}`} />
                   {!isCollapsed && (
-                    <span className="whitespace-nowrap animate-in fade-in duration-300 uppercase tracking-tight text-[11px]">
+                    <span className="whitespace-nowrap animate-in fade-in duration-300 uppercase tracking-tight text-[11px] flex-grow">
                       {item.label}
+                    </span>
+                  )}
+                  {badgeCount > 0 && (
+                    <span className={`${isCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'} min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-coral text-white text-[9px] font-black rounded-full`}>
+                      {badgeCount > 99 ? "99+" : badgeCount}
                     </span>
                   )}
                   {isActive && !isCollapsed && (

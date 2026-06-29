@@ -13,6 +13,8 @@ export interface ChatMessage {
   messageType: string;
   createdAt: string | Date;
   isRead: boolean;
+  isEdited?: boolean;
+  callDuration?: number;
 }
 
 export interface ChatConversation {
@@ -20,6 +22,7 @@ export interface ChatConversation {
   participants: ChatParticipant[];
   lastMessage?: ChatMessage;
   updatedAt: string | Date;
+  unreadCount?: number;
 }
 
 export interface ChatUser {

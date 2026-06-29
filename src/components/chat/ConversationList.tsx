@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import type { ChatConversation, ChatUser } from "@/types/chat";
+import { useChat } from "@/lib/chat-context";
 
 interface ConversationListProps {
   conversations: ChatConversation[];
@@ -21,6 +22,12 @@ function formatTimestamp(date: string | Date) {
     minute: "2-digit",
     hour12: true,
   });
+}
+
+function getUserIdentifier(userId: string, role?: string) {
+  const shortId = userId.substring(userId.length - 6).toUpperCase();
+  const rolePrefix = role === "tutor" ? "TUT" : role === "student" ? "STU" : "ADM";
+  return `${rolePrefix}-${shortId}`;
 }
 
 function getOtherParticipant(
@@ -49,6 +56,8 @@ export default function ConversationList({
   onSelect,
   emptyMessage = "Start chatting with your connections",
 }: ConversationListProps) {
+  const { onlineUserIds } = useChat();
+
   if (conversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-4">
@@ -101,25 +110,45 @@ export default function ConversationList({
                   {isAdminView ? "M" : displayName.charAt(0)}
                 </div>
               )}
-              {!isAdminView && (
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
+              {!isAdminView && otherUser && (
+                <div
+                  className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white rounded-full ${
+                    onlineUserIds.includes(String(otherUser._id))
+                      ? "bg-emerald-500"
+                      : "bg-gray-300"
+                  }`}
+                />
               )}
             </div>
 
             <div className="flex-grow text-left min-w-0">
               <div className="flex justify-between items-start gap-2">
-                <h3 className="text-sm font-black text-dark-navy uppercase truncate">
-                  {displayName}
-                </h3>
+                <div className="flex items-center gap-2 truncate flex-grow">
+                  <h3 className="text-sm font-black text-dark-navy uppercase truncate">
+                    {displayName}
+                  </h3>
+                  {!isAdminView && otherUser && (
+                    <span className="text-[8px] font-black bg-gray-100 text-steel-blue border border-gray-200 px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0">
+                      {getUserIdentifier(otherUser._id, otherUser.role)}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[9px] font-bold text-gray-400 uppercase flex-shrink-0">
                   {conv.lastMessage
                     ? formatTimestamp(conv.lastMessage.createdAt)
                     : ""}
                 </span>
               </div>
-              <p className="text-xs text-steel-blue truncate mt-1">
-                {conv.lastMessage?.content || "No messages yet"}
-              </p>
+              <div className="flex justify-between items-center mt-1 gap-2">
+                <p className="text-xs text-steel-blue truncate flex-grow">
+                  {conv.lastMessage?.content || "No messages yet"}
+                </p>
+                {conv.unreadCount && conv.unreadCount > 0 ? (
+                  <span className="flex items-center justify-center bg-coral text-white text-[9px] font-black h-5 min-w-5 px-1.5 rounded-full flex-shrink-0 animate-pulse">
+                    {conv.unreadCount}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </button>
         );

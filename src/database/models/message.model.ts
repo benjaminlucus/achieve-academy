@@ -12,6 +12,7 @@ export interface IMessage extends Document {
   callDuration?: number;
   isRead: boolean;
   readAt?: Date;
+  isEdited?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,7 +50,11 @@ const MessageSchema = new Schema<IMessage>({
     type: Boolean,
     default: false
   },
-  readAt: Date
+  readAt: Date,
+  isEdited: {
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true });
 
 // Index for fast message retrieval in a conversation

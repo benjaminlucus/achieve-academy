@@ -15,6 +15,7 @@ import { InterviewSection } from "@/components/dashboard/InterviewSection";
 import { SessionSection } from "@/components/dashboard/SessionSection";
 import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { PaymentSubmissionSection } from "@/components/dashboard/PaymentSubmissionSection";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
@@ -245,6 +246,9 @@ export default function StudentPrivateDashboard() {
 
             {/* Study Sessions Section */}
             <SessionSection userRole="student" />
+
+            {/* Payment Submission Section */}
+            <PaymentSubmissionSection userId={id} />
 
             {/* Academic Info */}
             <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-10">

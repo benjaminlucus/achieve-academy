@@ -35,7 +35,7 @@ export default async function TutorsApprovalPage() {
         </div>
       </div>
 
-      <TutorsTableClient initialTutors={pendingTutors} adminZoomConnected={user.zoomConnected} />
+      <TutorsTableClient initialTutors={pendingTutors} />
     </div>
   );
 }

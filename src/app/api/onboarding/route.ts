@@ -12,8 +12,6 @@ export async function POST(req: Request) {
     const user = await currentUser();
     const body = await req.json();
 
-    console.log("Received onboarding data:", body);
-
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
     // 1. Create or Update the Base User
@@ -52,8 +50,6 @@ export async function POST(req: Request) {
         subjects: body.subjects,
       });
     }
-
-    console.log("Onboarding successful for user:", newUser);
 
     return NextResponse.json({ success: true, message: "Onboarding completed successfully", user: newUser });
   } catch (error) {

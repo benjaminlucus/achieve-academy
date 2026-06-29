@@ -55,7 +55,6 @@ export const CreateUserDialog = ({ isOpen, onClose, onSuccess }: CreateUserDialo
       });
 
       if (response.ok) {
-        console.log(response)
         alert("User created successfully!");
         onSuccess();
         onClose();

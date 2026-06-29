@@ -21,7 +21,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const authResponse = pusherServer.authorizeChannel(socketId, channelName);
+    const userMetadata = {
+      user_id: user._id.toString(),
+      user_info: {
+        name: user.name || "User",
+        role: user.role,
+      },
+    };
+    const authResponse = pusherServer.authorizeChannel(socketId, channelName, userMetadata);
     return NextResponse.json(authResponse);
   } catch (error) {
     const authRes = authErrorResponse(error);

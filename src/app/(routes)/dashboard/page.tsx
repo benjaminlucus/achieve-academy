@@ -13,42 +13,27 @@ export default async function Dashboard() {
   }
 
   try {
-    console.log("[Dashboard] Step 1: Checking Clerk auth...");
     const user = await getCurrentUser(userId);
-
-    // Development-only logging
-    console.log("[Dashboard]", {
-      clerkId: userId,
-      found: !!user,
-      mongoId: user?._id,
-      role: user?.role,
-      isOnboarded: user?.isOnboarded,
-    });
 
     // User record does not exist
     if (!user) {
-      console.log("[Dashboard] Redirecting to onboarding: user not in DB");
       redirect("/onboarding");
     }
 
     // User exists but onboarding incomplete
     if (!user.isOnboarded) {
-      console.log("[Dashboard] Redirecting to onboarding: user not onboarded");
       redirect("/onboarding");
     }
 
     const role = user.role?.toLowerCase();
     switch (role) {
       case "admin":
-        console.log("[Dashboard] Redirecting to admin");
         redirect("/admin");
 
       case "tutor":
-        console.log("[Dashboard] Redirecting to tutor dashboard");
         redirect(`/tutors/${user._id}/dashboard`);
 
       case "student":
-        console.log("[Dashboard] Redirecting to student dashboard");
         redirect(`/students/${user._id}/dashboard`);
 
       default:
@@ -59,8 +44,7 @@ export default async function Dashboard() {
     }
   } catch (error) {
     // Re-throw Next.js special redirect errors!
-    if (error instanceof Error && error.digest?.startsWith("NEXT_REDIRECT")) {
-      console.log("[Dashboard] Passing through NEXT_REDIRECT error");
+    if (error instanceof Error && (error as any).digest?.startsWith("NEXT_REDIRECT")) {
       throw error;
     }
 

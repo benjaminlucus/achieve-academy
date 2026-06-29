@@ -5,9 +5,11 @@ import User from "@/database/models/user.model";
 import TutorProfile from "@/database/models/tutor.model";
 import StudentProfile from "@/database/models/student.model";
 import Session from "@/database/models/session.model";
+import Payment from "@/database/models/payment.model";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { studentProfileSchema, tutorProfileSchema } from "@/lib/validations";
+import { PLATFORM_COMMISSION_RATE } from "@/lib/constants";
 
 export async function createStudySession(data: {
   tutorId: string;
@@ -172,6 +174,89 @@ export async function updateProfileImage(userId: string, imageBase64: string) {
     return { success: true };
   } catch (error: any) {
     console.error("Update Profile Image Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function submitPaymentProof(data: {
+  paymentId?: string;
+  sessionId: string;
+  monthNumber: number;
+  amount: number;
+  paymentMethod: string;
+  transactionId?: string;
+  notes?: string;
+  screenshot: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const session = await Session.findById(data.sessionId);
+    if (!session) throw new Error("Session not found");
+    if (session.student.toString() !== currentUser._id.toString()) {
+      throw new Error("Unauthorized: This session does not belong to you");
+    }
+
+    const commission = data.amount * PLATFORM_COMMISSION_RATE;
+    const tutorEarning = data.amount - commission;
+
+    let payment;
+    
+    if (data.paymentId) {
+      // Resubmitting rejected payment
+      payment = await Payment.findById(data.paymentId);
+      if (!payment) throw new Error("Payment not found");
+      if (payment.student.toString() !== currentUser._id.toString()) {
+        throw new Error("Unauthorized");
+      }
+      
+      payment.status = "submitted";
+      payment.amount = data.amount;
+      payment.commission = commission;
+      payment.tutorEarning = tutorEarning;
+      payment.paymentMethod = data.paymentMethod;
+      payment.transactionId = data.transactionId;
+      payment.notes = data.notes;
+      payment.screenshot = data.screenshot;
+      payment.rejectionReason = undefined;
+      payment.history.push({
+        action: "Resubmitted payment proof",
+        timestamp: new Date()
+      });
+    } else {
+      // Creating new payment
+      payment = await Payment.create({
+        session: session._id,
+        student: currentUser._id,
+        tutor: session.tutor,
+        amount: data.amount,
+        commission,
+        tutorEarning,
+        monthNumber: data.monthNumber,
+        status: "submitted",
+        paymentMethod: data.paymentMethod,
+        transactionId: data.transactionId,
+        notes: data.notes,
+        screenshot: data.screenshot,
+        history: [{
+          action: "Submitted payment proof",
+          timestamp: new Date()
+        }]
+      });
+    }
+
+    await payment.save();
+
+    revalidatePath(`/students/${currentUser._id}/dashboard`);
+    
+    return { success: true, paymentId: payment._id.toString() };
+  } catch (error: any) {
+    console.error("Submit Payment Proof Error:", error);
     return { success: false, error: error.message };
   }
 }

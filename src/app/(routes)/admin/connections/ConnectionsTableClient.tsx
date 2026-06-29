@@ -5,6 +5,7 @@ import {
   Search,
   MessageSquare,
   UserX,
+  UserCheck,
   CheckCircle,
   Clock,
   Filter,
@@ -198,6 +199,11 @@ export default function ConnectionsTableClient({
     await patchConnection(id, { status: "blocked" }, "Connection blocked");
   };
 
+  const handleUnblockConnection = async (id: string) => {
+    if (!confirm("Unblock this connection? Messaging will be restored.")) return;
+    await patchConnection(id, { status: "accepted" }, "Connection unblocked");
+  };
+
   const filteredConnections = connections.filter((conn) => {
     const studentName = conn.student?.name || "";
     const tutorName = conn.tutor?.name || "";
@@ -383,7 +389,7 @@ export default function ConnectionsTableClient({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={() => void openAdminMonitor()}
+                      onClick={() => void openAdminMonitor({ studentId: conn.student?._id, tutorId: conn.tutor?._id })}
                       className="flex items-center gap-2 px-4 py-2 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral transition-all"
                     >
                       <MessageSquare size={14} /> Monitor Chat
@@ -404,6 +410,14 @@ export default function ConnectionsTableClient({
                   >
                     <UserX size={14} /> Block
                   </button>
+                  {conn.status === "blocked" && (
+                    <button
+                      onClick={() => void handleUnblockConnection(conn._id)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 text-emerald-600 bg-emerald-50 border border-emerald-100 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all"
+                    >
+                      <UserCheck size={14} /> Unblock
+                    </button>
+                  )}
                 </div>
 
                 {conn.status === "accepted" && conn.subscriptionStatus !== "active" && (

@@ -18,13 +18,14 @@ import Link from "next/link";
 import { getCurrentUser, getTotalPayments, getTotalUsers, getAdminStatistics } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+import AdminContactPanel from "@/components/admin/AdminContactPanel";
+import AdminReportsPanel from "@/components/admin/AdminReportsPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const { userId } = await auth();
   const user = await getCurrentUser(userId || undefined);
-  console.log("getcutrrentusrer user: ", user)
 
   if (!user) {
     return redirect("/onboarding");
@@ -106,6 +107,12 @@ export default async function AdminDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Admin Contact Panel */}
+        <AdminContactPanel />
+
+        {/* Pending Reports */}
+        <AdminReportsPanel zoomConnected={!!user.zoomConnected} />
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -22,19 +22,29 @@ const PaymentSchema = new Schema<IPayment>({
 
   amount: { type: Number, required: true },
 
-  commission: { type: Number, required: true }, // 20% of amount
-  tutorEarning: { type: Number, required: true }, // 80% of amount
+  commission: { type: Number, required: true },
+  tutorEarning: { type: Number, required: true },
 
   monthNumber: { type: Number, required: true },
 
   status: {
     type: String,
-    enum: ["pending", "paid", "failed"],
-    default: "pending"
+    enum: ["pending", "awaiting_payment", "submitted", "under_review", "confirmed", "rejected", "paid", "failed"],
+    default: "awaiting_payment"
   },
 
   paymentMethod: String,
   transactionId: String,
+  screenshot: String,
+  notes: String,
+  rejectionReason: String,
+
+  history: [{
+    action: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
+    adminId: { type: Schema.Types.ObjectId, ref: "User" },
+    notes: String
+  }],
 
   paidAt: Date,
 }, {timestamps: true});

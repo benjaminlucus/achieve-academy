@@ -1,37 +1,48 @@
+import Image from "next/image";
 import { Eye, ShieldAlert, UserCog } from 'lucide-react';
 import React from 'react';
 import Link from 'next/link';
 
 const AllUsersTable = ({ users, totalCount }: { users: any[], totalCount: number }) => {
-    return (
-        <div className="space-y-4">
-            {/* Desktop Table View */}
-            <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-50/50">
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {users.map((user: any) => (
-                                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
-                                                {(user.name || "U").charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
-                                                <p className="text-xs font-medium text-gray-400">{user.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
+  return (
+    <div className="space-y-4">
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-gray-50/50">
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {users.map((user: any) => (
+                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {user.profileImage ? (
+                        <Image
+                          src={user.profileImage}
+                          alt={user.name}
+                          width={40}
+                          height={40}
+                          className="w-10 h-10 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
+                          {(user.name || "U").charAt(0)}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
+                        <p className="text-xs font-medium text-gray-400">{user.email}</p>
+                      </div>
+                    </div>
+                  </td>
                                     <td className="px-6 py-4">
                                         <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLowerCase() === 'tutor'
                                             ? 'bg-blue-50 text-blue-600 border-blue-100'
@@ -78,19 +89,29 @@ const AllUsersTable = ({ users, totalCount }: { users: any[], totalCount: number
             </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
-                {users.map((user: any) => (
-                    <div key={user.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                        <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg">
-                                    {(user.name || "U").charAt(0)}
-                                </div>
-                                <div>
-                                    <p className="text-base font-black text-gray-900 uppercase tracking-tight">{user.name}</p>
-                                    <p className="text-xs font-medium text-gray-400">{user.email}</p>
-                                </div>
-                            </div>
+      <div className="md:hidden space-y-4">
+        {users.map((user: any) => (
+          <div key={user.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                {user.profileImage ? (
+                  <Image
+                    src={user.profileImage}
+                    alt={user.name}
+                    width={48}
+                    height={48}
+                    className="w-12 h-12 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg">
+                    {(user.name || "U").charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <p className="text-base font-black text-gray-900 uppercase tracking-tight">{user.name}</p>
+                  <p className="text-xs font-medium text-gray-400">{user.email}</p>
+                </div>
+              </div>
                             <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${user.status.toLowerCase() === "verified"
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                 : user.status.toLowerCase() === "blocked"

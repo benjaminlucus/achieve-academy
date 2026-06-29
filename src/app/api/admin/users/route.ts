@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     const [users, total] = await Promise.all([
       User.find({})
-        .select("name email role status createdAt")
+        .select("name email role status createdAt profileImage")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
       role: u.role,
       status: normalizeUserStatus(u.status),
       joined: u.createdAt,
+      profileImage: u.profileImage,
     }));
 
     return NextResponse.json({

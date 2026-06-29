@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Connection from "@/database/models/connection.model";
 import Session from "@/database/models/session.model";
 import Conversation from "@/database/models/conversation.model";
+import User from "@/database/models/user.model";
 import type { IUser } from "../../types";
 
 export async function getAllowedTutorIdsForStudent(
@@ -40,14 +41,20 @@ export async function canAccessConversation(
 
   const userId = user._id.toString();
   const isParticipant = conversation.participants.some(
-    (p) => p.toString() === userId
+    (p: any) => p.toString() === userId
   );
   if (!isParticipant) return false;
 
   const otherParticipantId = conversation.participants.find(
-    (p) => p.toString() !== userId
+    (p: any) => p.toString() !== userId
   );
   if (!otherParticipantId) return false;
+
+  // Check if other participant is admin - always allow
+  const otherUser = await User.findById(otherParticipantId);
+  if (otherUser && otherUser.role === "admin") {
+    return true;
+  }
 
   if (user.role === "student") {
     const allowedTutors = await getAllowedTutorIdsForStudent(user._id);
@@ -77,10 +84,15 @@ export async function getConversationQueryForUser(user: IUser) {
 
   if (user.role === "student") {
     const allowedTutorIds = await getAllowedTutorIdsForStudent(user._id);
-    if (allowedTutorIds.length === 0) {
+    const admins = await User.find({ role: "admin" }).select("_id").lean();
+    const adminIds = admins.map((a: any) => a._id.toString());
+    const allAllowedIds = [...allowedTutorIds, ...adminIds];
+    
+    if (allAllowedIds.length === 0) {
       return { _id: { $in: [] } };
     }
-    const allowedObjectIds = allowedTutorIds.map(
+    
+    const allowedObjectIds = allAllowedIds.map(
       (id) => new mongoose.Types.ObjectId(id)
     );
     return {
@@ -93,10 +105,15 @@ export async function getConversationQueryForUser(user: IUser) {
 
   if (user.role === "tutor") {
     const allowedStudentIds = await getAllowedStudentIdsForTutor(user._id);
-    if (allowedStudentIds.length === 0) {
+    const admins = await User.find({ role: "admin" }).select("_id").lean();
+    const adminIds = admins.map((a: any) => a._id.toString());
+    const allAllowedIds = [...allowedStudentIds, ...adminIds];
+    
+    if (allAllowedIds.length === 0) {
       return { _id: { $in: [] } };
     }
-    const allowedObjectIds = allowedStudentIds.map(
+    
+    const allowedObjectIds = allAllowedIds.map(
       (id) => new mongoose.Types.ObjectId(id)
     );
     return {
@@ -114,6 +131,10 @@ export async function authorizePusherChannel(
   user: IUser,
   channelName: string
 ): Promise<boolean> {
+  if (channelName === "presence-online-users") {
+    return true;
+  }
+
   if (channelName.startsWith("private-chat-")) {
     const conversationId = channelName.replace("private-chat-", "");
     return canAccessConversation(user, conversationId);

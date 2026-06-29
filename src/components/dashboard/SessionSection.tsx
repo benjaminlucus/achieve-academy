@@ -101,6 +101,13 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
           const now = new Date();
           const isLive = isBefore(start, now) && isAfter(end, now);
           const partner = userRole === "student" ? session.tutor : session.student;
+          const partnerRole = userRole === "student" ? "tutor" : "student";
+          
+          // Format session label dynamically based on user role
+          const sessionLabel = `${session.student.name} has an upcoming session with ${session.tutor.name} at ${format(start, "MMM do, h:mm a")}`;
+          const viewerPerspectiveLabel = userRole === "admin" 
+            ? sessionLabel 
+            : `${userRole === "student" ? "You" : "You"} have an upcoming session with ${partner.name} (${partnerRole}) at ${format(start, "MMM do, h:mm a")}`;
 
           return (
             <motion.div 
@@ -128,6 +135,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
               </div>
 
               <div className="space-y-3 mb-6">
+                <p className="text-xs text-steel-blue">{viewerPerspectiveLabel}</p>
                 <div className="flex items-center gap-2 text-steel-blue">
                   <Clock size={14} className="text-coral" />
                   <span className="text-[10px] font-bold uppercase tracking-wider">{session.duration} Minutes • {session.frequency}</span>

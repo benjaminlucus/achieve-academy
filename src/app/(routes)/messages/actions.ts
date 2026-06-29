@@ -5,6 +5,9 @@ import Connection from "@/database/models/connection.model";
 import Conversation from "@/database/models/conversation.model";
 import Message from "@/database/models/message.model";
 import User from "@/database/models/user.model";
+import Report from "@/database/models/report.model";
+import Payment from "@/database/models/payment.model";
+import Session from "@/database/models/session.model";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import mongoose from "mongoose";
@@ -15,6 +18,7 @@ import {
   canAccessConversation,
 } from "@/lib/chat-permissions";
 import { getChatChannelName, getUserChannelName } from "@/lib/chat-channels";
+import { sendEmail, emailTemplates } from "@/lib/email-service";
 
 // --- Connection Actions ---
 
@@ -145,7 +149,7 @@ export async function updateConnectionStatus(connectionId: string, status: "acce
 export async function sendMessage(data: {
   conversationId: string;
   content: string;
-  messageType?: "text" | "image" | "video" | "voice" | "file";
+  messageType?: "text" | "image" | "video" | "voice" | "file" | "call";
   mediaUrl?: string;
   mediaName?: string;
   mediaSize?: number;
@@ -240,5 +244,529 @@ export async function markAsRead(messageIds: string[]) {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  }
+}
+
+export async function editMessage(messageId: string, newContent: string) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const message = await Message.findById(messageId);
+    if (!message) throw new Error("Message not found");
+
+    if (message.sender.toString() !== currentUser._id.toString()) {
+      throw new Error("Forbidden");
+    }
+
+    message.content = newContent;
+    message.isEdited = true;
+    await message.save();
+
+    const channelName = getChatChannelName(message.conversation.toString());
+    await pusherServer.trigger(channelName, "message-edit", {
+      messageId: message._id.toString(),
+      content: newContent,
+      isEdited: true
+    });
+
+    return { success: true, message: JSON.parse(JSON.stringify(message)) };
+  } catch (error: any) {
+    console.error("Edit Message Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteMessage(messageId: string) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const message = await Message.findById(messageId);
+    if (!message) throw new Error("Message not found");
+
+    if (message.sender.toString() !== currentUser._id.toString()) {
+      throw new Error("Forbidden");
+    }
+
+    return await performMessageDelete(messageId, message.conversation);
+  } catch (error: any) {
+    console.error("Delete Message Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function adminDeleteMessage(messageId: string) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser || currentUser.role !== "admin") {
+      throw new Error("Forbidden");
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) throw new Error("Message not found");
+
+    return await performMessageDelete(messageId, message.conversation);
+  } catch (error: any) {
+    console.error("Admin Delete Message Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function performMessageDelete(
+  messageId: string,
+  conversationId: mongoose.Types.ObjectId
+) {
+  await Message.findByIdAndDelete(messageId);
+
+  const conversation = await Conversation.findById(conversationId);
+  if (conversation && conversation.lastMessage?.toString() === messageId) {
+    const prevMessage = await Message.findOne({ conversation: conversationId })
+      .sort({ createdAt: -1 });
+    conversation.lastMessage = prevMessage ? prevMessage._id : undefined;
+    await conversation.save();
+  }
+
+  const channelName = getChatChannelName(conversationId.toString());
+  await pusherServer.trigger(channelName, "message-delete", {
+    messageId: messageId
+  });
+
+  return { success: true };
+}
+
+export async function reportConversation(data: {
+  conversationId: string;
+  reason: string;
+  details?: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const conversation = await Conversation.findById(data.conversationId);
+    if (!conversation) throw new Error("Conversation not found");
+
+    const report = await Report.create({
+      reporter: currentUser._id,
+      conversation: conversation._id,
+      reason: data.reason,
+      details: data.details || "",
+      status: "pending"
+    });
+
+    return { 
+      success: true, 
+      reportId: report._id.toString(),
+      message: "Our support team will review this report within 24 hours." 
+    };
+  } catch (error: any) {
+    console.error("Report Conversation Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function sendAdminMessage(data: {
+  recipientId: string;
+  content: string;
+  category: "warning" | "update" | "reminder" | "general";
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const adminUser = await User.findOne({ clerkId });
+    if (!adminUser || adminUser.role !== "admin") {
+      throw new Error("Only admins can perform this action");
+    }
+
+    const prefix = `[${data.category.toUpperCase()}]: `;
+    const fullContent = `${prefix}${data.content}`;
+
+    const sendToOneUser = async (targetUserId: string) => {
+      const targetUser = await User.findById(targetUserId);
+      if (!targetUser) return;
+
+      let conversation = await Conversation.findOne({
+        participants: { $all: [adminUser._id, targetUser._id] }
+      });
+
+      if (!conversation) {
+        conversation = await Conversation.create({
+          participants: [adminUser._id, targetUser._id]
+        });
+      }
+
+      const message = await Message.create({
+        conversation: conversation._id,
+        sender: adminUser._id,
+        receiver: targetUser._id,
+        content: fullContent,
+        messageType: "text"
+      });
+
+      conversation.lastMessage = message._id;
+      await conversation.save();
+
+      const channelName = getChatChannelName(conversation._id.toString());
+      await pusherServer.trigger(channelName, "new-message", message);
+
+      await pusherServer.trigger(getUserChannelName(targetUser._id.toString()), "conversation-update", {
+        conversationId: conversation._id.toString(),
+        lastMessage: message
+      });
+    };
+
+    if (data.recipientId === "all_students") {
+      const students = await User.find({ role: "student" }).select("_id");
+      for (const student of students) {
+        await sendToOneUser(student._id.toString());
+      }
+    } else if (data.recipientId === "all_tutors") {
+      const tutors = await User.find({ role: "tutor" }).select("_id");
+      for (const tutor of tutors) {
+        await sendToOneUser(tutor._id.toString());
+      }
+    } else {
+      await sendToOneUser(data.recipientId);
+    }
+
+    revalidatePath("/messages");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Send Admin Message Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function sendPersonalizedEmail(data: {
+  toUserId: string;
+  subject: string;
+  htmlContent: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const adminUser = await User.findOne({ clerkId });
+    if (!adminUser || adminUser.role !== "admin") {
+      throw new Error("Only admins can perform this action");
+    }
+
+    const targetUser = await User.findById(data.toUserId);
+    if (!targetUser || !targetUser.email) {
+      throw new Error("Target user not found or no email");
+    }
+
+    const result = await sendEmail({
+      to: targetUser.email,
+      subject: data.subject,
+      html: data.htmlContent,
+    });
+
+    if (!result.success) {
+      throw new Error(result.error || "Failed to send email");
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Send Personalized Email Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function approvePayment(paymentId: string, emailData: {
+  subject: string;
+  htmlContent: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const adminUser = await User.findOne({ clerkId });
+    if (!adminUser || adminUser.role !== "admin") {
+      throw new Error("Only admins can perform this action");
+    }
+
+    const payment = await Payment.findById(paymentId)
+      .populate("student")
+      .populate("tutor");
+    if (!payment) throw new Error("Payment not found");
+
+    payment.status = "confirmed";
+    payment.paidAt = new Date();
+    payment.history.push({
+      action: "Payment approved",
+      timestamp: new Date(),
+      adminId: adminUser._id
+    });
+    await payment.save();
+
+    // Send confirmation email
+    await sendPersonalizedEmail({
+      toUserId: (payment.student as any)._id.toString(),
+      subject: emailData.subject,
+      htmlContent: emailData.htmlContent
+    });
+
+    // Also update session's lastPaymentDate
+    await Session.findByIdAndUpdate(payment.session, {
+      lastPaymentDate: new Date(),
+      $inc: { monthsCompleted: 1 }
+    });
+
+    // Activate connection if needed
+    await Connection.findOneAndUpdate(
+      {
+        student: payment.student,
+        tutor: payment.tutor,
+        status: "accepted"
+      },
+      {
+        subscriptionStatus: "active",
+        paymentStatus: "paid",
+        lastActivity: new Date()
+      }
+    );
+
+    revalidatePath("/admin/payments");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Approve Payment Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function rejectPayment(paymentId: string, rejectionReason: string) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const adminUser = await User.findOne({ clerkId });
+    if (!adminUser || adminUser.role !== "admin") {
+      throw new Error("Only admins can perform this action");
+    }
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) throw new Error("Payment not found");
+
+    payment.status = "rejected";
+    payment.rejectionReason = rejectionReason;
+    payment.history.push({
+      action: "Payment rejected",
+      timestamp: new Date(),
+      adminId: adminUser._id,
+      notes: rejectionReason
+    });
+    await payment.save();
+
+    revalidatePath("/admin/payments");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Reject Payment Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function initiateCall(data: {
+  conversationId: string;
+  callerName: string;
+  roomName: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const conversation = await Conversation.findById(data.conversationId);
+    if (!conversation) throw new Error("Conversation not found");
+
+    const receiverId = conversation.participants.find(
+      (p: mongoose.Types.ObjectId) => p.toString() !== currentUser._id.toString()
+    );
+    if (!receiverId) throw new Error("Receiver not found");
+
+    const receiverChannel = getUserChannelName(receiverId.toString());
+    await pusherServer.trigger(receiverChannel, "incoming-call", {
+      conversationId: data.conversationId,
+      callerId: currentUser._id.toString(),
+      callerName: data.callerName,
+      roomName: data.roomName,
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Initiate Call Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function endCallAction(data: {
+  conversationId: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const conversation = await Conversation.findById(data.conversationId);
+    if (!conversation) throw new Error("Conversation not found");
+
+    const receiverId = conversation.participants.find(
+      (p: mongoose.Types.ObjectId) => p.toString() !== currentUser._id.toString()
+    );
+    if (!receiverId) throw new Error("Receiver not found");
+
+    const receiverChannel = getUserChannelName(receiverId.toString());
+    await pusherServer.trigger(receiverChannel, "call-hungup", {
+      conversationId: data.conversationId,
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("End Call Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function acceptCallAction(data: {
+  conversationId: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const conversation = await Conversation.findById(data.conversationId);
+    if (!conversation) throw new Error("Conversation not found");
+
+    const receiverId = conversation.participants.find(
+      (p: mongoose.Types.ObjectId) => p.toString() !== currentUser._id.toString()
+    );
+    if (!receiverId) throw new Error("Receiver not found");
+
+    const receiverChannel = getUserChannelName(receiverId.toString());
+    await pusherServer.trigger(receiverChannel, "call-accepted", {
+      conversationId: data.conversationId,
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Accept Call Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function rejectCallAction(data: {
+  conversationId: string;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const conversation = await Conversation.findById(data.conversationId);
+    if (!conversation) throw new Error("Conversation not found");
+
+    const otherId = conversation.participants.find(
+      (p: mongoose.Types.ObjectId) => p.toString() !== currentUser._id.toString()
+    );
+    if (!otherId) throw new Error("Other participant not found");
+
+    const otherChannel = getUserChannelName(otherId.toString());
+    await pusherServer.trigger(otherChannel, "call-rejected", {
+      conversationId: data.conversationId,
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Reject Call Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function saveCallMessage(data: {
+  conversationId: string;
+  durationSeconds: number;
+}) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const currentUser = await User.findOne({ clerkId });
+    if (!currentUser) throw new Error("User not found");
+
+    const conversation = await Conversation.findById(data.conversationId);
+    if (!conversation) throw new Error("Conversation not found");
+
+    const hasAccess = await canAccessConversation(currentUser, data.conversationId);
+    if (!hasAccess) throw new Error("Forbidden");
+
+    const receiverId = conversation.participants.find(
+      (p: mongoose.Types.ObjectId) => p.toString() !== currentUser._id.toString()
+    );
+    if (!receiverId) throw new Error("Receiver not found");
+
+    const minutes = Math.floor(data.durationSeconds / 60);
+    const seconds = data.durationSeconds % 60;
+    const durationLabel = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+    const message = await Message.create({
+      conversation: conversation._id,
+      sender: currentUser._id,
+      receiver: receiverId,
+      content: `Voice call · ${durationLabel}`,
+      messageType: "call",
+      callDuration: data.durationSeconds,
+    });
+
+    conversation.lastMessage = message._id;
+    await conversation.save();
+
+    const channelName = getChatChannelName(conversation._id.toString());
+    await pusherServer.trigger(channelName, "new-message", message);
+
+    await pusherServer.trigger(getUserChannelName(receiverId.toString()), "conversation-update", {
+      conversationId: conversation._id.toString(),
+      lastMessage: message,
+    });
+
+    return { success: true, message: JSON.parse(JSON.stringify(message)) };
+  } catch (error: any) {
+    console.error("Save Call Message Error:", error);
+    return { success: false, error: error.message };
   }
 }

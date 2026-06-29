@@ -16,6 +16,12 @@ import { toast, Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
+interface PayoutHistoryEntry {
+  _id: string;
+  payoutAmount: number;
+  paidAt: string;
+}
+
 interface PayoutTutor {
   tutorId: string;
   name: string;
@@ -31,7 +37,7 @@ interface PayoutTutor {
   totalEarned: number;
   totalPaid: number;
   balance: number;
-  history: any[];
+  history: PayoutHistoryEntry[];
 }
 
 export default function PayoutsTableClient() {
@@ -105,8 +111,9 @@ export default function PayoutsTableClient() {
       } else {
         throw new Error(data.error);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to process payout");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to process payout";
+      toast.error(message);
     } finally {
       setIsProcessing(false);
     }
@@ -160,7 +167,13 @@ export default function PayoutsTableClient() {
               <div className="flex items-center gap-4 min-w-[250px]">
                 <div className="w-16 h-16 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-xl overflow-hidden shadow-inner">
                   {tutor.profileImage ? (
-                    <img src={tutor.profileImage} alt={tutor.name || "Tutor"} className="w-full h-full object-cover" />
+                    <Image 
+                      src={tutor.profileImage} 
+                      alt={tutor.name || "Tutor"} 
+                      width={64} 
+                      height={64} 
+                      className="w-full h-full object-cover" 
+                    />
                   ) : (
                     (tutor.name || "T").charAt(0)
                   )}
@@ -225,7 +238,7 @@ export default function PayoutsTableClient() {
               <div className="mt-6 pt-6 border-t border-gray-50">
                 <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3">Recent Payouts</p>
                 <div className="flex flex-wrap gap-3">
-                  {tutor.history.map((h: any) => (
+                  {tutor.history.map((h: PayoutHistoryEntry) => (
                     <div key={h._id} className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg text-[9px] font-bold text-steel-blue border border-gray-100">
                       <CheckCircle size={10} className="text-emerald-500" />
                       ${h.payoutAmount} • {new Date(h.paidAt).toLocaleDateString()}

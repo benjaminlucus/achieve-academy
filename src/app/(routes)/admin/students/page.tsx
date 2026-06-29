@@ -33,7 +33,7 @@ export default async function StudentsApprovalPage() {
         </div>
       </div>
 
-      <StudentsTableClient initialStudents={students} adminZoomConnected={user.zoomConnected} />
+      <StudentsTableClient initialStudents={students} />
     </div>
   );
 }

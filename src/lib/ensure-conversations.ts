@@ -9,7 +9,7 @@ async function upsertConversation(
   tutorId: mongoose.Types.ObjectId,
   connectionId?: mongoose.Types.ObjectId
 ) {
-  let conversation = await Conversation.findOne({
+  const conversation = await Conversation.findOne({
     participants: { $all: [studentId, tutorId] },
   });
 
@@ -24,7 +24,7 @@ async function upsertConversation(
         participants: [studentId, tutorId],
         ...(connectionId ? { connection: connectionId } : {}),
       });
-    } catch (err) {
+    } catch (_err) {
       // In case of concurrent creation, catch and update
       const existing = await Conversation.findOne({
         participants: { $all: [studentId, tutorId] },
