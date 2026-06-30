@@ -84,9 +84,10 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           port: 22
-          script: |
-            cd /var/www/your-tutoring-app
+                    script: |
+            cd /home/benjamin/ravencrest-academy
             git pull origin main
             bun install
             bun run build
-            pm2 restart tutoring-app-name
+            pm2 restart ravencrest-app || PORT=3000 pm2 start bun --name "ravencrest-app" -- run start
+            pm2 save
