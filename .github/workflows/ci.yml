@@ -84,10 +84,23 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           port: 22
-                    script: |
+          script: |
+            # 1. Navigate into your real server application folder
             cd /home/benjamin/ravencrest-academy
+            
+            # 2. Pull down the newest changes from GitHub
             git pull origin main
+            
+            # 3. Load user environment paths so Linux knows where Bun and PM2 live
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+            
+            # 4. Install dependencies and compile production code
             bun install
             bun run build
+            
+            # 5. Safely restart your process in PM2
             pm2 restart ravencrest-app || PORT=3000 pm2 start bun --name "ravencrest-app" -- run start
             pm2 save
