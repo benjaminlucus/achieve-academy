@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     const scheduledDate = new Date(scheduledAt);
     // Always auto-create the meeting (Zoom with fallback to Jitsi)
-    const topic = `Interview with ${user.name || "User"}`;
+    const topic = "Ravencrest User Interview Session";
     const meetingDetails = await createZoomMeeting(topic, scheduledDate, 30);
 
     await User.findByIdAndUpdate(userId, {

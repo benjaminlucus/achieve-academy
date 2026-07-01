@@ -71,6 +71,42 @@ export async function GET(req: any, { params }: any) {
 
     const activeCourses = [...new Set(sessions.map(s => s.subject))].length;
 
+    // Calculate XP points: 10 XP per completed session hour + 50 XP per payment
+    const xpFromSessions = Math.floor(hoursLearned * 10);
+    const xpFromPayments = payments.filter(p => p.status === "paid").length * 50;
+    const xpPoints = xpFromSessions + xpFromPayments;
+
+    // Calculate streak
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Sort completed sessions by date descending
+    const sortedCompletedSessions = [...completedSessions].sort((a, b) => 
+      new Date(b.endDate || b.createdAt).getTime() - new Date(a.endDate || a.createdAt).getTime()
+    );
+
+    let checkDate = new Date(today);
+    for (const session of sortedCompletedSessions) {
+      const sessionDate = new Date(session.endDate || session.createdAt);
+      sessionDate.setHours(0, 0, 0, 0);
+      
+      const diffDays = Math.floor((checkDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0 || diffDays === 1) {
+        streak++;
+        checkDate = new Date(sessionDate);
+      } else {
+        break;
+      }
+    }
+
+    // Course completion: based on completed sessions vs total sessions per subject
+    let courseCompletion = 0;
+    if (sessions.length > 0) {
+      courseCompletion = Math.min(100, Math.round((completedSessions.length / sessions.length) * 100));
+    }
+
     // 4. Merge sessions and payments for a richer activity history
     const sessionHistory = sessions.map(s => ({
       id: s._id,
@@ -102,10 +138,13 @@ export async function GET(req: any, { params }: any) {
       name: student.user.name,
       email: student.user.email,
       status: student.user.status,
+      blockReason: student.user.blockReason,
       whichClass: student.whichClass,
       learningGoals: student.learningGoals,
       subjects: student.subjects,
       location: `${student.user.country}`,
+      profileImage: student.user.profileImage,
+      bannerImage: student.user.bannerImage,
 
       // Interview Info from Interview model
       interviewDate: interview?.scheduledAt || student.user.interviewDate,
@@ -117,7 +156,11 @@ export async function GET(req: any, { params }: any) {
         hoursLearned: Number(hoursLearned.toFixed(1)),
         activeCourses,
         completedSessions: completedSessions.length,
-        totalSessions: sessions.length
+        totalSessions: sessions.length,
+        xpPoints,
+        streak,
+        courseCompletion,
+        rank: "-" // Could be enhanced later to compare against other students
       },
 
       history

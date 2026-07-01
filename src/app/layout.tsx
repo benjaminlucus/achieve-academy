@@ -33,10 +33,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased scroll-smooth`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-off-white font-sans text-dark-navy">
+      <body className="min-h-screen flex flex-col bg-off-white font-sans text-dark-navy">
         <ClerkProvider afterSignOutUrl="/">
           <ChatProvider>
             <Navbar />

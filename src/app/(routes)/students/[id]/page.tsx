@@ -75,15 +75,19 @@ export default function StudentProfileView() {
       <Toaster />
       
       {/* Hero Banner Area */}
-      <div className="relative h-64 md:h-80 bg-coral overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-dark-navy via-transparent to-transparent blur-3xl scale-150" />
-          <div className="grid grid-cols-12 gap-2 opacity-10 p-2">
-            {[...Array(60)].map((_, i) => (
-              <div key={i} className="h-12 bg-white/20 rounded-lg" />
-            ))}
+      <div className="relative h-64 md:h-80 bg-gradient-to-r from-gray-100 to-gray-50 overflow-hidden">
+        {studentData.bannerImage ? (
+          <Image 
+            src={studentData.bannerImage} 
+            alt="Profile Banner" 
+            fill 
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-gray-300 font-semibold uppercase tracking-widest text-sm">Banner Area</div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10">

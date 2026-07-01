@@ -84,6 +84,8 @@ export async function GET(req: any, { params }: any) {
 
         const activeStudents = [...new Set(sessions.filter(s => s.student).map(s => s.student._id.toString()))].length;
 
+        const totalEarnings = payments.filter(p => p.status === "paid").reduce((sum, p) => sum + (p.tutorEarning || 0), 0);
+
         // 4. Merge sessions and payments for activity history
         const sessionHistory = sessions.map(s => ({
             id: s._id,
@@ -116,6 +118,7 @@ export async function GET(req: any, { params }: any) {
             name: tutor.user?.name || "Tutor",
             email: tutor.user?.email,
             status: tutor.user?.status || "pending",
+            blockReason: tutor.user?.blockReason,
             subjects: tutor.subjects || [],
             experienceYears: tutor.experienceYears || 0,
             education: tutor.education || "",
@@ -124,6 +127,7 @@ export async function GET(req: any, { params }: any) {
             isVerified: tutor.isVerified || false,
             location: tutor.user?.country || "Not specified",
             profileImage: tutor.user?.profileImage,
+            bannerImage: tutor.user?.bannerImage,
 
             // Interview Info from Interview model
             interviewDate: interview?.scheduledAt || tutor.user?.interviewDate,
@@ -136,7 +140,8 @@ export async function GET(req: any, { params }: any) {
                 totalStudents: activeStudents,
                 completedSessions: completedSessions.length,
                 totalSessions: sessions.length,
-                rating: tutor.rating || 0
+                rating: tutor.rating || 0,
+                totalEarnings: Number(totalEarnings.toFixed(2))
             },
 
             availability: tutor.availability || [],

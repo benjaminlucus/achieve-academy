@@ -88,7 +88,7 @@ export async function getPlatformZoomAccessToken(): Promise<string> {
  * Creates a Zoom meeting using the platform's Zoom account
  */
 export const createZoomMeeting = async (
-  topic: string,
+  _topic: string,
   startTime: Date,
   duration: number = 60
 ): Promise<ZoomMeetingDetails> => {
@@ -102,7 +102,7 @@ export const createZoomMeeting = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        topic,
+        topic: "Ravencrest User Interview Session",
         type: 2,
         start_time: startTime.toISOString(),
         duration,
@@ -136,7 +136,7 @@ export const createZoomMeeting = async (
     
     // Fallback: Generate a Jitsi meeting link
     const randomRoom = Math.random().toString(36).substring(2, 10);
-    const fallbackUrl = `https://meet.jit.si/achieve-academy-${randomRoom}`;
+    const fallbackUrl = `https://meet.jit.si/ravencrest-academy-${randomRoom}`;
     return {
       meetingId: "fallback-" + randomRoom,
       joinUrl: fallbackUrl,
@@ -215,7 +215,7 @@ export async function getUserZoomAccessToken(user: any): Promise<string> {
  */
 export async function createZoomMeetingForUser(
   user: any,
-  topic: string,
+  _topic: string,
   startTime: Date,
   duration: number = 60
 ): Promise<ZoomMeetingDetails> {
@@ -229,7 +229,7 @@ export async function createZoomMeetingForUser(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        topic,
+        topic: "Ravencrest User Interview Session",
         type: 2,
         start_time: startTime.toISOString(),
         duration,

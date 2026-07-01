@@ -33,7 +33,7 @@ const InterviewSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["scheduled", "completed", "cancelled", "live"],
+      enum: ["scheduled", "completed", "cancelled", "live", "rescheduled", "skipped"],
       default: "scheduled",
     },
 
@@ -45,6 +45,10 @@ const InterviewSchema = new Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+    
+    previousInterviews: [
+      { type: Schema.Types.ObjectId, ref: "Interview" }
+    ],
   },
   { timestamps: true }
 );

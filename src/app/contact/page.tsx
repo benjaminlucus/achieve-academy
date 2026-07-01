@@ -43,12 +43,25 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send message");
+      }
+
       toast.success("Message sent! We'll get back to you soon.");
       setFormData({ name: "", email: "", subject: "General Support", message: "" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -102,8 +115,8 @@ export default function ContactPage() {
                     <Phone size={24} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Call Us</p>
-                    <p className="text-lg font-bold text-dark-navy">+1 (555) 000-0000</p>
+                    <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Message Us</p>
+                    <p className="text-lg font-bold text-dark-navy">+92 (0)330-3646773 </p>
                   </div>
                 </div>
 
@@ -175,6 +188,7 @@ export default function ContactPage() {
                   <option>Billing & Payouts</option>
                   <option>Technical Issues</option>
                   <option>Tutor Verification</option>
+                  <option>Others</option>
                 </select>
               </div>
 

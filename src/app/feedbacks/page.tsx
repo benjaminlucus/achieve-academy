@@ -5,7 +5,9 @@ import {
   MessageCircle, 
   ShieldCheck, 
   User,
-  ChevronRight
+  ChevronRight,
+  FileText,
+  ExternalLink
 } from "lucide-react";
 import { connectDB } from "@/database/connect";
 import Feedback from "@/database/models/feedback.model";
@@ -16,18 +18,20 @@ export const dynamic = "force-dynamic";
 
 interface FeedbackDocument {
   _id: string;
+  userId?: { _id: string; role: string; _doc: any };
   userName: string;
   userRole: string;
   rating: number;
   text: string;
   screenshotUrl?: string;
+  attachments?: string[];
   createdAt: string;
 }
 
 async function getPublicFeedbacks() {
   try {
     await connectDB();
-    const feedbacks = await Feedback.find({ isPublic: true }).sort({ createdAt: -1 });
+    const feedbacks = await Feedback.find({ isPublic: true }).populate('userId').sort({ createdAt: -1 });
     return JSON.parse(JSON.stringify(feedbacks)) as FeedbackDocument[];
   } catch (error) {
     console.error("Error fetching feedback:", error);
@@ -43,15 +47,15 @@ export default async function TestimonialsPage() {
       {/* Hero Section */}
       <section className="relative py-24 px-6 overflow-hidden bg-deep-black text-white">
         <div className="absolute top-0 right-0 w-96 h-96 bg-purple-primary/10 rounded-full -mr-48 -mt-48 blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-secondary/10 rounded-full -ml-48 -mb-48 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-primary/10 rounded-full -ml-48 -mb-48 blur-3xl" />
         
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 mb-8">
-            <ShieldCheck size={16} className="text-purple-secondary" />
+            <ShieldCheck size={16} className="text-purple-primary" />
             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Verified Community</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tight mb-6">
-            Trusted by <span className="text-purple-secondary">hundreds</span>
+            Trusted by <span className="text-purple-primary">hundreds</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed">
             Real feedback from students and tutors who have transformed their learning journey with Ravencrest Academy.
@@ -72,7 +76,7 @@ export default async function TestimonialsPage() {
             </div>
           </div>
           <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl flex items-center gap-6">
-            <div className="w-16 h-16 bg-purple-secondary/10 text-purple-secondary rounded-3xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-purple-primary/10 text-purple-primary rounded-3xl flex items-center justify-center">
               <MessageCircle size={32} />
             </div>
             <div>
@@ -106,7 +110,18 @@ export default async function TestimonialsPage() {
                     <User size={24} />
                   </div>
                   <div>
-                    <h4 className="font-black text-deep-black text-sm uppercase tracking-tight">{f.userName}</h4>
+                    {f.userId ? (
+                      <Link 
+                        href={f.userId.role === 'tutor' ? `/tutors/${f.userId._id}` : `/students/${f.userId._id}`}
+                        className="hover:text-purple-primary transition-colors"
+                      >
+                        <h4 className="font-black text-deep-black text-sm uppercase tracking-tight flex items-center gap-1">
+                          {f.userName} <ExternalLink size={10} />
+                        </h4>
+                      </Link>
+                    ) : (
+                      <h4 className="font-black text-deep-black text-sm uppercase tracking-tight">{f.userName}</h4>
+                    )}
                     <p className="text-[10px] font-bold text-purple-primary uppercase tracking-widest">{f.userRole}</p>
                   </div>
                 </div>
@@ -127,10 +142,31 @@ export default async function TestimonialsPage() {
                 &quot;{f.text}&quot;
               </p>
 
-              {f.screenshotUrl && (
-                <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-100 mb-6 group-hover:border-purple-primary/20 transition-colors">
-                  <Image src={f.screenshotUrl} alt="Review Screenshot" fill className="object-cover" />
-                  <div className="absolute inset-0 bg-deep-black/0 group-hover:bg-deep-black/20 transition-colors" />
+              {/* Show attachments */}
+              {(f.screenshotUrl || (f.attachments && f.attachments.length > 0)) && (
+                <div className="space-y-2 mb-6">
+                  {f.screenshotUrl && (
+                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-100 group-hover:border-purple-primary/20 transition-colors">
+                      <Image src={f.screenshotUrl} alt="Review Screenshot" fill className="object-cover" />
+                      <div className="absolute inset-0 bg-deep-black/0 group-hover:bg-deep-black/20 transition-colors" />
+                    </div>
+                  )}
+                  {f.attachments && f.attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {f.attachments.map((url, idx) => (
+                        <a 
+                          key={idx}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-600 hover:bg-purple-primary/10 hover:border-purple-primary/20 hover:text-purple-primary transition-colors"
+                        >
+                          <FileText size={14} />
+                          Attachment {idx + 1}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

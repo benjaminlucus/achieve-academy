@@ -9,6 +9,7 @@ import {
     Eye,
     CheckCircle,
     Loader2,
+    Trash2,
 } from "lucide-react";
 import { SearchBar } from '@/components/SearchBar';
 import { ITEMS_PER_PAGE } from '@/lib/constants';
@@ -18,19 +19,22 @@ import { toast } from 'react-hot-toast';
 const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number }) => {
     const [filters, setFilters] = useState({
         search: "",
-        status: "Pending Verification",
+        status: "All Status",
     });
     const [page, setPage] = useState(1);
     const [open, setOpen] = useState(false);
     const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+    const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+    const [blockReasonInput, setBlockReasonInput] = useState<string>("");
+    const [showBlockReasonModal, setShowBlockReasonModal] = useState<string | null>(null);
 
-    const handleStatusChange = async (userId: string, newStatus: string) => {
+    const handleStatusChange = async (userId: string, newStatus: string, reason?: string) => {
         setUpdatingUserId(userId);
         try {
             const res = await fetch(`/api/admin/users/${userId}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ status: newStatus, reason }),
             });
 
             if (!res.ok) {
@@ -43,6 +47,30 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
             toast.error("Failed to update status");
         } finally {
             setUpdatingUserId(null);
+            setShowBlockReasonModal(null);
+            setBlockReasonInput("");
+        }
+    };
+
+    const handleDeleteUser = async (userId: string) => {
+        if (!confirm("Are you sure you want to delete this user permanently?")) return;
+        
+        setDeletingUserId(userId);
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/status`, {
+                method: "DELETE",
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to delete user");
+            }
+
+            toast.success("User deleted successfully");
+            window.location.reload();
+        } catch (error) {
+            toast.error("Failed to delete user");
+        } finally {
+            setDeletingUserId(null);
         }
     };
 
@@ -189,7 +217,7 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                                         <UserCog size={16} />
                                                     </button>
                                                     <button 
-                                                        onClick={() => handleStatusChange(user.id, "blocked")}
+                                                        onClick={() => setShowBlockReasonModal(user.id)}
                                                         disabled={updatingUserId === user.id}
                                                         className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1" 
                                                         title="Block User"
@@ -198,6 +226,14 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                                     </button>
                                                 </>
                                             )}
+                                            <button 
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                disabled={deletingUserId === user.id}
+                                                className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" 
+                                                title="Delete User"
+                                            >
+                                                {deletingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -215,6 +251,64 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                     </div>
                 </div>
             </div>
+
+            {/* Block Reason Modal */}
+            {showBlockReasonModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-md w-full">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight">
+                                Block User
+                            </h3>
+                            <button 
+                                onClick={() => setShowBlockReasonModal(null)}
+                                className="p-2 hover:bg-gray-100 rounded-lg"
+                            >
+                                <ShieldAlert size={20} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    Reason for Blocking
+                                </label>
+                                <textarea
+                                    value={blockReasonInput}
+                                    onChange={(e) => setBlockReasonInput(e.target.value)}
+                                    rows={4}
+                                    placeholder="Enter the reason why this user is being blocked..."
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-dark-navy focus:outline-none focus:border-coral transition-all resize-none"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => {
+                                        setShowBlockReasonModal(null);
+                                        setBlockReasonInput("");
+                                    }}
+                                    className="flex-1 py-3 bg-gray-100 text-gray-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-gray-200 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange(showBlockReasonModal, "blocked", blockReasonInput)}
+                                    disabled={updatingUserId === showBlockReasonModal || !blockReasonInput.trim()}
+                                    className="flex-1 py-3 bg-coral text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-coral/90 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {updatingUserId === showBlockReasonModal ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            Blocking...
+                                        </>
+                                    ) : (
+                                        "Confirm Block"
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

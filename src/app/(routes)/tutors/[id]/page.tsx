@@ -78,15 +78,19 @@ export default function TutorProfileView() {
       <Toaster />
       
       {/* Hero Banner Area */}
-      <div className="relative h-64 md:h-80 bg-dark-navy overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-coral via-transparent to-transparent blur-3xl scale-150" />
-          <div className="grid grid-cols-8 gap-4 opacity-10 p-4">
-            {[...Array(32)].map((_, i) => (
-              <div key={i} className="h-20 bg-white/10 rounded-2xl" />
-            ))}
+      <div className="relative h-64 md:h-80 bg-gradient-to-r from-gray-100 to-gray-50 overflow-hidden">
+        {tutorData.bannerImage ? (
+          <Image 
+            src={tutorData.bannerImage} 
+            alt="Profile Banner" 
+            fill 
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-gray-300 font-semibold uppercase tracking-widest text-sm">Banner Area</div>
           </div>
-        </div>
+        )}
         
         {/* Verification Alert for Admin/Owner */}
         {!tutorData.isVerified && (

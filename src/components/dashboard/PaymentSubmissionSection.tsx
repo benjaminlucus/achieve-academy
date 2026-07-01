@@ -51,6 +51,82 @@ interface PaymentSubmissionSectionProps {
   userId: string;
 }
 
+const InfoCard = ({ payments }: { payments: Payment[] }) => {
+  // Get the most recent payment
+  const mostRecent = payments.length > 0 
+    ? [...payments].sort((a, b) => 
+      new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
+    )[0] : null;
+  
+  const status = mostRecent?.status || "awaiting_payment";
+  
+  let heading = "Complete Your Booking";
+  let description = "Your booking is currently awaiting payment verification. Please transfer the payment using one of the available payment methods below and upload your payment proof. Once our team verifies your payment, you will receive a confirmation email and your booking will become confirmed. Estimated verification time: Within 24 hours.";
+  let StatusIcon = CreditCard;
+  let gradient = "from-orange-100 to-amber-100";
+  let borderColor = "border-orange-200";
+  let iconColor = "text-orange-600";
+  let iconBg = "bg-orange-100";
+
+  switch (status) {
+    case "submitted":
+      heading = "Payment Proof Submitted";
+      description = "Thank you for submitting your payment proof! Our team is currently reviewing it. We'll get back to you within 24 hours with a confirmation or request for more info!";
+      StatusIcon = Clock;
+      gradient = "from-blue-100 to-blue-100";
+      borderColor = "border-blue-200";
+      iconColor = "text-blue-600";
+      iconBg = "bg-blue-100";
+      break;
+    case "under_review":
+      heading = "Payment Under Review";
+      description = "Our team is carefully reviewing your payment proof. We'll confirm it soon (usually within 24 hours! If we need anything else, we'll reach out!";
+      StatusIcon = AlertCircle;
+      gradient = "from-amber-100 to-amber-100";
+      borderColor = "border-amber-200";
+      iconColor = "text-amber-600";
+      iconBg = "bg-amber-100";
+      break;
+    case "confirmed":
+    case "paid":
+      heading = "Payment Confirmed";
+      description = "Great news! Your payment has been verified and confirmed! Your booking is all set! Enjoy your sessions!";
+      StatusIcon = CheckCircle2;
+      gradient = "from-emerald-100 to-emerald-100";
+      borderColor = "border-emerald-200";
+      iconColor = "text-emerald-600";
+      iconBg = "bg-emerald-100";
+      break;
+    case "rejected":
+      heading = "Payment Rejected";
+      description = "We're sorry, your payment proof couldn't be verified. Please resubmit payment with clear proof or contact support for help!";
+      StatusIcon = XCircle;
+      gradient = "from-rose-100 to-rose-100";
+      borderColor = "border-rose-200";
+      iconColor = "text-rose-600";
+      iconBg = "bg-rose-100";
+      break;
+  }
+  
+  return (
+    <div className={`bg-gradient-to-r ${gradient} ${borderColor} p-8 rounded-[2.5rem] border`}>
+      <div className="flex items-start gap-4">
+        <div className={`w-12 h-12 ${iconBg} rounded-2xl flex items-center justify-center ${iconColor} flex-shrink-0`}>
+          <StatusIcon size={24} />
+        </div>
+        <div>
+          <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-2">
+            {heading}
+          </h3>
+          <p className="text-sm text-steel-blue leading-relaxed">
+            {description}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionProps) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -184,21 +260,8 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
   return (
     <div className="space-y-8">
       {/* Info Card */}
-      <div className="bg-gradient-to-r from-coral/10 to-amber/10 border border-coral/20 p-8 rounded-[2.5rem]">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-coral/20 rounded-2xl flex items-center justify-center text-coral flex-shrink-0">
-            <CreditCard size={24} />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-2">
-              Complete Your Booking
-            </h3>
-            <p className="text-sm text-steel-blue leading-relaxed">
-              Your booking is currently awaiting payment verification. Please transfer the payment using one of the available payment methods below and upload your payment proof. Once our team verifies your payment, you will receive a confirmation email and your booking will become confirmed. Estimated verification time: Within 24 hours.
-            </p>
-          </div>
-        </div>
-      </div>
+      <InfoCard payments={payments} />
+
 
       {/* Payment Methods */}
       <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100">

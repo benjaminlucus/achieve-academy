@@ -24,6 +24,8 @@ const UserSchema = new Schema<IUser>(
       default: "applied",
     },
 
+    blockReason: String,
+
     verificationLevel: {
       type: String,
       enum: ["none", "green", "blue"],
@@ -42,6 +44,7 @@ const UserSchema = new Schema<IUser>(
     interviewCompletedAt: Date,
 
     profileImage: String,
+    bannerImage: String,
     isOnboarded: {
       type: Boolean,
       default: false,

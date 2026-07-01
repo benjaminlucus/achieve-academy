@@ -257,6 +257,32 @@ export const emailTemplates = {
       </div>
     `,
   }),
+  
+  interviewRescheduled: (name: string, date: string, joinLink: string) => ({
+    subject: `Your Interview Has Been Rescheduled - ${APP_NAME}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Your interview has been rescheduled! We've updated your interview time to a new slot.</p>
+        
+        <div style="background-color: #f8fafc; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #e2e8f0;">
+          <h2 style="font-size: 14px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-top: 0; letter-spacing: 0.05em;">New Interview Details</h2>
+          <p style="margin: 12px 0; color: #1e293b; font-size: 16px;"><strong>Date & Time:</strong> ${date}</p>
+          <div style="margin-top: 20px;">
+            <a href="${joinLink}" style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Join Zoom Meeting</a>
+          </div>
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">Please update your calendar with the new time, and let us know if you have any issues.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
 
   meetingScheduled: (data: {
     name: string;

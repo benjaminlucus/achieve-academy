@@ -7,9 +7,9 @@ import {
   DollarSign, Edit2, 
   ShieldCheck, Briefcase, 
   Calendar, Star, Users, Clock as ClockIcon, Pencil, Loader2,
-  Wallet, Building2, Smartphone, Video, X
+  Wallet, Building2, Smartphone, Video, X, Upload, Trash2, ShieldAlert
 } from "lucide-react";
-import { updateTutorProfile, updateProfileImage } from "@/app/(routes)/dashboard/actions";
+import { updateTutorProfile, updateProfileImage, updateBannerImage, removeBannerImage } from "@/app/(routes)/dashboard/actions";
 import Link from "next/link";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { InterviewSection } from "@/components/dashboard/InterviewSection";
@@ -19,14 +19,17 @@ import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
+import { RealtimeProvider, useRealtime } from "@/lib/realtime-context";
 
-export default function TutorPrivateDashboard() {
+function TutorDashboardContent() {
   const { id } = useParams<{ id: string }>();
+  const { lastUpdate } = useRealtime();
   const [tutorData, setTutorData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [conversations, setConversations] = useState<any[]>([]);
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -86,7 +89,7 @@ export default function TutorPrivateDashboard() {
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, lastUpdate]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -147,6 +150,50 @@ export default function TutorPrivateDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Banner size must be less than 5MB");
+      return;
+    }
+
+    setIsUploadingBanner(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      try {
+        const res = await updateBannerImage(id, base64);
+        if (res.success) {
+          setTutorData((prev: any) => ({ ...prev, bannerImage: base64 }));
+          toast.success("Banner updated!");
+        } else {
+          toast.error(res.error || "Failed to update banner");
+        }
+      } catch (error) {
+        toast.error("Error uploading banner");
+      } finally {
+        setIsUploadingBanner(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+// design the achievements sesction at studnets dashbaord that they are menaingful, not just ticks and stars and dummy data. make them like add certificates, etc, badges and manage these things in the system itself where change is needed, you wouldd design the architecture
+  const handleRemoveBanner = async () => {
+    try {
+      const res = await removeBannerImage(id);
+      if (res.success) {
+        setTutorData((prev: any) => ({ ...prev, bannerImage: undefined }));
+        toast.success("Banner removed!");
+      } else {
+        toast.error(res.error || "Failed to remove banner");
+      }
+    } catch (error) {
+      toast.error("Error removing banner");
+    }
+  };
+
 
   const handleAvailabilityChange = (day: string, value: string) => {
     setFormData((prev: any) => ({
@@ -188,74 +235,136 @@ export default function TutorPrivateDashboard() {
         {/* Trial Status Banner */}
         <TrialBanner userRole="tutor" myId={id} />
 
-        {/* Profile Header */}
-        <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-coral/5 rounded-full -mr-32 -mt-32 blur-3xl" />
-          
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left relative z-10">
-            <div className="relative group">
-              <div className="w-28 h-28 rounded-3xl bg-dark-navy p-1 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                <div className="w-full h-full rounded-[1.4rem] bg-white overflow-hidden -rotate-3 group-hover:rotate-0 transition-transform duration-500 relative">
-                  {tutorData.profileImage ? (
-                    <Image src={tutorData.profileImage} alt={tutorData.name} width={112} height={112} className="object-cover w-full h-full" />
+        {/* Block Reason Banner */}
+        {tutorData.status === "blocked" && (
+          <div className="bg-rose-50 border border-rose-200 p-6 rounded-[2rem]">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 flex-shrink-0">
+                <ShieldAlert size={20} />
+              </div>
+              <div>
+                <h3 className="font-black text-rose-800 uppercase tracking-tight">Account Blocked</h3>
+                {tutorData.blockReason && (
+                  <p className="text-sm text-rose-700 mt-2 leading-relaxed">
+                    Reason: {tutorData.blockReason}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LinkedIn-Style Banner + Profile */}
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-dark-navy/5 overflow-hidden">
+          {/* Banner Area */}
+          <div className="relative h-52 bg-gradient-to-r from-purple-50 to-coral/5">
+            {tutorData.bannerImage ? (
+              <Image src={tutorData.bannerImage} alt="Banner" fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-gray-300 font-bold uppercase tracking-widest">Add a banner</span>
+              </div>
+            )} 
+            
+            {/* Banner Controls - Only visible when editing */}
+            {isEditing && (
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                <label className="flex items-center gap-2 px-4 py-2 bg-white text-dark-navy rounded-xl font-bold text-xs uppercase tracking-widest cursor-pointer hover:bg-gray-100 transition-colors shadow-lg border border-gray-100">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleBannerChange}
+                    disabled={isUploadingBanner}
+                  />
+                  {isUploadingBanner ? (
+                    <Loader2 className="animate-spin" size={14} />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white bg-dark-navy text-4xl font-black">
-                      {tutorData.name.charAt(0)}
+                    <Upload size={14} />
+                  )}
+                  {isUploadingBanner ? "Uploading..." : "Change Banner"}
+                </label>
+                {tutorData.bannerImage && (
+                  <button 
+                    onClick={handleRemoveBanner}
+                    className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-rose-100 transition-colors shadow-lg border border-rose-100"
+                  >
+                    <Trash2 size={14} />
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Profile Header */}
+          <div className="px-8 md:px-10 pb-8 md:pb-10 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative">
+              <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+                <div className="relative group">
+                  <div className="w-28 h-28 rounded-2xl bg-white p-1 shadow-xl">
+                    <div className="w-full h-full rounded-xl bg-white overflow-hidden relative">
+                      {tutorData.profileImage ? (
+                        <Image src={tutorData.profileImage} alt={tutorData.name} width={112} height={112} className="object-cover w-full h-full" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white bg-dark-navy text-4xl font-black">
+                          {tutorData.name.charAt(0)}
+                        </div>
+                      )}
+
+                      {/* Change Image Overlay */}
+                      <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-xl">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handleImageChange}
+                          disabled={isUploading}
+                        />
+                        {isUploading ? (
+                          <Loader2 className="text-white animate-spin" size={24} />
+                        ) : (
+                          <Pencil className="text-white" size={24} />
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                  {tutorData.isVerified && (
+                    <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-xl border-4 border-white shadow-lg z-20 pointer-events-none">
+                      <ShieldCheck size={18} />
                     </div>
                   )}
-
-                  {/* Change Image Overlay */}
-                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={handleImageChange}
-                      disabled={isUploading}
-                    />
-                    {isUploading ? (
-                      <Loader2 className="text-white animate-spin" size={24} />
-                    ) : (
-                      <Pencil className="text-white" size={24} />
-                    )}
-                  </label>
+                </div>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{tutorData.name}</h1>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+                      <Briefcase size={14} className="text-coral" /> {tutorData.experienceYears} Years Exp
+                    </span>
+                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+                      <MapPin size={14} className="text-coral" /> {tutorData.location}
+                    </span>
+                    <StatusBadge status={tutorData.status} />
+                  </div>
                 </div>
               </div>
-              {tutorData.isVerified && (
-                <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-2xl border-4 border-white shadow-lg z-20 pointer-events-none">
-                  <ShieldCheck size={20} />
-                </div>
-              )}
-            </div>
-            <div className="space-y-3">
-              <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{tutorData.name}</h1>
-              <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                  <Briefcase size={14} className="text-coral" /> {tutorData.experienceYears} Years Exp
-                </span>
-                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                  <MapPin size={14} className="text-coral" /> {tutorData.location}
-                </span>
-                <StatusBadge status={tutorData.status} />
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                {isEditing ? (
+                  <>
+                    <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-6 py-3 bg-gray-50 text-dark-navy font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all border border-dark-navy/5">
+                      Cancel
+                    </button>
+                    <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none px-6 py-3 bg-coral text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-coral/90 transition-all shadow-lg shadow-coral/20 disabled:opacity-50">
+                      {isSaving ? "Saving..." : "Save Profile"}
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-6 py-3 bg-coral text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-coral/90 transition-all shadow-lg shadow-coral/20 flex items-center justify-center gap-2">
+                    <Edit2 size={16} /> Edit Profile
+                  </button>
+                )}
               </div>
             </div>
-
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto relative z-10">
-            {isEditing ? (
-              <>
-                <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-8 py-4 bg-gray-50 text-dark-navy font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all border border-dark-navy/5">
-                  Cancel
-                </button>
-                <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none px-8 py-4 bg-coral text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-coral/90 transition-all shadow-xl shadow-coral/20 disabled:opacity-50">
-                  {isSaving ? "Saving..." : "Save Profile"}
-                </button>
-              </>
-            ) : (
-              <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-8 py-4 bg-coral text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-coral/90 transition-all shadow-xl shadow-coral/20 flex items-center justify-center gap-3">
-                <Edit2 size={16} /> Edit Profile
-              </button>
-            )}
           </div>
         </div>
 
@@ -273,7 +382,7 @@ export default function TutorPrivateDashboard() {
               <ClockIcon size={24} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Hours</p>
-            <p className="text-2xl font-black text-dark-navy">{(tutorData.stats?.completedSessions ?? 0) * 1.5}h</p>
+            <p className="text-2xl font-black text-dark-navy">{tutorData.stats?.hoursTaught ?? 0}h</p>
           </div>
           <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-dark-navy/5 text-center group hover:border-coral/20 transition-all">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
@@ -286,8 +395,8 @@ export default function TutorPrivateDashboard() {
             <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <DollarSign size={24} />
             </div>
-            <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Rate</p>
-            <p className="text-2xl font-black text-dark-navy">${tutorData.hourlyRate ?? 0}/h</p>
+            <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Earnings</p>
+            <p className="text-2xl font-black text-dark-navy">${tutorData.stats?.totalEarnings ?? 0}</p>
           </div>
         </div>
 
@@ -490,5 +599,15 @@ export default function TutorPrivateDashboard() {
               </div>
             </div>
     </div>
+  );
+}
+
+export default function TutorPrivateDashboard() {
+  const { id } = useParams<{ id: string }>();
+  
+  return (
+    <RealtimeProvider currentUserId={id as string}>
+      <TutorDashboardContent />
+    </RealtimeProvider>
   );
 }

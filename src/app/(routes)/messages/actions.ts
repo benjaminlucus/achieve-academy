@@ -18,6 +18,7 @@ import {
   canAccessConversation,
 } from "@/lib/chat-permissions";
 import { getChatChannelName, getUserChannelName } from "@/lib/chat-channels";
+import { triggerDashboardUpdate } from "@/lib/realtime-events";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
 
 // --- Connection Actions ---
@@ -103,6 +104,9 @@ export async function updateConnectionStatus(connectionId: string, status: "acce
 
     connection.lastActivity = new Date();
     await connection.save();
+
+    await triggerDashboardUpdate(connection.student.toString());
+    await triggerDashboardUpdate(connection.tutor.toString());
 
     // If accepted, ensure a conversation exists
     if (status === "accepted") {
@@ -548,6 +552,9 @@ export async function approvePayment(paymentId: string, emailData: {
       }
     );
 
+    await triggerDashboardUpdate((payment.student as any)._id.toString());
+    await triggerDashboardUpdate((payment.tutor as any)._id.toString());
+
     revalidatePath("/admin/payments");
     return { success: true };
   } catch (error: any) {
@@ -579,6 +586,9 @@ export async function rejectPayment(paymentId: string, rejectionReason: string) 
       notes: rejectionReason
     });
     await payment.save();
+
+    await triggerDashboardUpdate(payment.student.toString());
+    await triggerDashboardUpdate(payment.tutor.toString());
 
     revalidatePath("/admin/payments");
     return { success: true };

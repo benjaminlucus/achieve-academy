@@ -63,6 +63,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                target={"_blank"}
                 className="text-sm font-medium text-steel-blue hover:text-dark-navy transition-colors"
               >
                 {link.label}
@@ -105,7 +106,7 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden p-2 text-dark-navy hover:text-coral transition-colors"
+              className="md:hidden p-2 text-dark-navy hover:text-purple-primary transition-colors"
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

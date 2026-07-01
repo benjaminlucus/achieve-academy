@@ -20,7 +20,8 @@ import {
   MessageSquare,
   HelpCircle,
   MessageCircle,
-  Video
+  Video,
+  Trophy
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
@@ -40,6 +41,7 @@ const sidebarItems: Array<{
   { icon: Calendar, label: "Sessions", href: "/admin/sessions" },
   { icon: CreditCard, label: "Payments", href: "/admin/payments", countKey: "paymentsPending" },
   { icon: DollarSign, label: "Tutor Payouts", href: "/admin/payouts", countKey: "payoutsPending" },
+  { icon: Trophy, label: "Achievements", href: "/admin/achievements" },
   { icon: MessageCircle, label: "Feedbacks", href: "/admin/feedbacks" },
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   { icon: HelpCircle, label: "Admin Guide", href: "/admin/guide" },
@@ -176,7 +178,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
                     </span>
                   )}
                   {badgeCount > 0 && (
-                    <span className={`${isCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'} min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-coral text-white text-[9px] font-black rounded-full`}>
+                    <span className={`${isCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'} min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-purple-primary text-white text-[9px] font-black rounded-full`}>
                       {badgeCount > 99 ? "99+" : badgeCount}
                     </span>
                   )}

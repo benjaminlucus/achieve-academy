@@ -10,19 +10,24 @@ import {
   Loader2, 
   X,
   User,
-  Shield
+  Shield,
+  FileText,
+  ExternalLink
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 
 interface Feedback {
   _id: string;
+  userId?: { _id: string; role: string; _doc: any }; // Populated user
   userName: string;
   userRole: string;
   rating: number;
   text: string;
   screenshotUrl?: string;
+  attachments?: string[];
   isPublic: boolean;
   createdAt: string;
 }
@@ -32,6 +37,10 @@ export default function FeedbackClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [attachmentPreviews, setAttachmentPreviews] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     userName: "",
@@ -39,6 +48,7 @@ export default function FeedbackClient() {
     rating: 5,
     text: "",
     screenshotUrl: "",
+    attachments: [] as string[], // Array of base64 strings
     isPublic: true
   });
 
@@ -60,14 +70,57 @@ export default function FeedbackClient() {
     }
   };
 
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setScreenshotFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAttachmentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachmentFiles(files);
+    const previews: string[] = [];
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        previews.push(reader.result as string);
+        if (previews.length === files.length) {
+          setAttachmentPreviews(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+    setAttachmentPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Convert files to base64 and combine with URL attachments
+      const screenshotBase64 = screenshotPreview || form.screenshotUrl;
+      const urlAttachments = Array.isArray(form.attachments) ? form.attachments : 
+        (typeof form.attachments === "string" ? form.attachments.split(",").map(s => s.trim()).filter(Boolean) : []);
+      const attachmentsBase64 = [...attachmentPreviews, ...urlAttachments];
+
       const res = await fetch("/api/admin/feedbacks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          ...form,
+          screenshotUrl: screenshotBase64,
+          attachments: attachmentsBase64
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -79,8 +132,13 @@ export default function FeedbackClient() {
           rating: 5,
           text: "",
           screenshotUrl: "",
+          attachments: [],
           isPublic: true
         });
+        setScreenshotFile(null);
+        setScreenshotPreview(null);
+        setAttachmentFiles([]);
+        setAttachmentPreviews([]);
         fetchFeedbacks();
       } else {
         toast.error(data.error || "Failed to add feedback");
@@ -159,7 +217,18 @@ export default function FeedbackClient() {
                       <User size={20} />
                     </div>
                     <div>
-                      <h4 className="font-black text-deep-black text-sm uppercase tracking-tight">{f.userName}</h4>
+                      {f.userId ? (
+                        <Link 
+                          href={f.userId.role === 'tutor' ? `/tutors/${f.userId._id}` : `/students/${f.userId._id}`}
+                          className="hover:text-purple-primary transition-colors"
+                        >
+                          <h4 className="font-black text-deep-black text-sm uppercase tracking-tight flex items-center gap-1">
+                            {f.userName} <ExternalLink size={10} />
+                          </h4>
+                        </Link>
+                      ) : (
+                        <h4 className="font-black text-deep-black text-sm uppercase tracking-tight">{f.userName}</h4>
+                      )}
                       <p className="text-[10px] font-bold text-purple-primary uppercase tracking-widest">{f.userRole}</p>
                     </div>
                   </div>
@@ -178,9 +247,30 @@ export default function FeedbackClient() {
                   &quot;{f.text}&quot;
                 </p>
 
-                {f.screenshotUrl && (
-                  <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-100">
-                    <Image src={f.screenshotUrl} alt="Feedback Screenshot" className="object-cover w-full h-full" />
+                {/* Show attachments */}
+                {(f.screenshotUrl || (f.attachments && f.attachments.length > 0)) && (
+                  <div className="space-y-2">
+                    {f.screenshotUrl && (
+                      <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-100">
+                        <Image src={f.screenshotUrl} alt="Feedback Screenshot" fill className="object-cover" />
+                      </div>
+                    )}
+                    {f.attachments && f.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {f.attachments.map((url, idx) => (
+                          <a 
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-600 hover:bg-purple-primary/10 hover:border-purple-primary/20 hover:text-purple-primary transition-colors"
+                          >
+                            <FileText size={14} />
+                            Attachment {idx + 1}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -227,18 +317,17 @@ export default function FeedbackClient() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="p-8 md:p-10 space-y-8">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-black text-deep-black uppercase tracking-tight">Add Platform Feedback</h3>
-                  <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
-                    <X size={20} />
-                  </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="text-xl font-black text-deep-black uppercase tracking-tight">Add Platform Feedback</h3>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-grow">
+                <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User Name</label>
                       <input 
@@ -264,7 +353,7 @@ export default function FeedbackClient() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rating (1-5)</label>
-                    <div className="flex gap-4">
+                    <div className="flex gap-3">
                       {[1, 2, 3, 4, 5].map((num) => (
                         <button
                           key={num}
@@ -289,14 +378,82 @@ export default function FeedbackClient() {
                     />
                   </div>
 
+                  {/* Screenshot: File Upload or URL */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Screenshot URL (Optional)</label>
-                    <input 
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all"
-                      value={form.screenshotUrl}
-                      onChange={(e) => setForm({...form, screenshotUrl: e.target.value})}
-                      placeholder="https://..."
-                    />
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Screenshot (Optional)</label>
+                    <div className="space-y-3">
+                      {screenshotPreview && (
+                        <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-100">
+                          <Image src={screenshotPreview} alt="Screenshot Preview" fill className="object-cover" />
+                        </div>
+                      )}
+                      <label className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all cursor-pointer hover:bg-gray-100">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleScreenshotChange}
+                        />
+                        <FileText size={16} /> {screenshotFile ? screenshotFile.name : "Select Screenshot File"}
+                      </label>
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">OR</p>
+                      <input 
+                        type="url"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all"
+                        value={form.screenshotUrl}
+                        onChange={(e) => setForm({...form, screenshotUrl: e.target.value})}
+                        placeholder="Or paste a URL..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Attachments: File Upload or Comma-Separated URLs */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Attachments (Optional)</label>
+                    <div className="space-y-3">
+                      {attachmentPreviews.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {attachmentPreviews.map((url, idx) => (
+                            <div key={idx} className="relative group">
+                              {url.startsWith("data:image/") ? (
+                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-100">
+                                  <Image src={url} alt={`Attachment ${idx+1}`} fill className="object-cover" />
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-600">
+                                  <FileText size={14} />
+                                  File {idx+1}
+                                </div>
+                              )}
+                              <button 
+                                type="button"
+                                onClick={() => removeAttachment(idx)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <label className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all cursor-pointer hover:bg-gray-100">
+                        <input 
+                          type="file" 
+                          multiple
+                          className="hidden"
+                          onChange={handleAttachmentsChange}
+                        />
+                        <FileText size={16} /> {attachmentFiles.length > 0 ? `${attachmentFiles.length} file(s) selected` : "Select Files"}
+                      </label>
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">OR</p>
+                      <input 
+                        type="text"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-purple-primary/30 transition-all"
+                        value={typeof form.attachments === "string" ? form.attachments : ""}
+                        onChange={(e) => setForm({...form, attachments: e.target.value.split(",").map(s => s.trim()).filter(Boolean)})}
+                        placeholder="Or paste comma-separated URLs..."
+                      />
+                    </div>
                   </div>
 
                   <button 

@@ -7,26 +7,30 @@ import {
   BookOpen, Edit2, 
   Target, BookCheck,
   Zap, Trophy,
-  TrendingUp, Pencil, Loader2
+  TrendingUp, Pencil, Loader2, Upload, Trash2, ShieldAlert
 } from "lucide-react";
-import { updateStudentProfile, updateProfileImage } from "@/app/(routes)/dashboard/actions";
+import { updateStudentProfile, updateProfileImage, updateBannerImage, removeBannerImage } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { InterviewSection } from "@/components/dashboard/InterviewSection";
 import { SessionSection } from "@/components/dashboard/SessionSection";
 import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { PaymentSubmissionSection } from "@/components/dashboard/PaymentSubmissionSection";
+import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
+import { RealtimeProvider, useRealtime } from "@/lib/realtime-context";
 
-export default function StudentPrivateDashboard() {
+function StudentDashboardContent() {
   const { id } = useParams<{ id: string }>();
+  const { lastUpdate } = useRealtime();
   const [studentData, setStudentData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [conversations, setConversations] = useState<any[]>([]);
 
@@ -64,7 +68,7 @@ export default function StudentPrivateDashboard() {
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, lastUpdate]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -115,6 +119,50 @@ export default function StudentPrivateDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Banner size must be less than 5MB");
+      return;
+    }
+
+    setIsUploadingBanner(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      try {
+        const res = await updateBannerImage(id, base64);
+        if (res.success) {
+          setStudentData((prev: any) => ({ ...prev, bannerImage: base64 }));
+          toast.success("Banner updated!");
+        } else {
+          toast.error(typeof res.error === 'string' ? res.error : "Failed to update banner");
+        }
+      } catch (error) {
+        toast.error("Error uploading banner");
+      } finally {
+        setIsUploadingBanner(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveBanner = async () => {
+    try {
+      const res = await removeBannerImage(id);
+      if (res.success) {
+        setStudentData((prev: any) => ({ ...prev, bannerImage: undefined }));
+        toast.success("Banner removed!");
+      } else {
+        toast.error(typeof res.error === 'string' ? res.error : "Failed to remove banner");
+      }
+    } catch (error) {
+      toast.error("Error removing banner");
+    }
+  };
+
 
   if (isLoading) return (
     <div className="min-h-screen bg-off-white flex items-center justify-center">
@@ -137,71 +185,133 @@ export default function StudentPrivateDashboard() {
         {/* Trial Status Banner */}
         <TrialBanner userRole="student" myId={id} />
 
-        {/* Profile Header */}
-        <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-coral/5 rounded-full -ml-32 -mt-32 blur-3xl" />
-          
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left relative z-10">
-            <div className="relative group">
-              <div className="w-28 h-28 rounded-3xl bg-coral p-1 shadow-2xl -rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                <div className="w-full h-full rounded-[1.4rem] bg-white overflow-hidden rotate-3 group-hover:rotate-0 transition-transform duration-500 relative">
-                  {studentData.profileImage ? (
-                    <Image src={studentData.profileImage} alt={studentData.name} width={112} height={112} className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-coral bg-white text-4xl font-black">
-                      {studentData.name.charAt(0)}
-                    </div>
-                  )}
-
-                  {/* Change Image Overlay */}
-                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={handleImageChange}
-                      disabled={isUploading}
-                    />
-                    {isUploading ? (
-                      <Loader2 className="text-white animate-spin" size={24} />
-                    ) : (
-                      <Pencil className="text-white" size={24} />
-                    )}
-                  </label>
-                </div>
+        {/* Block Reason Banner */}
+        {studentData.status === "blocked" && (
+          <div className="bg-rose-50 border border-rose-200 p-6 rounded-[2rem]">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 flex-shrink-0">
+                <ShieldAlert size={20} />
               </div>
-              <div className="absolute -bottom-2 -right-2 bg-dark-navy text-white p-2 rounded-2xl border-4 border-white shadow-lg z-20 pointer-events-none">
-                <Trophy size={20} />
-              </div>
-            </div>
-            <div className="space-y-3">
-              <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{studentData.name}</h1>
-              <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                  <GraduationCap size={14} className="text-coral" /> {studentData.whichClass}
-                </span>
-                <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                  <MapPin size={14} className="text-coral" /> {studentData.location}
-                </span>
-                <StatusBadge status={studentData.status} />
+              <div>
+                <h3 className="font-black text-rose-800 uppercase tracking-tight">Account Blocked</h3>
+                {studentData.blockReason && (
+                  <p className="text-sm text-rose-700 mt-2 leading-relaxed">
+                    Reason: {studentData.blockReason}
+                  </p>
+                )}
               </div>
             </div>
           </div>
-          <div className="flex gap-4 w-full md:w-auto relative z-10">
-            {isEditing ? (
-              <>
-                <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-8 py-4 bg-gray-50 text-dark-navy font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all border border-dark-navy/5">
-                  Cancel
-                </button>
-                <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none px-8 py-4 bg-dark-navy text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-dark-navy/90 transition-all shadow-xl shadow-dark-navy/20 disabled:opacity-50">
-                  {isSaving ? "Saving..." : "Save Profile"}
-                </button>
-              </>
+        )}
+
+        {/* LinkedIn-Style Banner + Profile */}
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+          {/* Banner Area */}
+          <div className="relative h-52 bg-gradient-to-r from-purple-50 to-blue-50">
+            {studentData.bannerImage ? (
+              <Image src={studentData.bannerImage} alt="Banner" fill className="object-cover" />
             ) : (
-              <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-8 py-4 bg-dark-navy text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-dark-navy/90 transition-all shadow-xl shadow-dark-navy/20 flex items-center justify-center gap-3">
-                <Edit2 size={16} /> Edit Profile
-              </button>
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-gray-300 font-bold uppercase tracking-widest">Add a banner</span>
+              </div>
             )}
+            {/* Banner Controls - Only visible when editing */}
+            {isEditing && (
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                <label className="flex items-center gap-2 px-4 py-2 bg-white text-dark-navy rounded-xl font-bold text-xs uppercase tracking-widest cursor-pointer hover:bg-gray-100 transition-all shadow-lg border border-gray-100">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleBannerChange}
+                    disabled={isUploadingBanner}
+                  />
+                  {isUploadingBanner ? (
+                    <Loader2 className="animate-spin" size={14} />
+                  ) : (
+                    <Upload size={14} />
+                  )}
+                  {isUploadingBanner ? "Uploading..." : "Change Banner"}
+                </label>
+                {studentData.bannerImage && (
+                  <button 
+                    onClick={handleRemoveBanner}
+                    className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-rose-100 transition-all shadow-lg border border-rose-100"
+                  >
+                    <Trash2 size={14} />
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Profile Header */}
+          <div className="px-8 md:px-10 pb-8 md:pb-10 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative">
+              <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+                <div className="relative group">
+                  <div className="w-28 h-28 rounded-2xl bg-white p-1 shadow-xl">
+                    <div className="w-full h-full rounded-xl bg-white overflow-hidden relative">
+                      {studentData.profileImage ? (
+                        <Image src={studentData.profileImage} alt={studentData.name} width={112} height={112} className="object-cover w-full h-full" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-coral bg-white text-4xl font-black">
+                          {studentData.name.charAt(0)}
+                        </div>
+                      )}
+
+                      {/* Change Image Overlay */}
+                      <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-xl">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handleImageChange}
+                          disabled={isUploading}
+                        />
+                        {isUploading ? (
+                          <Loader2 className="text-white animate-spin" size={24} />
+                        ) : (
+                          <Pencil className="text-white" size={24} />
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-dark-navy text-white p-2 rounded-xl border-4 border-white shadow-lg z-20 pointer-events-none">
+                    <Trophy size={18} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{studentData.name}</h1>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+                      <GraduationCap size={14} className="text-coral" /> {studentData.whichClass}
+                    </span>
+                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+                      <MapPin size={14} className="text-coral" /> {studentData.location}
+                    </span>
+                    <StatusBadge status={studentData.status} />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                {isEditing ? (
+                  <>
+                    <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-6 py-3 bg-gray-50 text-dark-navy font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all border border-dark-navy/5">
+                      Cancel
+                    </button>
+                    <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none px-6 py-3 bg-dark-navy text-white font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-dark-navy/90 transition-all shadow-lg shadow-dark-navy/20 disabled:opacity-50">
+                      {isSaving ? "Saving..." : "Save Profile"}
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-6 py-3 bg-dark-navy text-white font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-dark-navy/90 transition-all shadow-lg shadow-dark-navy/20 flex items-center justify-center gap-2">
+                    <Edit2 size={16} /> Edit Profile
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -249,6 +359,9 @@ export default function StudentPrivateDashboard() {
 
             {/* Payment Submission Section */}
             <PaymentSubmissionSection userId={id} />
+
+            {/* Achievements Section */}
+            <AchievementsSection userId={id} />
 
             {/* Academic Info */}
             <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-10">
@@ -329,5 +442,15 @@ export default function StudentPrivateDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StudentPrivateDashboard() {
+  const { id } = useParams<{ id: string }>();
+  
+  return (
+    <RealtimeProvider currentUserId={id as string}>
+      <StudentDashboardContent />
+    </RealtimeProvider>
   );
 }

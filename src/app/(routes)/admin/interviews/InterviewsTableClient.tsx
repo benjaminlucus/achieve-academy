@@ -75,139 +75,243 @@ const Countdown = ({ targetDate }: { targetDate: string }) => {
   );
 };
 
-const InterviewCard = ({ interview, onStatusChange, onResultChange }: { interview: Interview; onStatusChange: (id: string, status: string) => void; onResultChange: (id: string, result: "approved" | "rejected") => void }) => {
+const InterviewCard = ({ 
+  interview, 
+  onStatusChange, 
+  onResultChange, 
+  onReschedule,
+  onSkip 
+}: { 
+  interview: Interview; 
+  onStatusChange: (id: string, status: string) => void; 
+  onResultChange: (id: string, result: "approved" | "rejected") => void;
+  onReschedule: (id: string, date: string, notes?: string) => void;
+  onSkip: (id: string) => void;
+}) => {
   const isLive = isBefore(new Date(interview.scheduledAt), new Date()) && 
                  isAfter(addMinutes(new Date(interview.scheduledAt), 30), new Date());
   
   const isCompleted = interview.status === "completed";
+  const isSkipped = interview.status === "skipped";
+  const isRescheduled = interview.status === "rescheduled";
   const isEnded = isBefore(addMinutes(new Date(interview.scheduledAt), 30), new Date());
   const hasResult = interview.interviewResult === "approved" || interview.interviewResult === "rejected";
-  const showResultButtons = (isCompleted || isEnded) && !hasResult;
+  const showResultButtons = (isCompleted || isEnded) && !hasResult && !isSkipped && !isRescheduled;
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [newDate, setNewDate] = useState("");
 
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group"
-    >
-      <div className="p-6">
-        {/* Top Section: User Info & Status */}
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg shadow-inner overflow-hidden">
-              {interview.user.profileImage ? (
-                <Image src={interview.user.profileImage} alt={interview.user.name || "User"} width={48} height={48} className="w-full h-full object-cover" />
-              ) : (
-                (interview.user.name || "U").charAt(0)
+    <>
+      <motion.div 
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group"
+      >
+        <div className="p-6">
+          {/* Top Section: User Info & Status */}
+          <div className="flex justify-between items-start mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg shadow-inner overflow-hidden">
+                {interview.user.profileImage ? (
+                  <Image src={interview.user.profileImage} alt={interview.user.name || "User"} width={48} height={48} className="w-full h-full object-cover" />
+                ) : (
+                  (interview.user.name || "U").charAt(0)
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">{interview.user.name}</h3>
+                <p className="text-xs font-medium text-gray-400">{interview.user.email}</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <Countdown targetDate={interview.scheduledAt} />
+              {hasResult && (
+                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
+                  interview.interviewResult === "approved" 
+                    ? 'bg-emerald-100 text-emerald-600' 
+                    : 'bg-rose-100 text-rose-600'
+                }`}>
+                  {interview.interviewResult}
+                </span>
+              )}
+              {isSkipped && (
+                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-gray-100 text-gray-500">
+                  Skipped
+                </span>
+              )}
+              {isRescheduled && (
+                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-blue-50 text-blue-600">
+                  Rescheduled
+                </span>
               )}
             </div>
-            <div>
-              <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">{interview.user.name}</h3>
-              <p className="text-xs font-medium text-gray-400">{interview.user.email}</p>
-            </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <Countdown targetDate={interview.scheduledAt} />
-            {hasResult && (
-              <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
-                interview.interviewResult === "approved" 
-                  ? 'bg-emerald-100 text-emerald-600' 
-                  : 'bg-rose-100 text-rose-600'
-              }`}>
-                {interview.interviewResult}
-              </span>
-            )}
-          </div>
-        </div>
 
-        {/* Middle Section: Time & Links */}
-        <div className="space-y-4 mb-6">
-          <div className="flex items-center gap-3 text-gray-600">
-            <div className="p-2 bg-gray-50 rounded-lg">
-              <Calendar size={14} className="text-coral" />
+          {/* Middle Section: Time & Links */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center gap-3 text-gray-600">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <Calendar size={14} className="text-coral" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled For</p>
+                <p className="text-xs font-bold text-gray-700">
+                  {format(new Date(interview.scheduledAt), "EEE, MMM do, h:mm a")}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled For</p>
-              <p className="text-xs font-bold text-gray-700">
-                {format(new Date(interview.scheduledAt), "EEE, MMM do, h:mm a")}
-              </p>
+
+            <div className="flex items-center gap-3 text-gray-600">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <Video size={14} className="text-blue-500" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Meeting Platform</p>
+                <p className="text-xs font-bold text-gray-700 uppercase">Zoom Meeting</p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-gray-600">
-            <div className="p-2 bg-gray-50 rounded-lg">
-              <Video size={14} className="text-blue-500" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Meeting Platform</p>
-              <p className="text-xs font-bold text-gray-700 uppercase">Zoom Meeting</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Section: Actions */}
-        <div className="flex items-center gap-2 pt-4 border-t border-gray-50">
-          {!showResultButtons ? (
-            <>
-              <a 
-                href={interview.hostJoinLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className={`flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                  isCompleted ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
-                  'bg-dark-navy text-white hover:bg-coral shadow-sm'
-                }`}
-              >
-                <Play size={14} fill="currentColor" /> Join Meeting
-              </a>
-              
-              {!isCompleted && (
-                <button 
-                  onClick={() => onStatusChange(interview.id, "completed")}
-                  className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-                  title="Mark as Completed"
+          {/* Bottom Section: Actions */}
+          <div className="flex items-center gap-2 pt-4 border-t border-gray-50">
+            {!showResultButtons && !isSkipped && !isRescheduled ? (
+              <>
+                <a 
+                  href={interview.hostJoinLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className={`flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    isCompleted ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
+                    'bg-dark-navy text-white hover:bg-coral shadow-sm'
+                  }`}
                 >
-                  <CheckCircle size={18} />
+                  <Play size={14} fill="currentColor" /> Join Meeting
+                </a>
+                
+                {!isCompleted && (
+                  <>
+                    <button 
+                      onClick={() => setShowRescheduleModal(true)}
+                      className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                      title="Reschedule Interview"
+                    >
+                      <Calendar size={18} />
+                    </button>
+                    
+                    <button 
+                      onClick={() => onSkip(interview.id)}
+                      className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                      title="Skip & Approve"
+                    >
+                      <CheckCircle size={18} />
+                    </button>
+                    
+                    <button 
+                      onClick={() => onStatusChange(interview.id, "completed")}
+                      className="p-3 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-all shadow-sm"
+                      title="Mark as Completed"
+                    >
+                      <CheckCircle size={18} />
+                    </button>
+                  </>
+                )}
+              </>
+            ) : showResultButtons ? (
+              <>
+                <button 
+                  onClick={() => onResultChange(interview.id, "rejected")}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                >
+                  Reject
                 </button>
-              )}
-
-              <button 
-                className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-100 transition-all"
-                title="Options"
-              >
-                <MoreVertical size={18} />
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => onResultChange(interview.id, "rejected")}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
-              >
-                Reject
-              </button>
-              <button 
-                onClick={() => onResultChange(interview.id, "approved")}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-              >
-                Approve
-              </button>
-            </>
-          )}
+                <button 
+                  onClick={() => onResultChange(interview.id, "approved")}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                >
+                  Approve
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
-      </div>
+        
+        {/* Footer Notes */}
+        {interview.notes && (
+          <div className="px-6 py-3 bg-gray-50/50 border-t border-gray-50">
+            <p className="text-[10px] font-medium text-gray-500 italic">
+              " {interview.notes} "
+            </p>
+          </div>
+        )}
+      </motion.div>
       
-      {/* Footer Notes */}
-      {interview.notes && (
-        <div className="px-6 py-3 bg-gray-50/50 border-t border-gray-50">
-          <p className="text-[10px] font-medium text-gray-500 italic">
-            " {interview.notes} "
-          </p>
-        </div>
-      )}
-    </motion.div>
+      {/* Reschedule Modal */}
+      <AnimatePresence>
+        {showRescheduleModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowRescheduleModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-black text-gray-900 mb-6 uppercase">Reschedule Interview</h2>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">New Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold"
+                    value={newDate}
+                    onChange={(e) => setNewDate(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Notes (optional)</label>
+                  <textarea
+                    rows={3}
+                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold resize-none"
+                    placeholder="Add notes about the reschedule"
+                  />
+                </div>
+                
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setShowRescheduleModal(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (newDate) {
+                        onReschedule(interview.id, new Date(newDate).toISOString());
+                        setShowRescheduleModal(false);
+                      }
+                    }}
+                    disabled={!newDate}
+                    className="flex-1 py-3 bg-dark-navy text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-coral transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Reschedule
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
@@ -247,6 +351,40 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
       setInterviews(prev => prev.map(i => i.id === id ? { ...i, interviewResult: result } : i));
     } catch (error) {
       toast.error("Error updating interview result");
+    }
+  };
+
+  const handleReschedule = async (id: string, date: string) => {
+    try {
+      const res = await fetch(`/api/admin/interviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reschedule", scheduledAt: date }),
+      });
+
+      if (!res.ok) throw new Error("Failed to reschedule");
+
+      toast.success("Interview rescheduled successfully");
+      window.location.reload();
+    } catch (error) {
+      toast.error("Error rescheduling interview");
+    }
+  };
+
+  const handleSkip = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/interviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "skip" }),
+      });
+
+      if (!res.ok) throw new Error("Failed to skip");
+
+      toast.success("Interview skipped & user approved");
+      window.location.reload();
+    } catch (error) {
+      toast.error("Error skipping interview");
     }
   };
 
@@ -313,6 +451,8 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
                 interview={interview} 
                 onStatusChange={handleStatusChange}
                 onResultChange={handleResultChange}
+                onReschedule={handleReschedule}
+                onSkip={handleSkip}
               />
             ))
           ) : (

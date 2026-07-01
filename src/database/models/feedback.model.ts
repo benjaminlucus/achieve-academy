@@ -1,17 +1,23 @@
 import mongoose, { Schema, models, Document } from "mongoose";
 
 export interface IFeedback extends Document {
+  userId?: mongoose.Types.ObjectId; // Reference to User model
   userName: string;
   userRole: string; // e.g., "Student", "Tutor", "Parent"
   rating: number;
   text: string;
-  screenshotUrl?: string;
+  attachments?: string[]; // Multiple attachments (PDF, images, etc.)
+  screenshotUrl?: string; // Legacy support
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const FeedbackSchema = new Schema<IFeedback>({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
   userName: {
     type: String,
     required: true,
@@ -30,6 +36,9 @@ const FeedbackSchema = new Schema<IFeedback>({
     type: String,
     required: true,
   },
+  attachments: [{
+    type: String,
+  }],
   screenshotUrl: {
     type: String,
   },

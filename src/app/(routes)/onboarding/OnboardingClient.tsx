@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -18,9 +18,72 @@ import {
   Briefcase
 } from "lucide-react";
 import { completeOnboarding } from "./actions";
-import { allTimezones, allGrades } from "@/lib/constants";
+import { allTimezones, allGrades, allCountries } from "@/lib/constants";
 
 type Step = "role" | "location" | "details" | "availability" | "submitting";
+
+function CountrySelect({ defaultValue, onSelect }: { defaultValue?: string, onSelect: (c: string) => void }) {
+  const [search, setSearch] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState(defaultValue || "");
+
+  const filteredCountries = useMemo(() => {
+    return allCountries.filter(country => 
+      country.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search]);
+
+  const handleSelect = (country: string) => {
+    setSelected(country);
+    onSelect(country);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <div 
+        className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus-within:border-purple-primary/20 bg-gray-50/50 cursor-pointer transition-all"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {selected ? (
+          <span className="font-bold text-deep-black">{selected}</span>
+        ) : (
+          <span className="font-medium text-gray-400">Select your country</span>
+        )}
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden">
+          <input 
+            autoFocus
+            placeholder="Search country..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-4 py-3 border-b border-gray-100 outline-none focus:bg-purple-primary/5"
+          />
+          <div className="max-h-60 overflow-y-auto">
+            {filteredCountries.map(country => (
+              <button 
+                key={country}
+                onClick={() => handleSelect(country)}
+                className={`w-full text-left px-4 py-3 font-bold hover:bg-purple-primary/5 transition-colors ${
+                  selected === country ? "bg-purple-primary/10 text-purple-primary" : "text-deep-black"
+                }`}
+              >
+                {country}
+              </button>
+            ))}
+            {filteredCountries.length === 0 && (
+              <div className="px-4 py-3 text-gray-400">No countries found</div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      <input type="hidden" name="country" value={selected} required />
+    </div>
+  );
+}
 
 export default function OnboardingClient() {
   const { user, isLoaded } = useUser();
@@ -270,12 +333,9 @@ export default function OnboardingClient() {
                     <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
                       <Globe size={14} className="text-purple-primary" /> Country
                     </label>
-                    <input
-                      name="country"
-                      required
-                      defaultValue={formData.country}
-                      className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
-                      placeholder="e.g. United Kingdom"
+                    <CountrySelect 
+                      defaultValue={formData.country} 
+                      onSelect={(country) => setFormData(prev => ({...prev, country}))}
                     />
                   </div>
                   <div className="space-y-2">

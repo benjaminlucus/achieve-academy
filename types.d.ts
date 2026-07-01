@@ -11,6 +11,7 @@ export interface IUser extends Document {
   isOnboarded?: boolean;
   verificationLevel: "none" | "green" | "blue";
   profileImage?: string;
+  bannerImage?: string;
   country?: string;
   timezone?: string;
   lastLogin?: Date;
@@ -24,6 +25,7 @@ export interface IUser extends Document {
   meetingNotes?: string;
   interviewCompletedAt?: Date;
   createdAt: Date;
+  blockReason?: string;
   // Zoom OAuth Fields
   zoomConnected?: boolean;
   zoomUserId?: string;
@@ -166,6 +168,36 @@ export interface IScheduledMeeting extends Document {
   hostUrl: string;
   provider: "zoom";
   status: "scheduled" | "completed" | "cancelled";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type AchievementType = "badge" | "certificate" | "milestone" | "achievement";
+
+export interface IAchievement extends Document {
+  name: string;
+  description: string;
+  type: AchievementType;
+  image?: string; // Base64 or URL
+  icon?: string; // Lucide icon name
+  category?: string;
+  criteria?: {
+    type: "sessions" | "hours" | "courses" | "streak" | "custom";
+    value: number;
+    config?: any;
+  }[];
+  points?: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IUserAchievement extends Document {
+  user: mongoose.Types.ObjectId;
+  achievement: mongoose.Types.ObjectId;
+  earnedAt: Date;
+  criteriaMet?: any; // Record of how criteria were met
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
