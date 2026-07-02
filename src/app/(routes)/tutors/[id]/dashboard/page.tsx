@@ -336,7 +336,15 @@ function TutorDashboardContent() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{tutorData.name}</h1>
+                  {isEditing ? (
+                    <input 
+                      className="text-3xl font-black text-dark-navy tracking-tight uppercase w-full bg-transparent focus:outline-none border-b-2 border-coral/30 focus:border-coral" 
+                      value={formData.name} 
+                      onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                    />
+                  ) : (
+                    <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{tutorData.name}</h1>
+                  )}
                   <div className="flex flex-wrap justify-center md:justify-start gap-3">
                     <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
                       <Briefcase size={14} className="text-coral" /> {tutorData.experienceYears} Years Exp

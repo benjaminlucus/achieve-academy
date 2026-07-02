@@ -41,7 +41,7 @@ export default function AdminAchievementsClient() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    type: "achievement" as const,
+    type: "achievement" as "badge" | "certificate" | "milestone" | "achievement",
     image: "",
     icon: "",
     category: "",

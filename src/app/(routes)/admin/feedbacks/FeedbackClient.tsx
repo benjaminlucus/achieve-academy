@@ -109,8 +109,7 @@ export default function FeedbackClient() {
     try {
       // Convert files to base64 and combine with URL attachments
       const screenshotBase64 = screenshotPreview || form.screenshotUrl;
-      const urlAttachments = Array.isArray(form.attachments) ? form.attachments : 
-        (typeof form.attachments === "string" ? form.attachments.split(",").map(s => s.trim()).filter(Boolean) : []);
+      const urlAttachments = form.attachments;
       const attachmentsBase64 = [...attachmentPreviews, ...urlAttachments];
 
       const res = await fetch("/api/admin/feedbacks", {

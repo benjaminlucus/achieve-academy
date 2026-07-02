@@ -45,6 +45,8 @@ interface Payment {
   rejectionReason?: string;
   history: { action: string; timestamp: string; notes?: string }[];
   session?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface PaymentSubmissionSectionProps {
@@ -55,7 +57,7 @@ const InfoCard = ({ payments }: { payments: Payment[] }) => {
   // Get the most recent payment
   const mostRecent = payments.length > 0 
     ? [...payments].sort((a, b) => 
-      new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
+      new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime()
     )[0] : null;
   
   const status = mostRecent?.status || "awaiting_payment";

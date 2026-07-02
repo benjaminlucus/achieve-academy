@@ -261,7 +261,7 @@ export async function createZoomMeetingForUser(
   } catch (error: any) {
     logger.error("Failed to create Zoom meeting for connected user, falling back to platform Zoom", { error: error.message });
     // Fallback to platform-wide zoom or mock meeting
-    return createZoomMeeting(topic, startTime, duration);
+    return createZoomMeeting(_topic, startTime, duration);
   }
 }
 

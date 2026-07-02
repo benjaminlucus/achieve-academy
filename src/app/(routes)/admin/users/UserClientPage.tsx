@@ -34,7 +34,7 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
             const res = await fetch(`/api/admin/users/${userId}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus, reason }),
+                body: JSON.stringify({ status: newStatus, blockReason: reason }),
             });
 
             if (!res.ok) {

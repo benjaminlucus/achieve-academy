@@ -12,10 +12,12 @@
   "dependencies": {
     "@clerk/nextjs": "^7.0.8",
     "@livekit/components-react": "^2.9.21",
+    "@sentry/nextjs": "^10.63.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.2",
     "framer-motion": "^12.23.12",
+    "ioredis": "^5.11.1",
     "livekit-client": "^2.20.0",
     "livekit-server-sdk": "^2.15.5",
     "lucide-react": "^1.7.0",

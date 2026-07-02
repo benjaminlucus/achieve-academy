@@ -335,7 +335,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
                     </div>
 
                     <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-amber-100/80">
-                      {userRole === "tutor" && !isInitiator && (
+                      {!isInitiator && (
                         <>
                           <button
                             disabled={isProcessing}
@@ -353,7 +353,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
                           </button>
                         </>
                       )}
-                      {userRole === "student" && isInitiator && (
+                      {isInitiator && (
                         <button
                           disabled={isProcessing}
                           onClick={() => void handleStatusUpdate(conn._id, "cancelled")}
@@ -361,11 +361,6 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
                         >
                           <X size={14} /> Cancel Request
                         </button>
-                      )}
-                      {userRole === "student" && !isInitiator && (
-                        <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest w-full text-center py-1">
-                          Waiting for your response
-                        </p>
                       )}
                     </div>
                   </div>

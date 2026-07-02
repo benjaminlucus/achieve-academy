@@ -6,7 +6,9 @@ export type AuditAction =
   | "payment_verify_failed"
   | "user_status_change"
   | "payout_created"
-  | "interview_scheduled";
+  | "interview_scheduled"
+  | "user_deleted"
+  | "user_self_deleted";
 
 export interface IAuditLog extends Document {
   action: AuditAction;

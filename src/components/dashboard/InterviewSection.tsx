@@ -48,9 +48,8 @@ export const InterviewSection = ({ data }: { data: InterviewData }) => {
     return () => clearInterval(timer);
   }, [data.interviewDate]);
 
-  const showInterview = data.status === "interview_scheduled" || 
-                        data.status === "interview_live" || 
-                        (data.status === "interview_pending" && data.interviewDate);
+  const showInterview = !!data.interviewDate && 
+                        (data.status !== "verified" || !isEnded);
 
   if (!showInterview || !data.interviewDate) return null;
 

@@ -335,7 +335,7 @@ export default function OnboardingClient() {
                     </label>
                     <CountrySelect 
                       defaultValue={formData.country} 
-                      onSelect={(country) => setFormData(prev => ({...prev, country}))}
+                      onSelect={(country) => setFormData((prev: any) => ({...prev, country}))}
                     />
                   </div>
                   <div className="space-y-2">

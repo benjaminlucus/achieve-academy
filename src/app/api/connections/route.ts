@@ -2,38 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import Connection from "@/database/models/connection.model";
 import User from "@/database/models/user.model";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/lib/api-helpers";
+import { validateRequest } from "@/lib/api-helpers";
+import { ConnectionRequestSchema } from "@/lib/validators";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    await connectDB();
-    const sender = await User.findOne({ clerkId });
-    if (!sender) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const authResult = await requireAuth();
+    if ("response" in authResult) return authResult.response;
+    const { user: sender } = authResult;
 
     // Check if sender is onboarded and verified
     if (!sender.isOnboarded) {
+      logger.warn("connection_request_unonboarded", { userId: sender._id.toString() });
       return NextResponse.json({ error: "Please complete your onboarding first." }, { status: 403 });
     }
 
     if (sender.status !== "verified") {
+      logger.warn("connection_request_unverified", { userId: sender._id.toString() });
       return NextResponse.json({ error: "Your account is currently awaiting verification. You can wait until verification which takes 3 to 4 working days" }, { status: 403 });
     }
 
-    const { targetUserId } = await req.json();
-    if (!targetUserId) {
-      return NextResponse.json({ error: "Target user ID is required" }, { status: 400 });
-    }
+    const bodyValidation = await validateRequest(req, ConnectionRequestSchema);
+    if (bodyValidation.error) return bodyValidation.error;
+    const { targetUserId } = bodyValidation.data;
 
+    await connectDB();
     const targetUser = await User.findById(targetUserId);
     if (!targetUser) {
       return NextResponse.json({ error: "Target user not found" }, { status: 404 });
+    }
+
+    // Check target user is also verified/onboarded
+    if (!targetUser.isOnboarded || targetUser.status !== "verified") {
+      return NextResponse.json({ error: "This user is not available to connect yet." }, { status: 400 });
     }
 
     // Determine roles
@@ -45,6 +48,11 @@ export async function POST(req: NextRequest) {
       studentId = targetUser._id;
       tutorId = sender._id;
     } else {
+      logger.warn("invalid_connection_roles", {
+        senderId: sender._id.toString(),
+        senderRole: sender.role,
+        targetRole: targetUser.role
+      });
       return NextResponse.json({ error: "Invalid connection request roles" }, { status: 400 });
     }
 
@@ -61,6 +69,11 @@ export async function POST(req: NextRequest) {
         existingConnection.initiatedBy = sender._id;
         existingConnection.lastActivity = new Date();
         await existingConnection.save();
+        logger.info("connection_reactivated", {
+          connectionId: existingConnection._id.toString(),
+          studentId: studentId.toString(),
+          tutorId: tutorId.toString(),
+        });
         return NextResponse.json({ success: true, connection: existingConnection });
       }
       return NextResponse.json({ error: "Connection already exists or is pending" }, { status: 400 });
@@ -74,26 +87,25 @@ export async function POST(req: NextRequest) {
       lastActivity: new Date(),
     });
 
+    logger.info("connection_created", {
+      connectionId: newConnection._id.toString(),
+      studentId: studentId.toString(),
+      tutorId: tutorId.toString(),
+    });
+
     return NextResponse.json({ success: true, connection: newConnection });
 
   } catch (error: any) {
-    console.error("Create Connection Error:", error);
-    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+    logger.error("connection_create_error", { error: error.message });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    await connectDB();
-    const user = await User.findOne({ clerkId });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const authResult = await requireAuth();
+    if ("response" in authResult) return authResult.response;
+    const { user } = authResult;
 
     const query = user.role === "student" ? { student: user._id } : { tutor: user._id };
     
@@ -108,7 +120,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Get Connections Error:", error);
-    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+    logger.error("get_connections_error", { error: error.message });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

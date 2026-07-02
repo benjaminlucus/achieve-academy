@@ -8,6 +8,9 @@ import { authErrorResponse, requireAdmin } from "@/lib/auth";
 import { isValidUserStatus, type UserStatus } from "@/lib/user-status";
 import { writeAuditLog } from "@/lib/audit";
 import { captureException } from "@/lib/monitoring";
+import { validateRequest, validateParams } from "@/lib/api-helpers";
+import { UserIdParamSchema, UpdateUserStatusSchema } from "@/lib/validators";
+import { sanitizeXSS } from "@/lib/sanitize";
 
 export async function PATCH(
   req: NextRequest,
@@ -15,15 +18,16 @@ export async function PATCH(
 ) {
   try {
     const admin = await requireAdmin();
-    const { id: userId } = await context.params;
-    const { status, reason } = await req.json();
+    const params = await context.params;
+    const paramValidation = validateParams(params, UserIdParamSchema);
+    if (paramValidation.error) return paramValidation.error;
+    const { id: userId } = paramValidation.data;
 
-    if (!status || !isValidUserStatus(status)) {
-      return NextResponse.json(
-        { error: "Invalid status. Use: applied, interview_scheduled, verified, blocked" },
-        { status: 400 }
-      );
-    }
+    const bodyValidation = await validateRequest(req, UpdateUserStatusSchema);
+    if (bodyValidation.error) return bodyValidation.error;
+    const { status, blockReason } = bodyValidation.data;
+
+    const sanitizedBlockReason = sanitizeXSS(blockReason);
 
     await connectDB();
 
@@ -38,8 +42,8 @@ export async function PATCH(
     if (status === "verified") {
       updateData.verificationLevel = "green";
       updateData.blockReason = undefined; // Clear block reason when unblocking/verifying
-    } else if (status === "blocked" && reason) {
-      updateData.blockReason = reason;
+    } else if (status === "blocked" && sanitizedBlockReason) {
+      updateData.blockReason = sanitizedBlockReason;
     }
 
     await User.findByIdAndUpdate(userId, updateData);
@@ -59,7 +63,7 @@ export async function PATCH(
       });
     } else if (status === "blocked" && oldStatus !== "blocked") {
       if (oldStatus === "applied" || oldStatus === "interview_scheduled") {
-        const template = emailTemplates.userRejected(user.name || "there", reason);
+        const template = emailTemplates.userRejected(user.name || "there", sanitizedBlockReason);
         await sendEmail({
           to: user.email,
           subject: template.subject,
@@ -72,7 +76,7 @@ export async function PATCH(
       action: "user_status_change",
       actorId: admin._id,
       targetUserId: userId,
-      metadata: { from: oldStatus, to: status, reason },
+      metadata: { from: oldStatus, to: status, reason: sanitizedBlockReason },
     });
 
     return NextResponse.json({
@@ -93,7 +97,10 @@ export async function DELETE(
 ) {
   try {
     const admin = await requireAdmin();
-    const { id: userId } = await context.params;
+    const params = await context.params;
+    const paramValidation = validateParams(params, UserIdParamSchema);
+    if (paramValidation.error) return paramValidation.error;
+    const { id: userId } = paramValidation.data;
     await connectDB();
 
     const user = await User.findById(userId);

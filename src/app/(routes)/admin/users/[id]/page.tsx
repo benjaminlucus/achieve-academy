@@ -20,6 +20,7 @@ import {
   CheckCircle,
   XCircle,
   Video,
+  ShieldAlert,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -40,6 +41,9 @@ export default function AdminUserDetailPage() {
   const [data, setData] = useState<UserDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("account");
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
+  const [isBlocking, setIsBlocking] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,18 +63,40 @@ export default function AdminUserDetailPage() {
     if (params.id) fetchData();
   }, [params.id]);
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleBlockUser = async () => {
+    if (!blockReason.trim()) return;
+    
+    setIsBlocking(true);
     try {
       const res = await fetch(`/api/admin/users/${params.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: "blocked", blockReason: blockReason.trim() }),
+      });
+      if (res.ok) {
+        setShowBlockModal(false);
+        setBlockReason("");
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Error blocking user:", error);
+    } finally {
+      setIsBlocking(false);
+    }
+  };
+
+  const handleUnblockUser = async () => {
+    try {
+      const res = await fetch(`/api/admin/users/${params.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "verified" }),
       });
       if (res.ok) {
         window.location.reload();
       }
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("Error unblocking user:", error);
     }
   };
 
@@ -120,14 +146,14 @@ export default function AdminUserDetailPage() {
         <div className="flex gap-3">
           {data.user.status !== "blocked" ? (
             <button
-              onClick={() => handleStatusChange("blocked")}
+              onClick={() => setShowBlockModal(true)}
               className="px-6 py-3 bg-rose-50 text-rose-600 font-black text-[10px] uppercase tracking-widest rounded-xl border border-rose-100 hover:bg-rose-600 hover:text-white transition-all"
             >
               Block User
             </button>
           ) : (
             <button
-              onClick={() => handleStatusChange("verified")}
+              onClick={handleUnblockUser}
               className="px-6 py-3 bg-emerald-50 text-emerald-600 font-black text-[10px] uppercase tracking-widest rounded-xl border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all"
             >
               Unblock User
@@ -135,6 +161,23 @@ export default function AdminUserDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Block Reason Banner if blocked */}
+      {data.user.status === "blocked" && data.user.blockReason && (
+        <div className="bg-rose-50 border border-rose-200 p-6 rounded-[2rem]">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 flex-shrink-0">
+              <ShieldAlert size={20} />
+            </div>
+            <div>
+              <h3 className="font-black text-rose-800 uppercase tracking-tight">User is Blocked</h3>
+              <p className="text-sm text-rose-700 mt-2 leading-relaxed">
+                <span className="font-bold">Reason:</span> {data.user.blockReason}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* User Header */}
       <div className="bg-white p-8 rounded-[2.5rem] border border-dark-navy/5 shadow-sm flex flex-col md:flex-row items-start gap-8">
@@ -646,6 +689,67 @@ export default function AdminUserDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Block Reason Modal */}
+      {showBlockModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-md w-full">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight">
+                Block User
+              </h3>
+              <button
+                onClick={() => {
+                  setShowBlockModal(false);
+                  setBlockReason("");
+                }}
+                className="p-2 hover:bg-gray-100 rounded-xl"
+              >
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Reason for Blocking
+                </label>
+                <textarea
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  rows={4}
+                  placeholder="Enter the reason why this user is being blocked..."
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-dark-navy focus:outline-none focus:border-coral transition-all resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowBlockModal(false);
+                    setBlockReason("");
+                  }}
+                  className="flex-1 py-3 bg-gray-100 text-gray-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-gray-200 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBlockUser}
+                  disabled={isBlocking || !blockReason.trim()}
+                  className="flex-1 py-3 bg-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-rose-700 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isBlocking ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Blocking...
+                    </>
+                  ) : (
+                    "Confirm Block"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -69,7 +69,6 @@ const UserSchema = new Schema<IUser>(
 );
 
 // Add explicit indexes to optimize queries
-UserSchema.index({ clerkId: 1 });
 UserSchema.index({ email: 1 });
 UserSchema.index({ status: 1 });
 

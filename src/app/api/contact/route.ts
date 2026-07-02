@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
     const { name, email, subject, message } = body;
 
     // Rate limiting
-    const identifier = email || req.ip || "unknown";
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const identifier = email || ip;
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
     const existing = rateLimitStore.get(identifier);
