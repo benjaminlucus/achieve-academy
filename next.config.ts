@@ -25,6 +25,7 @@ const nextConfig: NextConfigWithESLint = {
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
+  output: "standalone",
   productionBrowserSourceMaps: true,
 };
 
