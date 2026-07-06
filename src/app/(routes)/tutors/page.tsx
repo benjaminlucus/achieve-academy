@@ -3,6 +3,8 @@ import User from "@/database/models/user.model";
 import TutorProfile from "@/database/models/tutor.model";
 import { TutorSearchSection } from "./TutorSearchSection";
 
+export const dynamic = "force-dynamic";
+
 export default async function TutorsPage(props: any) {
   await connectDB();
   const searchParams = props.searchParams || {};
