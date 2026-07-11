@@ -17,6 +17,8 @@ import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { PaymentSubmissionSection } from "@/components/dashboard/PaymentSubmissionSection";
 import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
+import { WhatsAppCard } from "@/components/dashboard/WhatsAppCard";
+import { PaymentInstructionsCard } from "@/components/dashboard/PaymentInstructionsCard";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
@@ -177,20 +179,20 @@ function StudentDashboardContent() {
   );
 
   return (
-    <div className="bg-[#F8F9FA] min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="bg-[#F8F9FA] min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8 font-sans">
       <Toaster />
       <ChatInitializer initialConversations={conversations} />
-      <div className="max-w-7xl mx-auto space-y-10">
+      <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Trial Status Banner */}
         <TrialBanner userRole="student" myId={id} />
 
         {/* Block Reason Banner */}
         {studentData.status === "blocked" && (
-          <div className="bg-rose-50 border border-rose-200 p-6 rounded-[2rem]">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 flex-shrink-0">
-                <ShieldAlert size={20} />
+          <div className="bg-rose-50 border border-rose-200 p-5 rounded-2xl">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 flex-shrink-0">
+                <ShieldAlert size={18} />
               </div>
               <div>
                 <h3 className="font-black text-rose-800 uppercase tracking-tight">Account Blocked</h3>
@@ -204,10 +206,10 @@ function StudentDashboardContent() {
           </div>
         )}
 
-        {/* LinkedIn-Style Banner + Profile */}
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+        {/* Profile Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {/* Banner Area */}
-          <div className="relative h-52 bg-gradient-to-r from-purple-50 to-blue-50">
+          <div className="relative h-44 bg-gradient-to-r from-purple-50 to-blue-50">
             {studentData.bannerImage ? (
               <Image src={studentData.bannerImage} alt="Banner" fill className="object-cover" />
             ) : (
@@ -215,10 +217,9 @@ function StudentDashboardContent() {
                 <span className="text-gray-300 font-bold uppercase tracking-widest">Add a banner</span>
               </div>
             )}
-            {/* Banner Controls - Only visible when editing */}
             {isEditing && (
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                <label className="flex items-center gap-2 px-4 py-2 bg-white text-dark-navy rounded-xl font-bold text-xs uppercase tracking-widest cursor-pointer hover:bg-gray-100 transition-all shadow-lg border border-gray-100">
+              <div className="absolute bottom-3 right-3 flex gap-2">
+                <label className="flex items-center gap-2 px-3 py-2 bg-white text-dark-navy rounded-xl font-bold text-xs uppercase tracking-widest cursor-pointer hover:bg-gray-100 transition-all shadow-lg border border-gray-100">
                   <input 
                     type="file" 
                     accept="image/*" 
@@ -236,7 +237,7 @@ function StudentDashboardContent() {
                 {studentData.bannerImage && (
                   <button 
                     onClick={handleRemoveBanner}
-                    className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-rose-100 transition-all shadow-lg border border-rose-100"
+                    className="flex items-center gap-2 px-3 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-rose-100 transition-all shadow-lg border border-rose-100"
                   >
                     <Trash2 size={14} />
                     Remove
@@ -247,21 +248,20 @@ function StudentDashboardContent() {
           </div>
 
           {/* Profile Header */}
-          <div className="px-8 md:px-10 pb-8 md:pb-10 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative">
-              <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+          <div className="px-6 md:px-8 pb-7 md:pb-8 pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 relative">
+              <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
                 <div className="relative group">
-                  <div className="w-28 h-28 rounded-2xl bg-white p-1 shadow-xl">
+                  <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-xl">
                     <div className="w-full h-full rounded-xl bg-white overflow-hidden relative">
                       {studentData.profileImage ? (
-                        <Image src={studentData.profileImage} alt={studentData.name} width={112} height={112} className="object-cover w-full h-full" />
+                        <Image src={studentData.profileImage} alt={studentData.name} width={96} height={96} className="object-cover w-full h-full" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-coral bg-white text-4xl font-black">
+                        <div className="w-full h-full flex items-center justify-center text-coral bg-white text-3xl font-black">
                           {studentData.name.charAt(0)}
                         </div>
                       )}
 
-                      {/* Change Image Overlay */}
                       <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-xl">
                         <input 
                           type="file" 
@@ -271,51 +271,51 @@ function StudentDashboardContent() {
                           disabled={isUploading}
                         />
                         {isUploading ? (
-                          <Loader2 className="text-white animate-spin" size={24} />
+                          <Loader2 className="text-white animate-spin" size={20} />
                         ) : (
-                          <Pencil className="text-white" size={24} />
+                          <Pencil className="text-white" size={20} />
                         )}
                       </label>
                     </div>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 bg-dark-navy text-white p-2 rounded-xl border-4 border-white shadow-lg z-20 pointer-events-none">
-                    <Trophy size={18} />
+                  <div className="absolute -bottom-2 -right-2 bg-dark-navy text-white p-1.5 rounded-xl border-4 border-white shadow-lg z-20 pointer-events-none">
+                    <Trophy size={16} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   {isEditing ? (
                     <input 
-                      className="text-3xl font-black text-dark-navy tracking-tight uppercase w-full bg-transparent focus:outline-none border-b-2 border-coral/30 focus:border-coral" 
+                      className="text-2xl font-black text-dark-navy tracking-tight uppercase w-full bg-transparent focus:outline-none border-b-2 border-coral/30 focus:border-coral" 
                       value={formData.name} 
                       onChange={(e) => setFormData({...formData, name: e.target.value})} 
                     />
                   ) : (
-                    <h1 className="text-3xl font-black text-dark-navy tracking-tight uppercase">{studentData.name}</h1>
+                    <h1 className="text-2xl font-black text-dark-navy tracking-tight uppercase">{studentData.name}</h1>
                   )}
-                  <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-                      <GraduationCap size={14} className="text-coral" /> {studentData.whichClass}
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                      <GraduationCap size={12} className="text-coral" /> {studentData.whichClass}
                     </span>
-                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-                      <MapPin size={14} className="text-coral" /> {studentData.location}
+                    <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                      <MapPin size={12} className="text-coral" /> {studentData.location}
                     </span>
                     <StatusBadge status={studentData.status} />
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                 {isEditing ? (
                   <>
-                    <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-6 py-3 bg-gray-50 text-dark-navy font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all border border-dark-navy/5">
+                    <button onClick={() => setIsEditing(false)} className="flex-1 md:flex-none px-5 py-2.5 bg-gray-50 text-dark-navy font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all border border-dark-navy/5">
                       Cancel
                     </button>
-                    <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none px-6 py-3 bg-dark-navy text-white font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-dark-navy/90 transition-all shadow-lg shadow-dark-navy/20 disabled:opacity-50">
+                    <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none px-5 py-2.5 bg-dark-navy text-white font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-dark-navy/90 transition-all shadow-lg shadow-dark-navy/20 disabled:opacity-50">
                       {isSaving ? "Saving..." : "Save Profile"}
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-6 py-3 bg-dark-navy text-white font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-dark-navy/90 transition-all shadow-lg shadow-dark-navy/20 flex items-center justify-center gap-2">
-                    <Edit2 size={16} /> Edit Profile
+                  <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-5 py-2.5 bg-dark-navy text-white font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-dark-navy/90 transition-all shadow-lg shadow-dark-navy/20 flex items-center justify-center gap-2">
+                    <Edit2 size={14} /> Edit Profile
                   </button>
                 )}
               </div>
@@ -324,46 +324,49 @@ function StudentDashboardContent() {
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
-            <div className="w-12 h-12 bg-coral/10 text-coral rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-              <Clock size={24} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-10 h-10 bg-coral/10 text-coral rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+              <Clock size={20} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Hours Learned</p>
-            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.hoursLearned ?? 0}h</p>
+            <p className="text-xl font-black text-dark-navy">{studentData.stats?.hoursLearned ?? 0}h</p>
           </div>
-          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
-            <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-              <BookOpen size={24} />
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+              <BookOpen size={20} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Active Courses</p>
-            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.activeCourses ?? 0}</p>
+            <p className="text-xl font-black text-dark-navy">{studentData.stats?.activeCourses ?? 0}</p>
           </div>
-          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-              <Zap size={24} className="fill-current" />
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+              <Zap size={20} className="fill-current" />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">XP Points</p>
-            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.xpPoints ?? 0}</p>
+            <p className="text-xl font-black text-dark-navy">{studentData.stats?.xpPoints ?? 0}</p>
           </div>
-          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
-            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-              <TrendingUp size={24} />
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center group hover:border-coral/20 transition-all">
+            <div className="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+              <TrendingUp size={20} />
             </div>
             <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-1">Streak</p>
-            <p className="text-2xl font-black text-dark-navy">{studentData.stats?.streak ?? 0} Days</p>
+            <p className="text-xl font-black text-dark-navy">{studentData.stats?.streak ?? 0} Days</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-10">
+          <div className="lg:col-span-8 space-y-8">
             {/* Interview Section */}
             <InterviewSection data={studentData} />
 
             {/* Study Sessions Section */}
             <SessionSection userRole="student" />
+
+            {/* Payment Instructions Card */}
+            <PaymentInstructionsCard userData={{ name: studentData?.name, email: studentData?.email }} />
 
             {/* Payment Submission Section */}
             <PaymentSubmissionSection userId={id} />
@@ -372,39 +375,39 @@ function StudentDashboardContent() {
             <AchievementsSection userId={id} />
 
             {/* Academic Info */}
-            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-10">
-              <div className="flex items-center justify-between border-b border-gray-50 pb-6">
-                <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Academic Profile</h2>
-                <BookCheck className="text-coral" size={24} />
+            <div className="bg-white p-7 rounded-2xl shadow-sm border border-gray-100 space-y-7">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-5">
+                <h2 className="text-lg font-black text-dark-navy uppercase tracking-tight">Academic Profile</h2>
+                <BookCheck className="text-coral" size={20} />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-10">
-                <div className="space-y-3">
+              <div className="grid md:grid-cols-2 gap-7">
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Current Grade / Level</label>
                   {isEditing ? (
-                    <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.whichClass} onChange={(e) => setFormData({...formData, whichClass: e.target.value})} />
+                    <input className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.whichClass} onChange={(e) => setFormData({...formData, whichClass: e.target.value})} />
                   ) : (
-                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">{studentData.whichClass}</p>
+                    <p className="text-dark-navy font-bold text-base bg-gray-50 p-4 rounded-xl border border-gray-100">{studentData.whichClass}</p>
                   )}
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Learning Goals</label>
                   {isEditing ? (
-                    <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.learningGoals} onChange={(e) => setFormData({...formData, learningGoals: e.target.value})} />
+                    <input className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.learningGoals} onChange={(e) => setFormData({...formData, learningGoals: e.target.value})} />
                   ) : (
-                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">{studentData.learningGoals}</p>
+                    <p className="text-dark-navy font-bold text-base bg-gray-50 p-4 rounded-xl border border-gray-100">{studentData.learningGoals}</p>
                   )}
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Subjects of Interest</label>
                 {isEditing ? (
-                  <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.subjects} onChange={(e) => setFormData({...formData, subjects: e.target.value})} />
+                  <input className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-coral/10 rounded-xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.subjects} onChange={(e) => setFormData({...formData, subjects: e.target.value})} />
                 ) : (
-                  <div className="flex flex-wrap gap-3 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-xl border border-gray-100">
                     {studentData.subjects.map((s: string) => (
-                      <span key={s} className="px-5 py-2 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl">{s}</span>
+                      <span key={s} className="px-4 py-2 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl">{s}</span>
                     ))}
                   </div>
                 )}
@@ -413,38 +416,12 @@ function StudentDashboardContent() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-4 space-y-10">
+          <div className="lg:col-span-4 space-y-8">
+            {/* WhatsApp Card */}
+            <WhatsAppCard userData={{ name: studentData?.name, email: studentData?.email }} />
+            
             {/* Connections Section */}
             <ConnectionList userRole="student" myId={id} />
-
-            {/* Achievements Card */}
-            <div className="bg-dark-navy p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-coral/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-coral/20 transition-all" />
-              <h2 className="text-lg font-black uppercase tracking-tight border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
-                My Progress <Target className="text-coral" size={20} />
-              </h2>
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-                    <span>Course Completion</span>
-                    <span>{studentData.stats?.courseCompletion ?? 0}%</span>
-                  </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-coral rounded-full" style={{ width: `${studentData.stats?.courseCompletion ?? 0}%` }} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-1">XP Points</p>
-                    <p className="text-xl font-black">{studentData.stats?.xpPoints ?? 0}</p>
-                  </div>
-                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-1">Rank</p>
-                    <p className="text-xl font-black">#{studentData.stats?.rank ?? "-"}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
         </div>

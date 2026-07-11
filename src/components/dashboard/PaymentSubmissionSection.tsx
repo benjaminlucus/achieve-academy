@@ -12,7 +12,9 @@ import {
   Upload, 
   Download,
   Send,
-  Loader2
+  Loader2,
+  Eye,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
@@ -54,7 +56,6 @@ interface PaymentSubmissionSectionProps {
 }
 
 const InfoCard = ({ payments }: { payments: Payment[] }) => {
-  // Get the most recent payment
   const mostRecent = payments.length > 0 
     ? [...payments].sort((a, b) => 
       new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime()
@@ -63,28 +64,28 @@ const InfoCard = ({ payments }: { payments: Payment[] }) => {
   const status = mostRecent?.status || "awaiting_payment";
   
   let heading = "Complete Your Booking";
-  let description = "Your booking is currently awaiting payment verification. Please transfer the payment using one of the available payment methods below and upload your payment proof. Once our team verifies your payment, you will receive a confirmation email and your booking will become confirmed. Estimated verification time: Within 24 hours.";
+  let description = "Bookings are confirmed only after payment verification. Upload payment proof below for approval!";
   let StatusIcon = CreditCard;
-  let gradient = "from-orange-100 to-amber-100";
-  let borderColor = "border-orange-200";
-  let iconColor = "text-orange-600";
-  let iconBg = "bg-orange-100";
+  let gradient = "from-amber-50 to-orange-50";
+  let borderColor = "border-amber-200";
+  let iconColor = "text-amber-600";
+  let iconBg = "bg-amber-100";
 
   switch (status) {
     case "submitted":
       heading = "Payment Proof Submitted";
-      description = "Thank you for submitting your payment proof! Our team is currently reviewing it. We'll get back to you within 24 hours with a confirmation or request for more info!";
+      description = "Thank you! We're reviewing your payment and will confirm within 24 hours.";
       StatusIcon = Clock;
-      gradient = "from-blue-100 to-blue-100";
+      gradient = "from-blue-50 to-indigo-50";
       borderColor = "border-blue-200";
       iconColor = "text-blue-600";
       iconBg = "bg-blue-100";
       break;
     case "under_review":
       heading = "Payment Under Review";
-      description = "Our team is carefully reviewing your payment proof. We'll confirm it soon (usually within 24 hours! If we need anything else, we'll reach out!";
+      description = "Our team is verifying your payment — this usually takes less than 24 hours!";
       StatusIcon = AlertCircle;
-      gradient = "from-amber-100 to-amber-100";
+      gradient = "from-amber-50 to-yellow-50";
       borderColor = "border-amber-200";
       iconColor = "text-amber-600";
       iconBg = "bg-amber-100";
@@ -92,18 +93,18 @@ const InfoCard = ({ payments }: { payments: Payment[] }) => {
     case "confirmed":
     case "paid":
       heading = "Payment Confirmed";
-      description = "Great news! Your payment has been verified and confirmed! Your booking is all set! Enjoy your sessions!";
+      description = "Great! Your booking is all set — enjoy your sessions!";
       StatusIcon = CheckCircle2;
-      gradient = "from-emerald-100 to-emerald-100";
+      gradient = "from-emerald-50 to-green-50";
       borderColor = "border-emerald-200";
       iconColor = "text-emerald-600";
       iconBg = "bg-emerald-100";
       break;
     case "rejected":
       heading = "Payment Rejected";
-      description = "We're sorry, your payment proof couldn't be verified. Please resubmit payment with clear proof or contact support for help!";
+      description = "Please resubmit with clear proof or contact support for assistance.";
       StatusIcon = XCircle;
-      gradient = "from-rose-100 to-rose-100";
+      gradient = "from-rose-50 to-red-50";
       borderColor = "border-rose-200";
       iconColor = "text-rose-600";
       iconBg = "bg-rose-100";
@@ -111,18 +112,75 @@ const InfoCard = ({ payments }: { payments: Payment[] }) => {
   }
   
   return (
-    <div className={`bg-gradient-to-r ${gradient} ${borderColor} p-8 rounded-[2.5rem] border`}>
+    <div className={`bg-gradient-to-r ${gradient} ${borderColor} p-6 rounded-2xl border`}>
       <div className="flex items-start gap-4">
-        <div className={`w-12 h-12 ${iconBg} rounded-2xl flex items-center justify-center ${iconColor} flex-shrink-0`}>
-          <StatusIcon size={24} />
+        <div className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center ${iconColor} flex-shrink-0`}>
+          <StatusIcon size={20} />
         </div>
         <div>
-          <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-2">
+          <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight mb-1">
             {heading}
           </h3>
           <p className="text-sm text-steel-blue leading-relaxed">
             {description}
           </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PaymentDetailsModal = ({ 
+  isOpen, 
+  onClose, 
+  method 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  method: PaymentMethod;
+}) => {
+  if (!isOpen) return null;
+  const details = PAYMENT_METHOD_DETAILS[method];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight">
+            {method} Details
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-xl"
+          >
+            <X size={20} className="text-gray-600" />
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account Name</p>
+            <p className="font-black text-dark-navy">{details.accountName}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              {"bankName" in details ? "Account Number" : "Wallet Number"}
+            </p>
+            <p className="font-black text-dark-navy">{details.accountNumber}</p>
+          </div>
+          {"bankName" in details && (
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Bank</p>
+              <p className="font-black text-dark-navy">{details.bankName}</p>
+            </div>
+          )}
+        </div>
+        <div className="p-6 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-dark-navy text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-dark-navy/90"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -141,6 +199,7 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resubmittingPayment, setResubmittingPayment] = useState<Payment | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -209,14 +268,12 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
 
       if (result.success) {
         toast.success("Payment proof submitted successfully!");
-        // Reset form
         setSelectedSession(null);
         setSelectedMonth(1);
         setTransactionId("");
         setNotes("");
         setScreenshotPreview(null);
         setResubmittingPayment(null);
-        // Refresh payments list
         const paymentsRes = await fetch(`/api/payments?studentId=${userId}`);
         if (paymentsRes.ok) {
           const data = await paymentsRes.json();
@@ -252,82 +309,71 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
 
   if (isLoading) {
     return (
-      <div className="bg-white p-10 rounded-[2.5rem] border border-gray-100 text-center">
-        <Loader2 className="animate-spin text-dark-navy mx-auto mb-4" size={32} />
-        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Loading payments...</p>
+      <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center">
+        <Loader2 className="animate-spin text-dark-navy mx-auto mb-4" size={28} />
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Loading payments...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Info Card */}
+    <div className="space-y-6">
       <InfoCard payments={payments} />
 
-
-      {/* Payment Methods */}
-      <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100">
-        <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
-          <Banknote size={20} className="text-coral" />
-          Payment Methods
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Object.entries(PAYMENT_METHOD_DETAILS).map(([key, details]) => (
-        <div
-          key={key}
-          onClick={() => setSelectedPaymentMethod(key as PaymentMethod)}
-          className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${
-            selectedPaymentMethod === key 
-              ? "border-coral bg-coral/5" 
-              : "border-gray-100 hover:border-coral/30"
-          }`}
-        >
-              <div className="flex items-center gap-3 mb-4">
+      <div className="bg-white p-6 rounded-2xl border border-gray-100">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight flex items-center gap-2">
+            <Banknote size={18} className="text-coral" />
+            Payment Methods
+          </h3>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 text-dark-navy font-bold text-[10px] uppercase tracking-widest rounded-xl hover:bg-gray-100"
+          >
+            <Eye size={14} />
+            View Details
+          </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {Object.entries(PAYMENT_METHOD_DETAILS).map(([key]) => (
+            <div
+              key={key}
+              onClick={() => setSelectedPaymentMethod(key as PaymentMethod)}
+              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                selectedPaymentMethod === key 
+                  ? "border-coral bg-coral/5" 
+                  : "border-gray-100 hover:border-gray-200"
+              }`}
+            >
+              <div className="flex items-center gap-3">
                 {key === PAYMENT_METHODS.BANK_TRANSFER ? (
-                  <Banknote size={20} className="text-coral" />
+                  <Banknote size={18} className="text-coral" />
                 ) : (
-                  <Smartphone size={20} className="text-coral" />
+                  <Smartphone size={18} className="text-coral" />
                 )}
                 <span className="font-black text-dark-navy uppercase tracking-widest text-sm">
                   {key}
                 </span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <p className="text-gray-600">
-                  <span className="font-bold text-dark-navy">Account Name:</span> {details.accountName}
-                </p>
-                <p className="text-gray-600">
-                  <span className="font-bold text-dark-navy">
-                    {"bankName" in details ? "Account Number" : "Wallet Number"}:
-                  </span> {details.accountNumber}
-                </p>
-                {"bankName" in details && (
-                  <p className="text-gray-600">
-                    <span className="font-bold text-dark-navy">Bank:</span> {details.bankName}
-                  </p>
-                )}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Upload Payment Proof */}
-      <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100">
-        <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
-          <Upload size={20} className="text-coral" />
-          Upload Payment Proof
+      <div className="bg-white p-6 rounded-2xl border border-gray-100">
+        <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight mb-5 flex items-center gap-2">
+          <Upload size={18} className="text-coral" />
+          Submit Payment Proof
         </h3>
         
-        <div className="space-y-6">
-          {/* Session Selector */}
+        <div className="space-y-5">
           {!resubmittingPayment && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">
                 Select Session
               </label>
               <select
-                className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy text-sm"
                 value={selectedSession?._id || ""}
                 onChange={(e) => {
                   const session = sessions.find(s => s._id === e.target.value);
@@ -344,14 +390,13 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
             </div>
           )}
 
-          {/* Month Selector */}
           {!resubmittingPayment && selectedSession && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">
                 Month Number
               </label>
               <select
-                className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy text-sm"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
               >
@@ -364,8 +409,7 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
             </div>
           )}
 
-          {/* Transaction ID */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">
               Transaction ID (Optional)
             </label>
@@ -374,28 +418,13 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
               placeholder="Enter transaction ID"
-              className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy"
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy text-sm"
             />
           </div>
 
-          {/* Notes */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">
-              Additional Notes (Optional)
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any notes..."
-              rows={3}
-              className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy resize-none"
-            />
-          </div>
-
-          {/* Screenshot Upload */}
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">
-              Upload Payment Screenshot (Required)
+              Payment Screenshot
             </label>
             <label className="block">
               <input
@@ -405,47 +434,46 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
                 onChange={handleScreenshotChange}
               />
               {screenshotPreview ? (
-                <div className="relative p-4 border-2 border-coral/30 bg-coral/5 rounded-2xl">
+                <div className="relative p-3 border border-coral/30 bg-coral/5 rounded-xl">
                   <Image
                     src={screenshotPreview}
                     alt="Payment proof"
-                    width={400}
-                    height={300}
-                    className="max-h-64 mx-auto rounded-xl object-contain"
+                    width={350}
+                    height={250}
+                    className="max-h-48 mx-auto rounded-lg object-contain"
                   />
                   <button
                     type="button"
                     onClick={() => setScreenshotPreview(null)}
-                    className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50"
+                    className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow hover:bg-gray-50"
                   >
-                    <XCircle size={20} className="text-rose-500" />
+                    <XCircle size={18} className="text-rose-500" />
                   </button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer hover:border-coral/30 transition-all">
-                  <Upload className="mx-auto mb-4 text-gray-400" size={32} />
-                  <p className="font-bold text-dark-navy mb-1">Click to upload or drag and drop</p>
-                  <p className="text-sm text-gray-500">PNG, JPG or JPEG (Max 5MB)</p>
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-coral/30 transition-all">
+                  <Upload className="mx-auto mb-3 text-gray-400" size={28} />
+                  <p className="font-bold text-dark-navy mb-1 text-sm">Click to upload screenshot</p>
+                  <p className="text-xs text-gray-500">PNG, JPG, JPEG (Max 5MB)</p>
                 </div>
               )}
             </label>
           </div>
 
-          {/* Submit Button */}
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || (!selectedSession && !resubmittingPayment) || !screenshotPreview}
-            className="w-full py-5 bg-dark-navy text-white font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-dark-navy/90 transition-all shadow-xl shadow-dark-navy/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-4 bg-dark-navy text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-dark-navy/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="animate-spin" size={16} />
+                <Loader2 className="animate-spin" size={14} />
                 Submitting...
               </>
             ) : (
               <>
-                <Send size={16} />
-                {resubmittingPayment ? "Resubmit Payment Proof" : "Submit Payment Proof"}
+                <Send size={14} />
+                {resubmittingPayment ? "Resubmit" : "Submit Payment Proof"}
               </>
             )}
           </button>
@@ -459,7 +487,7 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
                 setTransactionId("");
                 setNotes("");
               }}
-              className="w-full py-3 border border-gray-200 text-gray-500 font-bold text-[11px] uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-all"
+              className="w-full py-3 border border-gray-200 text-gray-500 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -467,37 +495,36 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
         </div>
       </div>
 
-      {/* Payment Status Cards */}
       {payments.length > 0 && (
-        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100">
-          <h3 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-6 flex items-center gap-2">
-            <CheckCircle2 size={20} className="text-coral" />
+        <div className="bg-white p-6 rounded-2xl border border-gray-100">
+          <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight mb-5 flex items-center gap-2">
+            <CheckCircle2 size={18} className="text-coral" />
             Payment History
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {payments.map((payment) => {
               const config = getStatusConfig(payment.status);
               const session = sessions.find(s => s._id === payment.session);
               const StatusIcon = config.icon;
 
               return (
-                <div key={payment._id} className="p-6 border border-gray-100 rounded-2xl">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div key={payment._id} className="p-4 border border-gray-100 rounded-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                     <div>
-                      <p className="font-black text-dark-navy">
+                      <p className="font-black text-dark-navy text-sm">
                         {session?.subject || "Session"} - Month {payment.monthNumber}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs text-gray-500">
                         {session?.tutor.name ? `With ${session.tutor.name}` : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <p className="text-xl font-black text-dark-navy">
+                      <p className="text-lg font-black text-dark-navy">
                         ${payment.amount.toFixed(2)}
                       </p>
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${config.bg} ${config.color}`}>
-                        <StatusIcon size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${config.bg} ${config.color}`}>
+                        <StatusIcon size={14} />
+                        <span className="text-[9px] font-black uppercase tracking-widest">
                           {config.label}
                         </span>
                       </div>
@@ -505,26 +532,26 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
                   </div>
 
                   {payment.status === "rejected" && payment.rejectionReason && (
-                    <div className="mb-4 p-4 bg-rose-50 border border-rose-200 rounded-xl">
-                      <p className="text-sm font-bold text-rose-700 flex items-center gap-2">
-                        <AlertCircle size={16} />
+                    <div className="mb-3 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                      <p className="text-xs font-bold text-rose-700 flex items-center gap-2">
+                        <AlertCircle size={14} />
                         Rejection Reason:
                       </p>
-                      <p className="text-sm text-rose-600 mt-1">
+                      <p className="text-xs text-rose-600 mt-1">
                         {payment.rejectionReason}
                       </p>
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2">
                     {payment.screenshot && (
                       <a
                         href={payment.screenshot}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-dark-navy text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-200 transition-all"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 text-dark-navy text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-100"
                       >
-                        <Download size={14} />
+                        <Download size={12} />
                         View Screenshot
                       </a>
                     )}
@@ -534,29 +561,12 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
                           setResubmittingPayment(payment);
                           setSelectedSession(session || null);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral/90 transition-all"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-coral/90"
                       >
-                        <Upload size={14} />
-                        Resubmit Payment Proof
+                        <Upload size={12} />
+                        Resubmit
                       </button>
                     )}
-                  </div>
-
-                  {/* History */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mb-2">
-                      History
-                    </p>
-                    <div className="space-y-2">
-                      {payment.history.slice().reverse().map((entry, index) => (
-                        <div key={index} className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                          <p className="text-gray-600">
-                            {entry.action} - {new Date(entry.timestamp).toLocaleString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               );
@@ -564,6 +574,12 @@ export const PaymentSubmissionSection = ({ userId }: PaymentSubmissionSectionPro
           </div>
         </div>
       )}
+
+      <PaymentDetailsModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        method={selectedPaymentMethod}
+      />
     </div>
   );
 };

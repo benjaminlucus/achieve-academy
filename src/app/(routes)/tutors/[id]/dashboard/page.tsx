@@ -16,6 +16,8 @@ import { InterviewSection } from "@/components/dashboard/InterviewSection";
 import { SessionSection } from "@/components/dashboard/SessionSection";
 import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { WhatsAppCard } from "@/components/dashboard/WhatsAppCard";
+import { TutorPaymentAssistanceCard } from "@/components/dashboard/TutorPaymentAssistanceCard";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
@@ -234,6 +236,9 @@ function TutorDashboardContent() {
         
         {/* Trial Status Banner */}
         <TrialBanner userRole="tutor" myId={id} />
+
+        {/* WhatsApp Community & Contact Card */}
+        <WhatsAppCard userData={{ name: tutorData?.name, email: tutorData?.email }} />
 
         {/* Block Reason Banner */}
         {tutorData.status === "blocked" && (
@@ -470,52 +475,8 @@ function TutorDashboardContent() {
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-4 space-y-10">
-            {/* Connections */}
-            <ConnectionList userRole="tutor" myId={id} />
-
-
-            {/* Availability */}
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-8">
-              <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest flex items-center gap-3">
-                <Calendar size={20} className="text-coral" /> Weekly Schedule
-              </h3>
-              <div className="space-y-4">
-                {isEditing ? (
-                  formData.availability.map((a: any) => (
-                    <div key={a.day} className="space-y-2">
-                      <label className="text-[9px] font-black text-steel-blue uppercase tracking-widest">{a.day}</label>
-                      <input 
-                        className="w-full px-4 py-2 bg-gray-50 rounded-xl text-xs font-bold focus:outline-none border border-transparent focus:border-dark-navy/10"
-                        placeholder="e.g. 10:00 AM, 02:00 PM"
-                        value={a.time}
-                        onChange={(e) => handleAvailabilityChange(a.day, e.target.value)}
-                      />
-                    </div>
-                  ))
-                ) : (
-                  tutorData.availability?.map((a: any) => (
-                    <div key={a.day} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
-                      <span className="text-xs font-bold text-steel-blue uppercase">{a.day}</span>
-                      <div className="flex flex-wrap justify-end gap-1">
-                        {(a.time || []).map((t: string, i: number) => (
-                          <span key={i} className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg uppercase">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-        {/* Payout Details */}
+            {/* Payout Details */}
             <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-10">
               <div className="flex items-center justify-between border-b border-gray-50 pb-6">
                 <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Payout Information</h2>
@@ -606,6 +567,52 @@ function TutorDashboardContent() {
                 )}
               </div>
             </div>
+
+            {/* Tutor Payment Assistance Card */}
+            <TutorPaymentAssistanceCard userData={{ name: tutorData?.name, email: tutorData?.email }} />
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-4 space-y-10">
+            {/* Connections */}
+            <ConnectionList userRole="tutor" myId={id} />
+
+            {/* Availability */}
+            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-8">
+              <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest flex items-center gap-3">
+                <Calendar size={20} className="text-coral" /> Weekly Schedule
+              </h3>
+              <div className="space-y-4">
+                {isEditing ? (
+                  formData.availability.map((a: any) => (
+                    <div key={a.day} className="space-y-2">
+                      <label className="text-[9px] font-black text-steel-blue uppercase tracking-widest">{a.day}</label>
+                      <input 
+                        className="w-full px-4 py-2 bg-gray-50 rounded-xl text-xs font-bold focus:outline-none border border-transparent focus:border-dark-navy/10"
+                        placeholder="e.g. 10:00 AM, 02:00 PM"
+                        value={a.time}
+                        onChange={(e) => handleAvailabilityChange(a.day, e.target.value)}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  tutorData.availability?.map((a: any) => (
+                    <div key={a.day} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+                      <span className="text-xs font-bold text-steel-blue uppercase">{a.day}</span>
+                      <div className="flex flex-wrap justify-end gap-1">
+                        {(a.time || []).map((t: string, i: number) => (
+                          <span key={i} className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg uppercase">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }
