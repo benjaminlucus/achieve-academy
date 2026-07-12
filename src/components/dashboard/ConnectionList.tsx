@@ -53,7 +53,7 @@ interface Meeting {
   status: string;
 }
 
-type ConnectionTab = "pending" | "active" | "history";
+type ConnectionTab = "pending" | "active" | "expired" | "history";
 
 function PartnerAvatar({ partner, userRole }: { partner: User; userRole: "student" | "tutor" }) {
   return (
@@ -124,7 +124,17 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
   );
 
   const activeConnections = useMemo(
-    () => allConnections.filter((c) => c.status === "accepted"),
+    () => allConnections.filter((c) => 
+      c.status === "accepted" && 
+      c.subscriptionStatus !== "expired"
+    ),
+    [allConnections]
+  );
+
+  const expiredConnections = useMemo(
+    () => allConnections.filter((c) => 
+      c.status === "accepted" && c.subscriptionStatus === "expired"
+    ),
     [allConnections]
   );
 
@@ -187,6 +197,12 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
       icon: <Users size={14} />,
     },
     {
+      id: "expired",
+      label: "Expired",
+      count: expiredConnections.length,
+      icon: <AlertCircle size={14} />,
+    },
+    {
       id: "history",
       label: "History",
       count: historyConnections.length,
@@ -199,7 +215,9 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
       ? pendingConnections
       : activeTab === "active"
         ? activeConnections
-        : historyConnections;
+        : activeTab === "expired"
+          ? expiredConnections
+          : historyConnections;
 
   if (isLoading) {
     return (

@@ -8,6 +8,8 @@ import { logger } from "./logger";
 import { decrypt, encrypt } from "./encryption";
 import User from "@/database/models/user.model";
 
+import { generateSecureRoomName } from "./jitsi-service";
+
 export const ZOOM_URL_REGEX = /^(https?:\/\/)?([a-z0-9-]+\.)?zoom\.(us|com)\/(j|my|s)\/[\d\w?=&._-]+$/i;
 
 // Cache for server-to-server access token
@@ -31,7 +33,7 @@ export interface ZoomMeetingDetails {
   hostUrl?: string;
   duration?: number;
   startTime?: Date;
-  provider: "zoom";
+  provider: "zoom" | "jitsi";
 }
 
 /**
@@ -132,18 +134,17 @@ export const createZoomMeeting = async (
       provider: "zoom",
     };
   } catch (error: any) {
-    logger.error("Failed to create Zoom meeting, falling back to mock Jitsi meeting", { error: error.message });
+    logger.error("Failed to create Zoom meeting, falling back to secure Jitsi meeting", { error: error.message });
     
-    // Fallback: Generate a Jitsi meeting link
-    const randomRoom = Math.random().toString(36).substring(2, 10);
-    const fallbackUrl = `https://meet.jit.si/ravencrest-academy-${randomRoom}`;
+    // Fallback: Generate a secure Jitsi meeting room name
+    const secureRoom = generateSecureRoomName();
     return {
-      meetingId: "fallback-" + randomRoom,
-      joinUrl: fallbackUrl,
-      hostUrl: fallbackUrl,
+      meetingId: secureRoom,
+      joinUrl: secureRoom,
+      hostUrl: secureRoom,
       duration,
       startTime,
-      provider: "zoom",
+      provider: "jitsi",
     };
   }
 };

@@ -46,6 +46,7 @@ export async function PATCH(
         studentJoinLink: meetingDetails.joinUrl,
         hostJoinLink: meetingDetails.hostUrl,
         meetingId: meetingDetails.meetingId,
+        meetingProvider: meetingDetails.provider,
         notes: notes || existingInterview.notes,
         status: "scheduled",
         previousInterviews: [...(existingInterview.previousInterviews || []), existingInterview._id],
@@ -56,6 +57,9 @@ export async function PATCH(
       await User.findByIdAndUpdate(existingInterview.userId, {
         interviewDate: newDate,
         interviewLink: meetingDetails.joinUrl,
+        interviewHostLink: meetingDetails.hostUrl,
+        meetingId: meetingDetails.meetingId,
+        meetingProvider: meetingDetails.provider,
       });
 
       // Send rescheduled email

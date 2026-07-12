@@ -129,11 +129,15 @@ export async function GET(req: any, { params }: any) {
             profileImage: tutor.user?.profileImage,
             bannerImage: tutor.user?.bannerImage,
 
+            hasJoinedWhatsAppCommunity: tutor.user?.hasJoinedWhatsAppCommunity || false,
+
             // Interview Info from Interview model
             interviewDate: interview?.scheduledAt || tutor.user?.interviewDate,
-            interviewLink: interview?.studentJoinLink || tutor.user?.interviewLink,
+            interviewLink: (interview?.meetingProvider || tutor.user?.meetingProvider || "zoom").toLowerCase() === "jitsi"
+              ? `/classroom/interview/${tutor.user._id.toString()}`
+              : (interview?.studentJoinLink || tutor.user?.interviewLink),
             interviewTimezone: interview?.timezone || tutor.user?.interviewTimezone,
-            meetingProvider: "Zoom",
+            meetingProvider: interview?.meetingProvider || tutor.user?.meetingProvider || "zoom",
 
             stats: {
                 hoursTaught: Number(hoursTaught.toFixed(1)),

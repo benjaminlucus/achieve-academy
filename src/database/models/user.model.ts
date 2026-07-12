@@ -64,6 +64,11 @@ const UserSchema = new Schema<IUser>(
     zoomEncryptedAccessToken: String,
     zoomEncryptedRefreshToken: String,
     zoomTokenExpiresAt: Date,
+
+    hasJoinedWhatsAppCommunity: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

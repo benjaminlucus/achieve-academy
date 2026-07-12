@@ -18,6 +18,7 @@ import { ConnectionList } from "@/components/dashboard/ConnectionList";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { WhatsAppCard } from "@/components/dashboard/WhatsAppCard";
 import { TutorPaymentAssistanceCard } from "@/components/dashboard/TutorPaymentAssistanceCard";
+import { WhatsAppOnboarding } from "@/components/dashboard/WhatsAppOnboarding";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
@@ -234,6 +235,15 @@ function TutorDashboardContent() {
       <ChatInitializer initialConversations={conversations} />
       <div className="max-w-7xl mx-auto space-y-10">
         
+        {/* WhatsApp Onboarding Banner and Modal */}
+        <WhatsAppOnboarding 
+          userId={id as string} 
+          hasJoinedInitial={!!tutorData.hasJoinedWhatsAppCommunity} 
+          onSuccess={() => {
+            setTutorData((prev: any) => ({ ...prev, hasJoinedWhatsAppCommunity: true }));
+          }}
+        />
+
         {/* Trial Status Banner */}
         <TrialBanner userRole="tutor" myId={id} />
 

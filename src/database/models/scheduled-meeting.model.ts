@@ -48,8 +48,8 @@ const ScheduledMeetingSchema = new Schema<IScheduledMeeting>({
   },
   provider: {
     type: String,
-    enum: ["zoom"],
-    default: "zoom"
+    enum: ["zoom", "jitsi"],
+    default: "jitsi"
   },
   status: {
     type: String,

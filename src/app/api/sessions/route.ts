@@ -5,6 +5,7 @@ import User from "@/database/models/user.model";
 import Connection from "@/database/models/connection.model";
 import { auth } from "@clerk/nextjs/server";
 import { checkConnectionAccess } from "@/lib/utils";
+import { generateSecureRoomName } from "@/lib/jitsi-service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,7 +49,8 @@ export async function POST(req: NextRequest) {
       subject,
       rate: rate || 0,
       status: "active",
-      notes
+      notes,
+      meetingLink: generateSecureRoomName()
     });
 
     return NextResponse.json({ success: true, session });
@@ -80,7 +82,13 @@ export async function GET() {
       .populate("tutor", "name profileImage email")
       .sort({ startDate: 1 });
 
-    return NextResponse.json({ success: true, sessions });
+    const securedSessions = sessions.map((session) => {
+      const sObj = session.toObject();
+      sObj.meetingLink = `/classroom/session/${sObj._id}`;
+      return sObj;
+    });
+
+    return NextResponse.json({ success: true, sessions: securedSessions });
 
   } catch (error: unknown) {
     console.error("Get Sessions Error:", error);

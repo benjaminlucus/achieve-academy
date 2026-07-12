@@ -32,6 +32,7 @@ export interface IUser extends Document {
   zoomEncryptedAccessToken?: string;
   zoomEncryptedRefreshToken?: string;
   zoomTokenExpiresAt?: Date;
+  hasJoinedWhatsAppCommunity?: boolean;
 }
 
 export interface IUserFlag extends Document {
@@ -166,7 +167,7 @@ export interface IScheduledMeeting extends Document {
   meetingId: string;
   joinUrl: string;
   hostUrl: string;
-  provider: "zoom";
+  provider: "zoom" | "jitsi";
   status: "scheduled" | "completed" | "cancelled";
   createdAt: Date;
   updatedAt: Date;

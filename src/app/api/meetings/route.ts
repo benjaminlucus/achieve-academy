@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       meetingId: zoomMeeting.meetingId,
       joinUrl: zoomMeeting.joinUrl,
       hostUrl: zoomMeeting.hostUrl,
-      provider: "zoom",
+      provider: zoomMeeting.provider,
       status: "scheduled",
     });
 
@@ -177,7 +177,16 @@ export async function GET(req: NextRequest) {
       .populate("tutor", "name email")
       .sort({ date: 1 });
 
-    return NextResponse.json({ success: true, meetings });
+    const securedMeetings = meetings.map((meeting) => {
+      const mObj = meeting.toObject();
+      if (mObj.provider === "jitsi") {
+        mObj.joinUrl = `/classroom/meeting/${mObj._id}`;
+        mObj.hostUrl = `/classroom/meeting/${mObj._id}`;
+      }
+      return mObj;
+    });
+
+    return NextResponse.json({ success: true, meetings: securedMeetings });
   } catch (error: any) {
     logger.error("Failed to get meetings:", error);
     return NextResponse.json(

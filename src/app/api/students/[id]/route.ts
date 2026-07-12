@@ -132,6 +132,11 @@ export async function GET(req: any, { params }: any) {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 10); // Keep last 10 activities
 
+    const isJitsi = (interview?.meetingProvider || student.user.meetingProvider || "zoom").toLowerCase() === "jitsi";
+    const interviewLink = isJitsi 
+      ? `/classroom/interview/${student.user._id.toString()}`
+      : (interview?.studentJoinLink || student.user.interviewLink);
+
     const studentData = {
       _id: student.user._id.toString(),
       clerkId: student.user.clerkId,
@@ -145,12 +150,13 @@ export async function GET(req: any, { params }: any) {
       location: `${student.user.country}`,
       profileImage: student.user.profileImage,
       bannerImage: student.user.bannerImage,
+      hasJoinedWhatsAppCommunity: student.user.hasJoinedWhatsAppCommunity || false,
 
       // Interview Info from Interview model
       interviewDate: interview?.scheduledAt || student.user.interviewDate,
-      interviewLink: interview?.studentJoinLink || student.user.interviewLink,
+      interviewLink,
       interviewTimezone: interview?.timezone || student.user.interviewTimezone,
-      meetingProvider: "Zoom",
+      meetingProvider: interview?.meetingProvider || student.user.meetingProvider || "zoom",
 
       stats: {
         hoursLearned: Number(hoursLearned.toFixed(1)),

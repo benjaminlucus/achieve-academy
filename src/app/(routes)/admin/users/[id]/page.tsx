@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { toast, Toaster } from "react-hot-toast";
 
 type UserDetails = {
   user: any;
@@ -44,6 +45,33 @@ export default function AdminUserDetailPage() {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [blockReason, setBlockReason] = useState("");
   const [isBlocking, setIsBlocking] = useState(false);
+  const [isResettingWhatsApp, setIsResettingWhatsApp] = useState(false);
+
+  const handleResetWhatsApp = async () => {
+    setIsResettingWhatsApp(true);
+    try {
+      const res = await fetch(`/api/admin/users/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reset-whatsapp" }),
+      });
+      if (res.ok) {
+        toast.success("WhatsApp onboarding status reset successfully!");
+        const resData = await fetch(`/api/admin/users/${params.id}`);
+        if (resData.ok) {
+          const json = await resData.json();
+          setData(json);
+        }
+      } else {
+        toast.error("Failed to reset WhatsApp status");
+      }
+    } catch (error) {
+      console.error("Error resetting WhatsApp status:", error);
+      toast.error("Error resetting WhatsApp status");
+    } finally {
+      setIsResettingWhatsApp(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +155,7 @@ export default function AdminUserDetailPage() {
 
   return (
     <div className="space-y-8">
+      <Toaster />
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={() => router.back()}
@@ -315,6 +344,25 @@ export default function AdminUserDetailPage() {
                       ? new Date(data.user.lastLogin).toLocaleString()
                       : "Never"}
                   </span>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
+                  <span className="text-[10px] font-black text-steel-blue uppercase tracking-widest">
+                    WhatsApp Onboarding
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-bold uppercase ${data.user.hasJoinedWhatsAppCommunity ? "text-emerald-600" : "text-amber-600"}`}>
+                      {data.user.hasJoinedWhatsAppCommunity ? "Joined" : "Not Joined"}
+                    </span>
+                    {data.user.hasJoinedWhatsAppCommunity && (
+                      <button
+                        onClick={handleResetWhatsApp}
+                        disabled={isResettingWhatsApp}
+                        className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-100 transition-all disabled:opacity-50"
+                      >
+                        Reset Status
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

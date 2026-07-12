@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       interviewLink: meetingDetails.joinUrl,
       interviewHostLink: meetingDetails.hostUrl,
       meetingId: meetingDetails.meetingId,
-      meetingProvider: "zoom",
+      meetingProvider: meetingDetails.provider,
       meetingNotes: notes,
     });
 
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       studentJoinLink: meetingDetails.joinUrl,
       hostJoinLink: meetingDetails.hostUrl,
       meetingId: meetingDetails.meetingId,
-      meetingProvider: "zoom",
+      meetingProvider: meetingDetails.provider,
       notes,
       status: "scheduled",
       interviewResult: "pending",

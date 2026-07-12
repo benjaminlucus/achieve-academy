@@ -19,6 +19,7 @@ import { PaymentSubmissionSection } from "@/components/dashboard/PaymentSubmissi
 import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
 import { WhatsAppCard } from "@/components/dashboard/WhatsAppCard";
 import { PaymentInstructionsCard } from "@/components/dashboard/PaymentInstructionsCard";
+import { WhatsAppOnboarding } from "@/components/dashboard/WhatsAppOnboarding";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
@@ -184,6 +185,15 @@ function StudentDashboardContent() {
       <ChatInitializer initialConversations={conversations} />
       <div className="max-w-7xl mx-auto space-y-8">
         
+        {/* WhatsApp Onboarding Banner and Modal */}
+        <WhatsAppOnboarding 
+          userId={id as string} 
+          hasJoinedInitial={!!studentData.hasJoinedWhatsAppCommunity} 
+          onSuccess={() => {
+            setStudentData((prev: any) => ({ ...prev, hasJoinedWhatsAppCommunity: true }));
+          }}
+        />
+
         {/* Trial Status Banner */}
         <TrialBanner userRole="student" myId={id} />
 

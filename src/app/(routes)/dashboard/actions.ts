@@ -328,3 +328,29 @@ export async function submitPaymentProof(data: {
   }
 }
 
+export async function confirmWhatsAppJoined(userId: string) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    await connectDB();
+    const user = await User.findById(userId);
+    if (!user || user.clerkId !== clerkId) throw new Error("Unauthorized");
+
+    user.hasJoinedWhatsAppCommunity = true;
+    await user.save();
+
+    await triggerDashboardUpdate(userId);
+    await triggerUserUpdate(userId, "whatsapp-joined");
+
+    revalidatePath(`/tutors/${userId}/dashboard`);
+    revalidatePath(`/students/${userId}/dashboard`);
+    revalidatePath(`/dashboard`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Confirm WhatsApp Joined Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
