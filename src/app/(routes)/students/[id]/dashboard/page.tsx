@@ -7,7 +7,7 @@ import {
   BookOpen, Edit2, 
   Target, BookCheck,
   Zap, Trophy,
-  TrendingUp, Pencil, Loader2, Upload, Trash2, ShieldAlert
+  TrendingUp, Pencil, Loader2, Upload, Trash2, ShieldAlert, Search, CheckCircle2, ArrowRight
 } from "lucide-react";
 import { updateStudentProfile, updateProfileImage, updateBannerImage, removeBannerImage } from "@/app/(routes)/dashboard/actions";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -36,6 +36,7 @@ function StudentDashboardContent() {
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [conversations, setConversations] = useState<any[]>([]);
+  const [tutorRequests, setTutorRequests] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +59,17 @@ function StudentDashboardContent() {
             subjects: data.subjects.join(", "),
             description: data.description || "",
           });
+
+          // Fetch tutor requests for this email
+          try {
+            const tutorReqRes = await fetch(`/api/tutor-requests?email=${encodeURIComponent(data.email)}`);
+            if (tutorReqRes.ok) {
+              const tutorReqData = await tutorReqRes.json();
+              setTutorRequests(tutorReqData.requests || []);
+            }
+          } catch (e) {
+            console.error("Error fetching tutor requests:", e);
+          }
         }
 
         if (convRes.ok) {
@@ -193,6 +205,62 @@ function StudentDashboardContent() {
             setStudentData((prev: any) => ({ ...prev, hasJoinedWhatsAppCommunity: true }));
           }}
         />
+
+        {/* Tutor Request Notifications */}
+        {tutorRequests.map((request) => (
+          <div key={request.id} className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm space-y-4">
+            <div className="flex items-start gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                request.status === "Tutor Found" ? "bg-emerald-100 text-emerald-600" :
+                request.status === "Closed" ? "bg-gray-100 text-gray-600" :
+                "bg-amber-100 text-amber-600"
+              }`}>
+                {request.status === "Tutor Found" ? <CheckCircle2 size={24} /> : <Search size={24} />}
+              </div>
+              <div className="flex-grow">
+                <h3 className="text-base font-black text-dark-navy uppercase tracking-tight">
+                  {request.status === "Tutor Found" 
+                    ? "🎉 We found a tutor for your request!"
+                    : request.status === "Closed"
+                    ? "Your tutor request has been closed"
+                    : "Your tutor request is being processed"}
+                </h3>
+                <p className="text-sm text-steel-blue mt-1">
+                  Request for <span className="font-bold text-coral">{request.subject}</span> • 
+                  Submitted on {new Date(request.createdAt).toLocaleDateString()}
+                </p>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
+                    request.status === "Pending" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                    request.status === "Reviewing" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                    request.status === "Tutor Found" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                    request.status === "Contacted" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                    request.status === "Connected" ? "bg-green-50 text-green-700 border-green-200" :
+                    "bg-gray-50 text-gray-700 border-gray-200"
+                  }`}>
+                    Status: {request.status}
+                  </span>
+                  {request.status !== "Closed" && request.status !== "Connected" && (
+                    <span className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">
+                      Response time: &lt; 24 hours
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {request.status === "Tutor Found" && (
+              <div className="flex items-center gap-3 pt-2">
+                <button className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg">
+                  View Tutor <ArrowRight size={14} />
+                </button>
+                <button className="flex items-center gap-2 px-6 py-3 bg-[#0F172A] text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-[#1e293b] transition-all">
+                  Connect Now
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
 
         {/* Trial Status Banner */}
         <TrialBanner userRole="student" myId={id} />

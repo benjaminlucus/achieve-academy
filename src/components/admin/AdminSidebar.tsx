@@ -21,7 +21,8 @@ import {
   HelpCircle,
   MessageCircle,
   Video,
-  Trophy
+  Trophy,
+  Search
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
@@ -32,6 +33,7 @@ const sidebarItems: Array<{
   countKey?: keyof SidebarCounts;
 }> = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin", countKey: "reportsPending" },
+  { icon: Search, label: "Tutor Requests", href: "/admin/tutor-requests" },
   { icon: Users, label: "Users", href: "/admin/users" },
   { icon: UserCheck, label: "Tutors Approval", href: "/admin/tutors", countKey: "tutorsPending" },
   { icon: GraduationCap, label: "Students Approval", href: "/admin/students", countKey: "studentsPending" },
@@ -101,8 +103,12 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
 
   // Listen for external toggle events
   useEffect(() => {
-    const handleToggle = () => setIsOpen(prev => !prev);
+    const handleToggle = (event: Event) => {
+      console.log("AdminSidebar received toggle event! Toggling sidebar.");
+      setIsOpen(prev => !prev);
+    };
     window.addEventListener('toggle-admin-sidebar', handleToggle);
+    console.log("AdminSidebar: toggle event listener registered!");
     return () => window.removeEventListener('toggle-admin-sidebar', handleToggle);
   }, []);
 
@@ -154,7 +160,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex-grow p-4 space-y-1 overflow-y-auto custom-scrollbar pt-8 lg:pt-6">
+          <nav className="flex-grow p-4 space-y-2 overflow-y-auto custom-scrollbar pt-8 lg:pt-6">
             {sidebarItems.map((item) => {
               const isActive = pathname === item.href;
               const badgeCount = item.countKey && counts ? counts[item.countKey] : 0;
@@ -163,7 +169,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
                   key={item.href}
                   href={item.href}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all group relative
+                    flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold transition-all group relative
                     ${isActive 
                       ? 'bg-gray-50 text-deep-black shadow-sm border border-gray-100' 
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}
@@ -171,7 +177,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
                   `}
                   title={isCollapsed ? item.label : ''}
                 >
-                  <item.icon size={18} className={`flex-shrink-0 ${isActive ? 'text-purple-primary' : 'text-gray-400 group-hover:text-deep-black transition-colors'}`} />
+                  <item.icon size={20} className={`flex-shrink-0 ${isActive ? 'text-purple-primary' : 'text-gray-400 group-hover:text-deep-black transition-colors'}`} />
                   {!isCollapsed && (
                     <span className="whitespace-nowrap animate-in fade-in duration-300 uppercase tracking-tight text-[11px] flex-grow">
                       {item.label}

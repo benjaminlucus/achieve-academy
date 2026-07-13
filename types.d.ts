@@ -43,13 +43,31 @@ export interface IUserFlag extends Document {
   createdAt: Date;
 }
 
+export type TutorRequestStatus = 
+  | "Pending" 
+  | "Reviewing" 
+  | "Tutor Found" 
+  | "Contacted" 
+  | "Connected" 
+  | "Closed";
+
 export interface ITutorRequest extends Document {
-  student: mongoose.Types.ObjectId;
+  fullName: string;
+  email: string;
   subject: string;
-  budget: number;
+  classLevel: string;
+  budget: string; // Can be hourly or monthly (any budget)
+  preferredLanguage: string[];
+  description: string;
+  preferredSchedule?: string;
+  preferredGender?: string;
+  additionalNotes?: string;
+  status: TutorRequestStatus;
   assignedTutor?: mongoose.Types.ObjectId;
-  status: "pending" | "assigned" | "rejected";
+  student?: mongoose.Types.ObjectId; // Optional, if student is registered
+  internalNotes?: string[];
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ISession extends Document {
