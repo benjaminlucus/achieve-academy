@@ -25,6 +25,7 @@ import {
   Search
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
+import { useAdminSidebar } from "../../contexts/AdminSidebarContext";
 
 const sidebarItems: Array<{
   icon: typeof LayoutDashboard;
@@ -33,18 +34,18 @@ const sidebarItems: Array<{
   countKey?: keyof SidebarCounts;
 }> = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin", countKey: "reportsPending" },
-  { icon: Search, label: "Tutor Requests", href: "/admin/tutor-requests" },
+  { icon: Search, label: "Tutor Requests", href: "/admin/tutor-requests" },     
   { icon: Users, label: "Users", href: "/admin/users" },
   { icon: UserCheck, label: "Tutors Approval", href: "/admin/tutors", countKey: "tutorsPending" },
   { icon: GraduationCap, label: "Students Approval", href: "/admin/students", countKey: "studentsPending" },
   { icon: Calendar, label: "Interviews", href: "/admin/interviews", countKey: "interviewsScheduled" },
   { icon: LinkIcon, label: "Connections", href: "/admin/connections", countKey: "connectionsPending" },
-  { icon: MessageSquare, label: "All Messages", href: "/admin/messages" },
+  { icon: MessageSquare, label: "All Messages", href: "/admin/messages" },      
   { icon: Calendar, label: "Sessions", href: "/admin/sessions" },
   { icon: CreditCard, label: "Payments", href: "/admin/payments", countKey: "paymentsPending" },
   { icon: DollarSign, label: "Tutor Payouts", href: "/admin/payouts", countKey: "payoutsPending" },
   { icon: Trophy, label: "Achievements", href: "/admin/achievements" },
-  { icon: MessageCircle, label: "Feedbacks", href: "/admin/feedbacks" },
+  { icon: MessageCircle, label: "Feedbacks", href: "/admin/feedbacks" },        
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   { icon: HelpCircle, label: "Admin Guide", href: "/admin/guide" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
@@ -66,7 +67,7 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
+  const { isSidebarOpen: isOpen, closeSidebar, toggleSidebar } = useAdminSidebar();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [counts, setCounts] = useState<SidebarCounts | null>(null);
@@ -96,21 +97,9 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
   // Close sidebar on route change (mobile)
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsOpen(false);
+      closeSidebar();
     }
-  }, [pathname, isOpen]);
-
-  // Listen for external toggle events
-  useEffect(() => {
-    const handleToggle = (event: Event) => {
-      console.log("AdminSidebar received toggle event! Toggling sidebar.");
-      setIsOpen(prev => !prev);
-    };
-    window.addEventListener('toggle-admin-sidebar', handleToggle);
-    console.log("AdminSidebar: toggle event listener registered!");
-    return () => window.removeEventListener('toggle-admin-sidebar', handleToggle);
-  }, []);
+  }, [pathname, isOpen, closeSidebar]);
 
   if (!isMounted) return null;
 
@@ -119,7 +108,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
       {/* Sidebar Aside */}
       <aside className={`
         fixed inset-y-0 left-0 z-[50] bg-white border-r border-gray-100 transition-all duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}      
         ${isCollapsed ? 'lg:w-20' : 'w-72 lg:w-72'}
         shadow-2xl lg:shadow-none
       `}
@@ -127,7 +116,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
         '--sidebar-width': isCollapsed ? '5rem' : '18rem'
       } as React.CSSProperties}>
         <div className="flex flex-col h-full relative">
-          
+
           {/* Collapse Toggle Button (Desktop Only) */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -139,7 +128,7 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
 
           {/* Logo Section */}
           <div className={`p-6 border-b border-gray-50 transition-all duration-300 flex items-center justify-between ${isCollapsed ? 'px-4' : ''}`}>
-            <Link href="/" className="flex items-center gap-3 overflow-hidden">
+            <Link href="/" className="flex items-center gap-3 overflow-hidden"> 
               <div className="w-10 h-10 bg-deep-black rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg shadow-deep-black/10">
                 <span className="text-white font-bold text-xl">R</span>
               </div>
@@ -149,11 +138,11 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
                 </span>
               )}
             </Link>
-            
+
             {/* Mobile Close Button */}
-            <button 
+            <button
               className="lg:hidden p-2 text-gray-400 hover:text-deep-black transition-colors"
-              onClick={() => setIsOpen(false)}
+              onClick={closeSidebar}
             >
               <X size={20} />
             </button>
@@ -170,9 +159,9 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
                   href={item.href}
                   className={`
                     flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold transition-all group relative
-                    ${isActive 
-                      ? 'bg-gray-50 text-deep-black shadow-sm border border-gray-100' 
-                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}
+                    ${isActive
+                      ? 'bg-gray-50 text-deep-black shadow-sm border border-gray-100'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}   
                     ${isCollapsed ? 'justify-center px-0' : ''}
                   `}
                   title={isCollapsed ? item.label : ''}
@@ -210,8 +199,8 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
                 )}
               </div>
             ) : (
-              <Link 
-                href="/api/auth/zoom" 
+              <Link
+                href="/api/auth/zoom"
                 className={`flex items-center gap-3 w-full px-4 py-3 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-xl transition-all group ${isCollapsed ? 'justify-center px-0' : ''}`}
                 title={isCollapsed ? "Connect Zoom" : ""}
               >
@@ -227,8 +216,8 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
 
           {/* Logout Section */}
           <div className="p-4 border-t border-gray-50">
-            <button 
-              onClick={()=> signOut()} 
+            <button
+              onClick={()=> signOut()}
               className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50 rounded-xl transition-all group ${isCollapsed ? 'justify-center px-0' : ''}`}
               title={isCollapsed ? 'Logout' : ''}
             >
@@ -253,9 +242,9 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
 
       {/* Overlay for mobile */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-[45] bg-deep-black/20 backdrop-blur-sm lg:hidden transition-opacity duration-300"
-          onClick={() => setIsOpen(false)}
+          onClick={closeSidebar}
         />
       )}
     </>

@@ -143,37 +143,139 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                 </div>
             )}
             {/* Users Table */}
+            {filteredUsers.length === 0 && (
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm text-center">
+                    <p className="text-sm font-medium text-gray-500">No users found matching for your search {filters.search}.</p>
+                </div>
+            )}
 
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-50/50">
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {filteredUsers.length === 0 && (
-                                    <p className="text-sm font-medium text-gray-500">No users found matching for your search {filters.search}.</p>
-                            )}
-                            {paginatedUsers.map((user: any) => (
-                                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
-                                                {(user.name || "U").charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
-                                                <p className="text-xs font-medium text-gray-400">{user.email}</p>
-                                            </div>
+            {filteredUsers.length > 0 && (
+                <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-gray-50/50">
+                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
+                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
+                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
+                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {paginatedUsers.map((user: any) => (
+                                        <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
+                                                        {(user.name || "U").charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
+                                                        <p className="text-xs font-medium text-gray-400">{user.email}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
+                                                    ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                                    : user.role.toLocaleLowerCase() === 'admin'
+                                                        ? 'bg-orange-50 text-orange-600 border-orange-100'
+                                                        : 'bg-purple-50 text-purple-600 border-purple-100'
+                                                    }`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-tight">
+                                                {user.joined}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
+                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                    : user.status.toLocaleLowerCase() === "blocked"
+                                                        ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                        : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                                                    }`}>
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
+                                                    <span className="text-[10px] font-black uppercase">{user.status}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Link href={`/admin/users/${user.id}`} className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="View Profile">
+                                                        <Eye size={16} />
+                                                    </Link>
+                                                    {user.status.toLocaleLowerCase() === "blocked" ? (
+                                                        <button 
+                                                            onClick={() => handleStatusChange(user.id, "verified")}
+                                                            disabled={updatingUserId === user.id}
+                                                            className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1" 
+                                                            title="Unblock User"
+                                                        >
+                                                            {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
+                                                                <UserCog size={16} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setShowBlockReasonModal(user.id)}
+                                                                disabled={updatingUserId === user.id}
+                                                                className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1" 
+                                                                title="Block User"
+                                                            >
+                                                                {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <button 
+                                                        onClick={() => handleDeleteUser(user.id)}
+                                                        disabled={deletingUserId === user.id}
+                                                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" 
+                                                        title="Delete User"
+                                                    >
+                                                        {deletingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
+                        {paginatedUsers.map((user: any) => (
+                            <div key={user.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-dark-navy flex items-center justify-center text-white font-black text-lg">
+                                            {(user.name || "U").charAt(0)}
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                        <div>
+                                            <p className="text-base font-black text-gray-900 uppercase tracking-tight">{user.name}</p>
+                                            <p className="text-xs font-medium text-gray-400">{user.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
+                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                        : user.status.toLocaleLowerCase() === "blocked"
+                                            ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                            : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                                        }`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
+                                        <span className="text-[10px] font-black uppercase">{user.status}</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center justify-between pt-2">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</p>
                                         <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
                                             ? 'bg-blue-50 text-blue-600 border-blue-100'
                                             : user.role.toLocaleLowerCase() === 'admin'
@@ -182,75 +284,52 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                             }`}>
                                             {user.role}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-tight">
-                                        {user.joined}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
-                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                            : user.status.toLocaleLowerCase() === "blocked"
-                                                ? 'bg-rose-50 text-rose-600 border-rose-100'
-                                                : 'bg-yellow-50 text-yellow-600 border-yellow-100'
-                                            }`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
-                                            <span className="text-[10px] font-black uppercase">{user.status}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Link href={`/admin/users/${user.id}`} className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="View Profile">
-                                                <Eye size={16} />
-                                            </Link>
-                                            {user.status.toLocaleLowerCase() === "blocked" ? (
-                                                <button 
-                                                    onClick={() => handleStatusChange(user.id, "verified")}
-                                                    disabled={updatingUserId === user.id}
-                                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1" 
-                                                    title="Unblock User"
-                                                >
-                                                    {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                                                </button>
-                                            ) : (
-                                                <>
-                                                    <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
-                                                        <UserCog size={16} />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => setShowBlockReasonModal(user.id)}
-                                                        disabled={updatingUserId === user.id}
-                                                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1" 
-                                                        title="Block User"
-                                                    >
-                                                        {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
-                                                    </button>
-                                                </>
-                                            )}
-                                            <button 
-                                                onClick={() => handleDeleteUser(user.id)}
-                                                disabled={deletingUserId === user.id}
-                                                className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" 
-                                                title="Delete User"
-                                            >
-                                                {deletingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
+                                    <div className="text-right space-y-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined</p>
+                                        <p className="text-xs font-bold text-gray-700 uppercase tracking-tight">{user.joined}</p>
+                                    </div>
+                                </div>
 
-                {/* Pagination */}
-                <div className="p-6 border-t border-gray-50 flex items-center justify-between bg-gray-50/10">
-                    <span className="text-xs font-medium text-gray-500">Showing 1 to 5 of {totalCount} entries</span>
-                    <div className="flex items-center gap-2">
-                        <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-black uppercase tracking-widest text-gray-400 cursor-not-allowed">Prev</button>
-                        <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} className="px-4 py-2 bg-dark-navy text-white rounded-lg text-xs font-black uppercase tracking-widest shadow-sm">Next</button>
+                                <div className="pt-4 grid grid-cols-2 gap-2 border-t border-gray-50">
+                                    <Link
+                                        href={`/admin/users/${user.id}`}
+                                        className="py-3 bg-gray-50 text-gray-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-dark-navy hover:text-white transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Eye size={14} /> Profile
+                                    </Link>
+                                    {user.status.toLocaleLowerCase() === "blocked" ? (
+                                        <button 
+                                            onClick={() => handleStatusChange(user.id, "verified")}
+                                            disabled={updatingUserId === user.id}
+                                            className="py-3 bg-emerald-50 text-emerald-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {updatingUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />} Unblock
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => setShowBlockReasonModal(user.id)}
+                                            disabled={updatingUserId === user.id}
+                                            className="py-3 bg-rose-50 text-rose-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {updatingUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <ShieldAlert size={14} />} Block
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </div>
-            </div>
+
+                    {/* Pagination */}
+                    <div className="bg-white md:bg-gray-50/10 p-6 rounded-3xl border border-gray-100 md:border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-widest">Showing 1 to 5 of {totalCount} entries</span>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="flex-1 sm:flex-none px-6 py-3 border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-gray-400 cursor-not-allowed">Prev</button>
+                            <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} className="flex-1 sm:flex-none px-6 py-3 bg-dark-navy text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-dark-navy/10">Next</button>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Block Reason Modal */}
             {showBlockReasonModal && (
