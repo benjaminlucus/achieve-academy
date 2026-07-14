@@ -170,7 +170,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
               ? sessionLabel 
               : `${userRole === "student" ? "You" : "You"} have a session with ${partner.name} (${partnerRole}) at ${format(start, "MMM do, h:mm a")}`;
 
-            const wasJoined = session.attendance?.length > 0 && session.attendance.some(a => a.present);
+            const wasJoined = session.attendance && session.attendance.length > 0 && session.attendance.some(a => a.present);
 
             return (
               <motion.div 
