@@ -421,4 +421,75 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  connectionBlocked: (data: {
+    name: string;
+    partnerName: string;
+    role: 'student' | 'tutor';
+    paymentLink?: string;
+  }) => ({
+    subject: `Connection with ${data.partnerName} is temporarily paused due to trial expiration`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #ef4444; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${data.name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Your connection with <strong>${data.partnerName}</strong> is now temporarily paused because the trial period has expired.</p>
+        
+        <div style="background-color: #fef2f2; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #fee2e2;">
+          <p style="margin: 0 0 16px 0; color: #991b1b; font-size: 16px; font-weight: 600;">What this means:</p>
+          <ul style="margin-top: 12px; color: #450a0a; line-height: 1.8;">
+            <li>You can't message or schedule sessions with ${data.partnerName} right now</li>
+            <li>Your account is still active and you can use other platform features</li>
+            ${data.role === 'student' && data.paymentLink ? `
+            <li>To resume your connection, please complete the payment for your subscription</li>
+            ` : `
+            <li>The connection will resume automatically once the student completes payment or trial is extended</li>
+            `}
+          </ul>
+          ${data.role === 'student' && data.paymentLink ? `
+          <div style="margin-top: 20px;">
+            <a href="${data.paymentLink}" style="background-color: #0f172a; color: #ffffff; padding: 14px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 800; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em;">Complete Payment</a>
+          </div>
+          ` : ''}
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions or need assistance, feel free to reach out.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  connectionRestored: (data: {
+    name: string;
+    partnerName: string;
+  }) => ({
+    subject: `Your connection with ${data.partnerName} is restored!`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #10b981; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${data.name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Great news! Your connection with <strong>${data.partnerName}</strong> is now restored!</p>
+        
+        <div style="background-color: #f0fdf4; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #dcfce7;">
+          <p style="margin: 0; color: #166534; font-size: 16px; font-weight: 600;">You can now:</p>
+          <ul style="margin-top: 12px; color: #1e293b; line-height: 1.8;">
+            <li>Message ${data.partnerName} again</li>
+            <li>Schedule new sessions</li>
+            <li>Continue your learning journey</li>
+          </ul>
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">Log in to your dashboard to get started.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
 };

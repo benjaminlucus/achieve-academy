@@ -8,24 +8,43 @@ import type { IUser } from "../../types";
 export async function getAllowedTutorIdsForStudent(
   studentId: mongoose.Types.ObjectId
 ): Promise<string[]> {
+  const now = new Date();
   const connections = await Connection.find({
     student: studentId,
     status: "accepted",
-  }).select("tutor");
+  }).select("tutor subscriptionStatus trialEndsAt");
 
-  return connections.map((c) => c.tutor.toString());
+  return connections
+    .filter(c => {
+      if (c.subscriptionStatus === "active") return true;
+      if (c.subscriptionStatus === "trial" && c.trialEndsAt) {
+        return new Date(c.trialEndsAt) >= now;
+      }
+      return false;
+    })
+    .map((c) => c.tutor.toString());
 }
 
+// Tutors can always message all students they have connections with
 export async function getAllowedStudentIdsForTutor(
   tutorId: mongoose.Types.ObjectId
 ): Promise<string[]> {
+  const now = new Date();
   const [connections, sessions] = await Promise.all([
-    Connection.find({ tutor: tutorId, status: "accepted" }).select("student"),
+    Connection.find({ tutor: tutorId, status: "accepted" }).select("student subscriptionStatus trialEndsAt"),
     Session.find({ tutor: tutorId, status: "active" }).select("student"),
   ]);
 
   const ids = new Set<string>();
-  connections.forEach((c) => ids.add(c.student.toString()));
+  connections
+    .filter(c => {
+      if (c.subscriptionStatus === "active") return true;
+      if (c.subscriptionStatus === "trial" && c.trialEndsAt) {
+        return new Date(c.trialEndsAt) >= now;
+      }
+      return false;
+    })
+    .forEach((c) => ids.add(c.student.toString()));
   sessions.forEach((s) => ids.add(s.student.toString()));
   return Array.from(ids);
 }

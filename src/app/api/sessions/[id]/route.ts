@@ -12,7 +12,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
-    const { status } = await req.json();
+    const body = await req.json();
+    const { status, cancellationReason } = body;
     const { userId: clerkId } = await auth();
 
     if (!clerkId) {
@@ -41,6 +42,10 @@ export async function PATCH(
 
     const oldStatus = session.status;
     session.status = status;
+    if (status === "cancelled") {
+      session.cancelledBy = user._id;
+      session.cancellationReason = cancellationReason;
+    }
     await session.save();
 
     // Automation logic when session is marked as completed

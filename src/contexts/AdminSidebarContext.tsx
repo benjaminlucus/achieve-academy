@@ -14,9 +14,16 @@ const AdminSidebarContext = createContext<AdminSidebarContextType | undefined>(
 
 export function AdminSidebarProvider({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  console.log('AdminSidebarProvider - isSidebarOpen:', isSidebarOpen);
 
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-  const closeSidebar = () => setIsSidebarOpen(false);
+  const toggleSidebar = () => {
+    console.log('AdminSidebarProvider - toggleSidebar called');
+    setIsSidebarOpen((prev) => !prev);
+  };
+  const closeSidebar = () => {
+    console.log('AdminSidebarProvider - closeSidebar called');
+    setIsSidebarOpen(false);
+  };
 
   return (
     <AdminSidebarContext.Provider

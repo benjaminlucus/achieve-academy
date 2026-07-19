@@ -10,6 +10,8 @@ import {
     CheckCircle,
     Loader2,
     Trash2,
+    Plus,
+    Minus,
 } from "lucide-react";
 import { SearchBar } from '@/components/SearchBar';
 import { ITEMS_PER_PAGE } from '@/lib/constants';
@@ -17,16 +19,33 @@ import { CreateUserDialog } from './CreateUserDialog';
 import { toast } from 'react-hot-toast';
 
 const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number }) => {
-    const [filters, setFilters] = useState({
-        search: "",
-        status: "All Status",
-    });
-    const [page, setPage] = useState(1);
-    const [open, setOpen] = useState(false);
-    const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
-    const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
-    const [blockReasonInput, setBlockReasonInput] = useState<string>("");
-    const [showBlockReasonModal, setShowBlockReasonModal] = useState<string | null>(null);
+  const [userList, setUserList] = useState(users);
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "All Status",
+  });
+  const [page, setPage] = useState(1);
+  const [open, setOpen] = useState(false);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [modifyingTrialUserId, setModifyingTrialUserId] = useState<string | null>(null);
+  const [blockReasonInput, setBlockReasonInput] = useState<string>("");
+  const [showBlockReasonModal, setShowBlockReasonModal] = useState<string | null>(null);
+
+  // Helper function to get visibility badges for a user
+  const getVisibilityBadges = (user: any) => {
+    const badges = [];
+    if (!user.isVerified) {
+      badges.push({ text: "Not Verified", color: "bg-yellow-50 text-yellow-600 border-yellow-100" });
+    }
+    if (!user.isPublicProfile) {
+      badges.push({ text: "Public Profile Disabled", color: "bg-gray-50 text-gray-600 border-gray-100" });
+    }
+    if (user.hasExpiredTrial && !user.hasActiveOrTrialConnection) {
+      badges.push({ text: "Trial Expired", color: "bg-rose-50 text-rose-600 border-rose-100" });
+    }
+    return badges;
+  };
 
     const handleStatusChange = async (userId: string, newStatus: string, reason?: string) => {
         setUpdatingUserId(userId);
@@ -74,7 +93,57 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
         }
     };
 
-    const filteredUsers = users.filter((user) => {
+    const handleModifyTrial = async (userId: string, action: 'extend' | 'decrease') => {
+        setModifyingTrialUserId(userId);
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/trial`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action }),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || "Failed to modify trial");
+            }
+
+            const data = await res.json();
+            const latestTrialEndsAt = data.connections?.reduce((latest: string | null, connection: { trialEndsAt?: string | null }) => {
+                if (!connection?.trialEndsAt) return latest;
+                if (!latest) return connection.trialEndsAt;
+
+                return new Date(connection.trialEndsAt) > new Date(latest)
+                    ? connection.trialEndsAt
+                    : latest;
+            }, null);
+
+            const now = new Date();
+            const hasActiveOrTrialConnection = Boolean(
+                latestTrialEndsAt && new Date(latestTrialEndsAt) >= now
+            );
+
+            setUserList((prevUsers: any[]) =>
+                prevUsers.map((user) =>
+                    user.id === userId
+                        ? {
+                            ...user,
+                            latestTrialEndsAt,
+                            hasActiveOrTrialConnection,
+                            hasExpiredTrial: Boolean(latestTrialEndsAt) && !hasActiveOrTrialConnection,
+                        }
+                        : user
+                )
+            );
+
+            toast.success(`Trial ${action}ed by 1 day!`);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to modify trial");
+        } finally {
+            setModifyingTrialUserId(null);
+        }
+    };
+
+    const filteredUsers = userList.filter((user) => {
         const matchesSearch =
             user.name.toLowerCase().includes(filters.search.toLowerCase()) ||
             user.email.toLowerCase().includes(filters.search.toLowerCase());
@@ -127,8 +196,8 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
 
             <SearchBar
                 placeholder="Search by name or email..."
-                allStatuses={["Pending Verification", "Scheduled Interview", "Approved", "Blocked", "All Status"]}
-                initialStatus="Pending Verification"
+                allStatuses={["All Status", "Pending Verification", "Scheduled Interview", "Approved", "Blocked"]}
+                initialStatus="All Status"
                 onSearch={(data) => { setFilters(data); setPage(1); }}
             />
 
@@ -152,105 +221,177 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
             {filteredUsers.length > 0 && (
                 <>
                     {/* Desktop Table View */}
-                    <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-gray-50/50">
-                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                    {paginatedUsers.map((user: any) => (
-                                        <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
-                                                        {(user.name || "U").charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
-                                                        <p className="text-xs font-medium text-gray-400">{user.email}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
-                                                    ? 'bg-blue-50 text-blue-600 border-blue-100'
-                                                    : user.role.toLocaleLowerCase() === 'admin'
-                                                        ? 'bg-orange-50 text-orange-600 border-orange-100'
-                                                        : 'bg-purple-50 text-purple-600 border-purple-100'
-                                                    }`}>
-                                                    {user.role}
+            <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-gray-50/50">
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Visibility</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Trial</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {paginatedUsers.map((user: any) => {
+                                const visibilityBadges = getVisibilityBadges(user);
+                                return (
+                                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
+                                                {(user.name || "U").charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
+                                                <p className="text-xs font-medium text-gray-400">{user.email}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
+                                            ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                            : user.role.toLocaleLowerCase() === 'admin'
+                                                ? 'bg-orange-50 text-orange-600 border-orange-100'
+                                                : 'bg-purple-50 text-purple-600 border-purple-100'
+                                            }`}>
+                                            {user.role}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-tight">
+                                        {user.joined}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
+                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                            : user.status.toLocaleLowerCase() === "blocked"
+                                                ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                                            }`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
+                                            <span className="text-[10px] font-black uppercase">{user.status}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-1">
+                                            {visibilityBadges.length > 0 ? (
+                                                visibilityBadges.map((badge, index) => (
+                                                    <span key={index} className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[9px] font-black uppercase ${badge.color}`}>
+                                                        {badge.text}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md border bg-emerald-50 text-emerald-600 border-emerald-100 text-[9px] font-black uppercase">
+                                                    Visible
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-tight">
-                                                {user.joined}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
-                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                    : user.status.toLocaleLowerCase() === "blocked"
-                                                        ? 'bg-rose-50 text-rose-600 border-rose-100'
-                                                        : 'bg-yellow-50 text-yellow-600 border-yellow-100'
-                                                    }`}>
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
-                                                    <span className="text-[10px] font-black uppercase">{user.status}</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {user.latestTrialEndsAt ? (
+                                            <div className={`flex flex-col gap-2 transition-all duration-200 ${modifyingTrialUserId === user.id ? "opacity-70 scale-[0.98]" : "opacity-100 scale-100"}`}>
+                                                <div className="text-xs font-bold text-gray-700 transition-colors duration-200">
+                                                    Ends: {new Date(user.latestTrialEndsAt).toLocaleDateString()}
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Link href={`/admin/users/${user.id}`} className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="View Profile">
-                                                        <Eye size={16} />
-                                                    </Link>
-                                                    {user.status.toLocaleLowerCase() === "blocked" ? (
-                                                        <button 
-                                                            onClick={() => handleStatusChange(user.id, "verified")}
-                                                            disabled={updatingUserId === user.id}
-                                                            className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1" 
-                                                            title="Unblock User"
-                                                        >
-                                                            {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                                                        </button>
-                                                    ) : (
-                                                        <>
-                                                            <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
-                                                                <UserCog size={16} />
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => setShowBlockReasonModal(user.id)}
-                                                                disabled={updatingUserId === user.id}
-                                                                className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1" 
-                                                                title="Block User"
-                                                            >
-                                                                {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                    <button 
-                                                        onClick={() => handleDeleteUser(user.id)}
-                                                        disabled={deletingUserId === user.id}
-                                                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" 
-                                                        title="Delete User"
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => handleModifyTrial(user.id, 'decrease')}
+                                                        disabled={modifyingTrialUserId === user.id}
+                                                        className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-all disabled:opacity-60"
                                                     >
-                                                        {deletingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                                        {modifyingTrialUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <Minus size={14} />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleModifyTrial(user.id, 'extend')}
+                                                        disabled={modifyingTrialUserId === user.id}
+                                                        className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-all disabled:opacity-60"
+                                                    >
+                                                        {modifyingTrialUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
                                                     </button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs font-medium text-gray-400">
+                                                No trial
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Link href={`/admin/users/${user.id}`} className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="View Profile">
+                                                <Eye size={16} />
+                                            </Link>
+                                            {user.status.toLocaleLowerCase() === "blocked" ? (
+                                                <button 
+                                                    onClick={() => handleStatusChange(user.id, "verified")}
+                                                    disabled={updatingUserId === user.id}
+                                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1" 
+                                                    title="Unblock User"
+                                                >
+                                                    {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                                                </button>
+                                            ) : user.status.toLocaleLowerCase() !== "verified" ? (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleStatusChange(user.id, "verified")}
+                                                        disabled={updatingUserId === user.id}
+                                                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-1" 
+                                                        title="Verify User"
+                                                    >
+                                                        {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                                                    </button>
+                                                    <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
+                                                        <UserCog size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setShowBlockReasonModal(user.id)}
+                                                        disabled={updatingUserId === user.id}
+                                                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1" 
+                                                        title="Block User"
+                                                    >
+                                                        {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-coral hover:text-white transition-all" title="Change Role">
+                                                        <UserCog size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setShowBlockReasonModal(user.id)}
+                                                        disabled={updatingUserId === user.id}
+                                                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1" 
+                                                        title="Block User"
+                                                    >
+                                                        {updatingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
+                                                    </button>
+                                                </>
+                                            )}
+                                            <button 
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                disabled={deletingUserId === user.id}
+                                                className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" 
+                                                title="Delete User"
+                                            >
+                                                {deletingUserId === user.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )})}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
                     {/* Mobile Card View */}
                     <div className="md:hidden space-y-4">
-                        {paginatedUsers.map((user: any) => (
+                        {paginatedUsers.map((user: any) => {
+                            const visibilityBadges = getVisibilityBadges(user);
+                            return (
                             <div key={user.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
@@ -291,7 +432,55 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                     </div>
                                 </div>
 
-                                <div className="pt-4 grid grid-cols-2 gap-2 border-t border-gray-50">
+                                {/* Visibility Badges */}
+                                <div className="pt-2 border-t border-gray-50">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Visibility</p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {visibilityBadges.length > 0 ? (
+                                            visibilityBadges.map((badge, index) => (
+                                                <span key={index} className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[9px] font-black uppercase ${badge.color}`}>
+                                                    {badge.text}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md border bg-emerald-50 text-emerald-600 border-emerald-100 text-[9px] font-black uppercase">
+                                                Visible
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Trial Info */}
+                                <div className="pt-2 border-t border-gray-50">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Trial</p>
+                                    {user.latestTrialEndsAt ? (
+                                        <div className={`flex flex-col gap-2 transition-all duration-200 ${modifyingTrialUserId === user.id ? "opacity-70 scale-[0.98]" : "opacity-100 scale-100"}`}>
+                                            <div className="text-xs font-bold text-gray-700 transition-colors duration-200">
+                                                Ends: {new Date(user.latestTrialEndsAt).toLocaleDateString()}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleModifyTrial(user.id, 'decrease')}
+                                                    disabled={modifyingTrialUserId === user.id}
+                                                    className="flex-1 py-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-all font-black uppercase text-[10px] tracking-widest disabled:opacity-60"
+                                                >
+                                                    {modifyingTrialUserId === user.id ? <Loader2 size={14} className="animate-spin mx-auto" /> : "Decrease"}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleModifyTrial(user.id, 'extend')}
+                                                    disabled={modifyingTrialUserId === user.id}
+                                                    className="flex-1 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-all font-black uppercase text-[10px] tracking-widest disabled:opacity-60"
+                                                >
+                                                    {modifyingTrialUserId === user.id ? <Loader2 size={14} className="animate-spin mx-auto" /> : "Extend"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs font-medium text-gray-400">No trial</span>
+                                    )}
+                                </div>
+
+                                <div className="pt-4 grid grid-cols-3 gap-2 border-t border-gray-50">
                                     <Link
                                         href={`/admin/users/${user.id}`}
                                         className="py-3 bg-gray-50 text-gray-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-dark-navy hover:text-white transition-all flex items-center justify-center gap-2"
@@ -306,7 +495,16 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                         >
                                             {updatingUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />} Unblock
                                         </button>
-                                    ) : (
+                                    ) : user.status.toLocaleLowerCase() !== "verified" ? (
+                                        <button 
+                                            onClick={() => handleStatusChange(user.id, "verified")}
+                                            disabled={updatingUserId === user.id}
+                                            className="py-3 bg-emerald-50 text-emerald-600 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {updatingUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />} Verify
+                                        </button>
+                                    ) : null}
+                                    {user.status.toLocaleLowerCase() !== "blocked" ? (
                                         <button 
                                             onClick={() => setShowBlockReasonModal(user.id)}
                                             disabled={updatingUserId === user.id}
@@ -314,10 +512,10 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                         >
                                             {updatingUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <ShieldAlert size={14} />} Block
                                         </button>
-                                    )}
+                                    ) : null}
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
 
                     {/* Pagination */}

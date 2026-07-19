@@ -68,6 +68,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProps) {
   const pathname = usePathname();
   const { isSidebarOpen: isOpen, closeSidebar, toggleSidebar } = useAdminSidebar();
+  console.log('AdminSidebar - isOpen:', isOpen);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [counts, setCounts] = useState<SidebarCounts | null>(null);
@@ -77,6 +78,16 @@ export default function AdminSidebar({ zoomConnected = false }: AdminSidebarProp
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
+
+  // Listen for custom toggle event
+  useEffect(() => {
+    const handleToggle = () => {
+      console.log('Received toggle-admin-sidebar event');
+      toggleSidebar();
+    };
+    window.addEventListener('toggle-admin-sidebar', handleToggle);
+    return () => window.removeEventListener('toggle-admin-sidebar', handleToggle);
+  }, [toggleSidebar]);
 
   useEffect(() => {
     const fetchCounts = async () => {

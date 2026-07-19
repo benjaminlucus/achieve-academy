@@ -8,7 +8,8 @@ export type AuditAction =
   | "payout_created"
   | "interview_scheduled"
   | "user_deleted"
-  | "user_self_deleted";
+  | "user_self_deleted"
+  | "trial_modified";
 
 export interface IAuditLog extends Document {
   action: AuditAction;

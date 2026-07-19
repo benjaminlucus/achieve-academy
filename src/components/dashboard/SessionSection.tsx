@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Clock, Play, CheckCircle, Loader2, History } from "lucide-react";
+import { Calendar, Clock, Play, CheckCircle, Loader2, History, Video } from "lucide-react";
 import { format, isAfter, isBefore, addMinutes } from "date-fns";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -30,7 +30,7 @@ interface Session {
   }[];
 }
 
-type TabType = "upcoming" | "previous";
+type TabType = "live" | "upcoming" | "previous";
 
 export const SessionSection = ({ userRole }: { userRole: string }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -76,17 +76,35 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
 
   const now = new Date();
 
+  // Filter sessions for each tab
+  const liveSessions = sessions.filter(session => {
+    const start = new Date(session.startDate);
+    const end = addMinutes(start, session.duration);
+    return isBefore(start, now) && isAfter(end, now);
+  }).sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
   const upcomingSessions = sessions.filter(session => {
     const start = new Date(session.startDate);
-    return isAfter(start, now) || session.status === "active";
+    const end = addMinutes(start, session.duration);
+    return isAfter(start, now);
   }).sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
   const previousSessions = sessions.filter(session => {
     const start = new Date(session.startDate);
-    return isBefore(start, now) || session.status === "completed";
+    const end = addMinutes(start, session.duration);
+    return isAfter(now, end) || session.status === "completed";
   }).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
-  const displayedSessions = activeTab === "upcoming" ? upcomingSessions : previousSessions;
+  const getDisplayedSessions = () => {
+    switch (activeTab) {
+      case "live": return liveSessions;
+      case "upcoming": return upcomingSessions;
+      case "previous": return previousSessions;
+      default: return [];
+    }
+  };
+
+  const displayedSessions = getDisplayedSessions();
 
   if (isLoading) {
     return (
@@ -113,6 +131,22 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">Study Sessions</h2>
         <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+          <button
+            onClick={() => setActiveTab("live")}
+            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+              activeTab === "live" 
+                ? "bg-emerald-500 text-white shadow-sm" 
+                : "text-gray-500 hover:text-dark-navy"
+            }`}
+          >
+            <Video size={12} />
+            Live
+            {liveSessions.length > 0 && (
+              <span className="inline-flex items-center justify-center w-4 h-4 text-[8px] bg-white text-emerald-500 rounded-full">
+                {liveSessions.length}
+              </span>
+            )}
+          </button>
           <button
             onClick={() => setActiveTab("upcoming")}
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -149,10 +183,10 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
       {displayedSessions.length === 0 ? (
         <div className="bg-white p-10 rounded-[2.5rem] border border-dark-navy/5 text-center space-y-4">
           <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto">
-            {activeTab === "upcoming" ? <Calendar className="text-gray-300" size={32} /> : <History className="text-gray-300" size={32} />}
+            {activeTab === "live" ? <Video className="text-gray-300" size={32} /> : activeTab === "upcoming" ? <Calendar className="text-gray-300" size={32} /> : <History className="text-gray-300" size={32} />}
           </div>
           <p className="text-sm font-bold text-steel-blue uppercase tracking-widest">
-            No {activeTab} Sessions
+            No {activeTab === "live" ? "Live" : activeTab} Sessions
           </p>
         </div>
       ) : (
@@ -160,7 +194,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
           {displayedSessions.map((session) => {
             const start = new Date(session.startDate);
             const end = addMinutes(start, session.duration);
-            const isLive = isBefore(start, now) && isAfter(end, now);
+            const isLive = activeTab === "live";
             const hasStarted = isBefore(start, now);
             const partner = userRole === "student" ? session.tutor : session.student;
             const partnerRole = userRole === "student" ? "tutor" : "student";
@@ -177,7 +211,9 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                 key={session._id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white p-6 rounded-[2rem] border border-dark-navy/5 shadow-sm hover:shadow-md transition-all group"
+                className={`bg-white p-6 rounded-[2rem] border shadow-sm hover:shadow-md transition-all group ${
+                  isLive ? 'border-emerald-200 shadow-emerald-100' : 'border-dark-navy/5'
+                }`}
               >
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-3">
@@ -221,7 +257,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                   )}
                 </div>
 
-                {activeTab === "upcoming" && (
+                {(activeTab === "upcoming" || activeTab === "live") && (
                   <div className="flex gap-2">
                     {session.meetingLink ? (
                       <a 
@@ -229,16 +265,13 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                          hasStarted 
-                            ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald/10' 
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          isLive || hasStarted 
+                            ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-100' 
+                            : 'bg-dark-navy text-white hover:bg-dark-navy/90 shadow-lg shadow-dark-navy/10'
                         }`}
-                        onClick={(e) => {
-                          if (!hasStarted) e.preventDefault();
-                        }}
                       >
                         <Play size={14} fill="currentColor" /> 
-                        {hasStarted ? "Start" : "Join Session"}
+                        {isLive ? "Start Session" : hasStarted ? "Start" : "Join Session"}
                       </a>
                     ) : (
                       <button 
@@ -248,7 +281,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                         <Play size={14} fill="currentColor" /> Link Pending
                       </button>
                     )}
-                    {!isLive && (
+                    {activeTab === "upcoming" && !isLive && (
                       <button 
                         onClick={() => handleCompleteSession(session._id)}
                         className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"

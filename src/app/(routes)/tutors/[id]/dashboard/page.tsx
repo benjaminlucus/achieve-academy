@@ -33,6 +33,7 @@ function TutorDashboardContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isTogglingPublicProfile, setIsTogglingPublicProfile] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [conversations, setConversations] = useState<any[]>([]);
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -483,6 +484,57 @@ function TutorDashboardContent() {
                     </p>
                   </div>
                 )}
+              </div>
+              
+              <div className="space-y-3 pt-4 border-t border-gray-50">
+                <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Public Profile</label>
+                <div className="flex items-center justify-between bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                  <div>
+                    <p className="text-dark-navy font-bold text-lg">Show my profile publicly</p>
+                    <p className="text-xs text-steel-blue mt-1">Students will be able to find and view your profile</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setIsTogglingPublicProfile(true);
+                      const newVal = !tutorData.isPublicProfile;
+                      try {
+                        const res = await fetch('/api/me', {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ isPublicProfile: newVal })
+                        });
+                        if (res.ok) {
+                          setTutorData((prev: any) => ({...prev, isPublicProfile: newVal}));
+                          toast.success("Profile visibility updated!");
+                        } else {
+                          toast.error("Failed to update visibility");
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        toast.error("Failed to update visibility");
+                      } finally {
+                        setIsTogglingPublicProfile(false);
+                      }
+                    }}
+                    disabled={isTogglingPublicProfile}
+                    className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors ${
+                      isTogglingPublicProfile ? 'bg-gray-400 cursor-wait' : 
+                      tutorData.isPublicProfile ? 'bg-emerald-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    {isTogglingPublicProfile ? (
+                      <div className="w-6 h-6 m-1 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-sm transition-transform ${tutorData.isPublicProfile ? 'translate-x-9' : 'translate-x-1'}`}
+                      />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 

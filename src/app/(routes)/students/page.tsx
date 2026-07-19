@@ -1,6 +1,7 @@
 import { connectDB } from "@/database/connect";
 import User from "@/database/models/user.model";
 import StudentProfile from "@/database/models/student.model";
+import Connection from "@/database/models/connection.model";
 import { StudentSearchSection } from "./StudentSearchSection";
 
 export const dynamic = "force-dynamic";
@@ -16,19 +17,32 @@ export default async function StudentsPage({ searchParams }: PageProps) {
   const query = resolvedParams.q || "";
   const classFilter = resolvedParams.class || "Class (All)";
 
-  // Basic fetch - ONLY show APPROVED (verified) users publicly
+  // Basic fetch - ONLY show APPROVED (verified), public, active subscription/trial users publicly
   const students = await StudentProfile.find({})
     .populate({
       path: "user",
       model: User,
-      match: { status: "verified" },
-      select: "_id name email profileImage status country verificationLevel",
+      match: { status: "verified", isPublicProfile: { $ne: false } },
+      select: "_id name email profileImage status country verificationLevel isPublicProfile",
     })
     .lean();
 
+  // Check if user has any active or trial connection
+  const connections = await Connection.find({ 
+    status: "accepted", 
+    subscriptionStatus: { $in: ["trial", "active"] } 
+  }).select("student tutor").lean();
+
+  const activeUserIds = new Set<string>();
+  connections.forEach((conn: any) => {
+    if (conn.student) activeUserIds.add(conn.student.toString());
+    if (conn.tutor) activeUserIds.add(conn.tutor.toString());
+  });
+
   // Filter logic
   const filteredStudents = (students || []).filter((s: any) => {
-    if (!s.user) return false; // This filters out users whose status is not 'approved' due to the match in populate
+    if (!s.user) return false; // This filters out users whose status is not 'approved' or public off
+    if (!activeUserIds.has(s.user._id.toString())) return false; // No active or trial connection
     
     const subjects = s.preferredSubjects || s.subjects || [];
     const name = s.user.name || "";

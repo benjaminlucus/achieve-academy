@@ -69,6 +69,10 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    isPublicProfile: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

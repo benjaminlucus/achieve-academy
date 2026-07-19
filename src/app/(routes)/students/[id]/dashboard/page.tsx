@@ -34,6 +34,7 @@ function StudentDashboardContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isTogglingPublicProfile, setIsTogglingPublicProfile] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [conversations, setConversations] = useState<any[]>([]);
   const [tutorRequests, setTutorRequests] = useState<any[]>([]);
@@ -489,6 +490,86 @@ function StudentDashboardContent() {
                     ))}
                   </div>
                 )}
+              </div>
+              
+              <div className="space-y-2 pt-4 border-t border-gray-100">
+                <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Public Profile</label>
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <div>
+                    <p className="text-dark-navy font-bold text-base">Show my profile publicly</p>
+                    <p className="text-xs text-steel-blue mt-1">Tutors will be able to find and view your profile</p>
+                    {(() => {
+                      const isDisabled = studentData.connections?.some((c: any) => 
+                        c.status === 'blocked' || c.subscriptionStatus === 'expired'
+                      );
+                      if (isDisabled) {
+                        return (
+                          <p className="text-xs text-rose-500 mt-1 font-medium">
+                            Disabled because your trial has expired or connection is blocked
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const isDisabled = studentData.connections?.some((c: any) => 
+                        c.status === 'blocked' || c.subscriptionStatus === 'expired'
+                      );
+                      if (isDisabled) return;
+                      
+                      setIsTogglingPublicProfile(true);
+                      const newVal = !studentData.isPublicProfile;
+                      try {
+                        const res = await fetch('/api/me', {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ isPublicProfile: newVal })
+                        });
+                        if (res.ok) {
+                          setStudentData((prev: any) => ({ ...prev, isPublicProfile: newVal }));
+                          toast.success("Profile visibility updated!");
+                        } else {
+                          toast.error("Failed to update visibility");
+                        }
+                      } catch (e) {
+                        console.error(e);
+                        toast.error("Failed to update visibility");
+                      } finally {
+                        setIsTogglingPublicProfile(false);
+                      }
+                    }}
+                    disabled={(() => {
+                      return studentData.connections?.some((c: any) => 
+                        c.status === 'blocked' || c.subscriptionStatus === 'expired'
+                      ) || isTogglingPublicProfile;
+                    })()}
+                    className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors ${
+                      (() => {
+                        const isDisabled = studentData.connections?.some((c: any) => 
+                          c.status === 'blocked' || c.subscriptionStatus === 'expired'
+                        );
+                        return isDisabled ? 'bg-gray-400 cursor-not-allowed' : 
+                          studentData.isPublicProfile ? 'bg-coral' : 'bg-gray-300';
+                      })()
+                    }`}
+                  >
+                    {isTogglingPublicProfile ? (
+                      <div className="w-6 h-6 m-1 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-sm transition-transform ${
+                          studentData.isPublicProfile ? 'translate-x-9' : 'translate-x-1'
+                        }`}
+                      />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

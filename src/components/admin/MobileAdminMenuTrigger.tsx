@@ -4,10 +4,14 @@ import { Menu } from "lucide-react";
 import { useAdminSidebar } from "../../contexts/AdminSidebarContext";
 
 export default function MobileAdminMenuTrigger() {
-  const { toggleSidebar } = useAdminSidebar();
+  const { toggleSidebar, isSidebarOpen } = useAdminSidebar();
+  console.log('MobileAdminMenuTrigger - isSidebarOpen:', isSidebarOpen);
   return (
     <button
-      onClick={toggleSidebar}
+      onClick={() => {
+        console.log('MobileAdminMenuTrigger clicked!');
+        toggleSidebar();
+      }}
       className="lg:hidden p-3 -ml-3 text-dark-navy hover:text-coral transition-all active:scale-95 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100"
       aria-label="Toggle Admin Menu"
     >

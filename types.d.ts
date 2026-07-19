@@ -26,6 +26,7 @@ export interface IUser extends Document {
   interviewCompletedAt?: Date;
   createdAt: Date;
   blockReason?: string;
+  isPublicProfile: boolean;
   // Zoom OAuth Fields
   zoomConnected?: boolean;
   zoomUserId?: string;

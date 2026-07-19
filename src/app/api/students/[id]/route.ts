@@ -4,6 +4,7 @@ import StudentProfile from "@/database/models/student.model";
 import Session from "@/database/models/session.model";
 import Payment from "@/database/models/payment.model";
 import Interview from "@/database/models/interview.model";
+import Connection from "@/database/models/connection.model";
 import { auth } from "@clerk/nextjs/server";
 import User from "@/database/models/user.model";
 
@@ -58,6 +59,11 @@ export async function GET(req: any, { params }: any) {
     // Fetch interview data
     const interview = await Interview.findOne({ userId: student.user?._id })
       .sort({ scheduledAt: -1 });
+
+    // Fetch connections for the student
+    const connections = await Connection.find({
+      $or: [{ student: student.user?._id }, { student: student._id }]
+    }).populate("tutor", "name");
 
     const completedSessions = sessions.filter(s => s.status === "completed");
 
@@ -151,6 +157,8 @@ export async function GET(req: any, { params }: any) {
       profileImage: student.user.profileImage,
       bannerImage: student.user.bannerImage,
       hasJoinedWhatsAppCommunity: student.user.hasJoinedWhatsAppCommunity || false,
+      isPublicProfile: student.user.isPublicProfile ?? true,
+      connections,
 
       // Interview Info from Interview model
       interviewDate: interview?.scheduledAt || student.user.interviewDate,
