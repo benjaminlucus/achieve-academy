@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import { 
   Star, 
   Quote, 
@@ -15,6 +16,19 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Testimonials",
+  description: "Read real testimonials from students and tutors who use Ravencrest Academy. See how we've helped transform learning journeys.",
+  openGraph: {
+    title: "Testimonials | Ravencrest Academy",
+    description: "Read real testimonials from students and tutors who use Ravencrest Academy.",
+  },
+  twitter: {
+    title: "Testimonials | Ravencrest Academy",
+    description: "Read real testimonials from students and tutors who use Ravencrest Academy.",
+  },
+};
 
 interface FeedbackDocument {
   _id: string;

@@ -14,6 +14,7 @@ import {
   Inbox,
   Users,
   Archive,
+  ArrowRight,
 } from "lucide-react";
 import { ScheduleSessionModal } from "./ScheduleSessionModal";
 import { ScheduleMeetingModal } from "./ScheduleMeetingModal";
@@ -53,7 +54,7 @@ interface Meeting {
   status: string;
 }
 
-type ConnectionTab = "pending" | "active" | "expired" | "history";
+type ConnectionTab = "received" | "sent" | "active" | "expired" | "history";
 
 function PartnerAvatar({ partner, userRole }: { partner: User; userRole: "student" | "tutor" }) {
   return (
@@ -71,7 +72,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
   const [allConnections, setAllConnections] = useState<Connection[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ConnectionTab>("pending");
+  const [activeTab, setActiveTab] = useState<ConnectionTab>("active");
   const [selectedPartner, setSelectedPartner] = useState<User | null>(null);
   const [selectedConnectionForMeeting, setSelectedConnectionForMeeting] = useState<{
     id: string;
@@ -118,9 +119,14 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
     void load();
   }, []);
 
-  const pendingConnections = useMemo(
-    () => allConnections.filter((c) => c.status === "pending"),
-    [allConnections]
+  const receivedRequests = useMemo(
+    () => allConnections.filter((c) => c.status === "pending" && currentUserId && c.initiatedBy && String(c.initiatedBy) !== String(currentUserId)),
+    [allConnections, currentUserId]
+  );
+
+  const sentRequests = useMemo(
+    () => allConnections.filter((c) => c.status === "pending" && currentUserId && c.initiatedBy && String(c.initiatedBy) === String(currentUserId)),
+    [allConnections, currentUserId]
   );
 
   const activeConnections = useMemo(
@@ -149,12 +155,12 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
   useEffect(() => {
     if (initializedTab.current || isLoading) return;
     initializedTab.current = true;
-    if (pendingConnections.length > 0) {
-      setActiveTab("pending");
+    if (receivedRequests.length > 0) {
+      setActiveTab("received");
     } else if (activeConnections.length > 0) {
       setActiveTab("active");
     }
-  }, [isLoading, pendingConnections.length, activeConnections.length]);
+  }, [isLoading, receivedRequests.length, activeConnections.length]);
 
   const handleStatusUpdate = async (
     connectionId: string,
@@ -185,10 +191,16 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
 
   const tabs: { id: ConnectionTab; label: string; count: number; icon: React.ReactNode }[] = [
     {
-      id: "pending",
-      label: userRole === "tutor" ? "Requests" : "Sent",
-      count: pendingConnections.length,
+      id: "received",
+      label: "Received Requests",
+      count: receivedRequests.length,
       icon: <Inbox size={14} />,
+    },
+    {
+      id: "sent",
+      label: "Sent Requests",
+      count: sentRequests.length,
+      icon: <Users size={14} />,
     },
     {
       id: "active",
@@ -211,13 +223,15 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
   ];
 
   const visibleConnections =
-    activeTab === "pending"
-      ? pendingConnections
-      : activeTab === "active"
-        ? activeConnections
-        : activeTab === "expired"
-          ? expiredConnections
-          : historyConnections;
+    activeTab === "received"
+      ? receivedRequests
+      : activeTab === "sent"
+        ? sentRequests
+        : activeTab === "active"
+          ? activeConnections
+          : activeTab === "expired"
+            ? expiredConnections
+            : historyConnections;
 
   if (isLoading) {
     return (
@@ -229,6 +243,30 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
 
   return (
     <div className="space-y-6">
+      {receivedRequests.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 sm:p-8 rounded-[2.5rem] border border-amber-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Inbox size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-black text-dark-navy uppercase tracking-tight">
+                You have {receivedRequests.length} new {userRole === "tutor" ? "student" : "tutor"} request{receivedRequests.length !== 1 ? 's' : ''}!
+              </h3>
+              <p className="text-sm text-steel-blue mt-1">
+                Check your received requests tab to respond.
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveTab("received")}
+              className="px-6 py-3 bg-amber-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-amber-700 transition-all flex items-center gap-2"
+            >
+              View Requests <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {meetings.length > 0 && (
         <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-dark-navy/5 shadow-sm">
           <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest mb-6 flex items-center gap-3">
@@ -284,7 +322,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
                     className={`px-2 py-0.5 rounded-full text-[9px] ${
                       activeTab === tab.id
                         ? "bg-coral text-white"
-                        : tab.id === "pending"
+                        : tab.id === "received" || tab.id === "sent"
                           ? "bg-amber-100 text-amber-700"
                           : "bg-gray-100 text-gray-600"
                     }`}
@@ -301,22 +339,26 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
           {visibleConnections.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-sm font-black text-dark-navy uppercase tracking-tight">
-                {activeTab === "pending"
-                  ? userRole === "tutor"
-                    ? "No Pending Requests"
-                    : "No Sent Requests"
+                {activeTab === "received"
+                  ? "No Received Requests"
+                  : activeTab === "sent"
+                    ? "No Sent Requests"
                   : activeTab === "active"
                     ? "No Active Connections"
+                    : activeTab === "expired"
+                      ? "No Expired Connections"
                     : "No History"}
               </p>
               <p className="text-xs text-steel-blue mt-2 max-w-xs mx-auto">
-                {activeTab === "pending" && userRole === "tutor"
-                  ? "Student connection requests will appear here."
-                  : activeTab === "pending"
-                    ? "Find a tutor and send a connection request."
+                {activeTab === "received"
+                  ? "Connection requests from others will appear here."
+                  : activeTab === "sent"
+                    ? "Requests you've sent will appear here."
                     : activeTab === "active"
                       ? "Accepted connections will show here with chat and scheduling."
-                      : "Declined or cancelled requests appear here."}
+                      : activeTab === "expired"
+                        ? "Expired trials will appear here."
+                        : "Declined or cancelled requests appear here."}
               </p>
             </div>
           ) : (

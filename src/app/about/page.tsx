@@ -1,7 +1,21 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, CheckCircle2, Users, Trophy, Target, Sparkles } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description: "Learn about Ravencrest Academy's mission to make quality education accessible to everyone. Discover our values and how we connect students with expert tutors.",
+  openGraph: {
+    title: "About Us | Ravencrest Academy",
+    description: "Discover Ravencrest Academy's story, mission, and values. We're dedicated to connecting students with world-class tutors.",
+  },
+  twitter: {
+    title: "About Us | Ravencrest Academy",
+    description: "Discover Ravencrest Academy's story, mission, and values.",
+  },
+};
 
 const stats = [
   { label: "Student Satisfaction", value: "95%", icon: CheckCircle2 },

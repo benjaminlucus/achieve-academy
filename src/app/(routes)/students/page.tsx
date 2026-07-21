@@ -3,8 +3,22 @@ import User from "@/database/models/user.model";
 import StudentProfile from "@/database/models/student.model";
 import Connection from "@/database/models/connection.model";
 import { StudentSearchSection } from "./StudentSearchSection";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Find Students",
+  description: "Browse our directory of students seeking tutoring help on Ravencrest Academy. Find students who match your expertise.",
+  openGraph: {
+    title: "Find Students | Ravencrest Academy",
+    description: "Browse our directory of students seeking tutoring help on Ravencrest Academy.",
+  },
+  twitter: {
+    title: "Find Students | Ravencrest Academy",
+    description: "Browse our directory of students seeking tutoring help on Ravencrest Academy.",
+  },
+};
 
 interface PageProps {
   searchParams: Promise<{ q?: string; class?: string }>;

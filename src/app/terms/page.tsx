@@ -1,6 +1,20 @@
 import React from "react";
+import type { Metadata } from "next";
 import { Shield, CreditCard, UserCheck, Gavel, Mail, Scale } from "lucide-react";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Terms & Conditions",
+  description: "Read Ravencrest Academy's terms and conditions for using our tutoring platform. Understand our policies on payments, conduct, and user eligibility.",
+  openGraph: {
+    title: "Terms & Conditions | Ravencrest Academy",
+    description: "Read Ravencrest Academy's terms and conditions for using our tutoring platform.",
+  },
+  twitter: {
+    title: "Terms & Conditions | Ravencrest Academy",
+    description: "Read Ravencrest Academy's terms and conditions for using our tutoring platform.",
+  },
+};
 
 const sections = [
   {

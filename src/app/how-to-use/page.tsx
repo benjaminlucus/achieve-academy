@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import { 
   UserPlus, 
   Search, 
@@ -14,6 +15,19 @@ import {
   Video
 } from "lucide-react";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "How to Use",
+  description: "Complete guide to using Ravencrest Academy for both students and tutors. Learn how to sign up, connect, and start teaching/learning.",
+  openGraph: {
+    title: "How to Use | Ravencrest Academy",
+    description: "Complete guide to using Ravencrest Academy for both students and tutors.",
+  },
+  twitter: {
+    title: "How to Use | Ravencrest Academy",
+    description: "Complete guide to using Ravencrest Academy for both students and tutors.",
+  },
+};
 
 const studentSteps = [
   {

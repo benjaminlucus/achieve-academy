@@ -3,8 +3,22 @@ import User from "@/database/models/user.model";
 import TutorProfile from "@/database/models/tutor.model";
 import Connection from "@/database/models/connection.model";
 import { TutorSearchSection } from "./TutorSearchSection";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Find Tutors",
+  description: "Browse our directory of verified expert tutors at Ravencrest Academy. Find the perfect mentor for your learning needs.",
+  openGraph: {
+    title: "Find Tutors | Ravencrest Academy",
+    description: "Browse our directory of verified expert tutors at Ravencrest Academy.",
+  },
+  twitter: {
+    title: "Find Tutors | Ravencrest Academy",
+    description: "Browse our directory of verified expert tutors at Ravencrest Academy.",
+  },
+};
 
 export default async function TutorsPage(props: any) {
   await connectDB();
