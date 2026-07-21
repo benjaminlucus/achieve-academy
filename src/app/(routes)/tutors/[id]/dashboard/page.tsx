@@ -19,6 +19,7 @@ import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { WhatsAppCard } from "@/components/dashboard/WhatsAppCard";
 import { TutorPaymentAssistanceCard } from "@/components/dashboard/TutorPaymentAssistanceCard";
 import { WhatsAppOnboarding } from "@/components/dashboard/WhatsAppOnboarding";
+import ConnectionRequestsManager from "@/components/dashboard/ConnectionRequestsManager";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
@@ -255,6 +256,9 @@ function TutorDashboardContent() {
 
         {/* Trial Status Banner */}
         <TrialBanner userRole="tutor" myId={id} />
+
+        {/* Two-Way Connection Requests & Dashboard Notification Banner */}
+        <ConnectionRequestsManager currentUserId={id as string} currentUserRole="tutor" />
 
         {/* WhatsApp Community & Contact Card */}
         <WhatsAppCard userData={{ name: tutorData?.name, email: tutorData?.email }} />

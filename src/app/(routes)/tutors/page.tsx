@@ -27,33 +27,20 @@ export default async function TutorsPage(props: any) {
   const query = searchParams.q || "";
   const subjectFilter = searchParams.subject || "Subject (All)";
 
-  // Basic fetch - ONLY show APPROVED (verified), public, active subscription/trial users publicly
+  // Fetch ONLY verified, public profile tutors
   const tutors = await TutorProfile.find({})
     .populate({
       path: "user",
       model: User,
-      match: { status: "verified", isPublicProfile: { $ne: false } }, // isPublicProfile default true
+      match: { status: "verified", isPublicProfile: { $ne: false } },
       select: "_id name email profileImage status verificationLevel isPublicProfile",
     })
     .select("subjects hourlyRate rating experienceYears teachingLevels experienceLevel description")
     .lean();
 
-  // Check if user has any active or trial connection
-  const connections = await Connection.find({ 
-    status: "accepted", 
-    subscriptionStatus: { $in: ["trial", "active"] } 
-  }).select("student tutor").lean();
-
-  const activeUserIds = new Set<string>();
-  connections.forEach((conn: any) => {
-    if (conn.student) activeUserIds.add(conn.student.toString());
-    if (conn.tutor) activeUserIds.add(conn.tutor.toString());
-  });
-
   // Filter logic
   const filteredTutors = (tutors as any[]).filter((t) => {
-    if (!t.user) return false; // This filters out users whose status is not 'approved' or public off
-    if (!activeUserIds.has(t.user._id.toString())) return false; // No active or trial connection
+    if (!t.user) return false; // Filter out non-verified or hidden profiles
     
     const matchesQuery = !query || 
       t.user.name.toLowerCase().includes(query.toLowerCase()) ||

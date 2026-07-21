@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
       experience: t.experienceYears,
       education: t.education,
       isVerified: t.isVerified,
+      degreeDocument: t.degreeDocument,
+      certificateDocuments: t.certificateDocuments || [],
       createdAt: t.createdAt,
     }));
 
@@ -46,5 +48,62 @@ export async function GET(req: NextRequest) {
     if (authRes) return authRes;
     captureException(error, { route: "admin/tutors" });
     return NextResponse.json({ error: "Failed to fetch tutors" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    await requireAdmin();
+    await connectDB();
+
+    const { tutorId, type, certId, status } = await req.json();
+
+    if (!tutorId || !type || !status) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    if (!["verified", "rejected", "pending"].includes(status)) {
+      return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
+    }
+
+    const tutor = await TutorProfile.findOne({ user: tutorId });
+    if (!tutor) {
+      return NextResponse.json({ error: "Tutor profile not found" }, { status: 404 });
+    }
+
+    if (type === "degree") {
+      if (tutor.degreeDocument) {
+        tutor.degreeDocument.status = status;
+        tutor.markModified("degreeDocument");
+      } else {
+        return NextResponse.json({ error: "No degree document uploaded" }, { status: 400 });
+      }
+    } else if (type === "certificate") {
+      if (!certId) {
+        return NextResponse.json({ error: "Missing certificate ID" }, { status: 400 });
+      }
+      const cert = tutor.certificateDocuments?.find((c: any) => c.id === certId);
+      if (cert) {
+        cert.status = status;
+        tutor.markModified("certificateDocuments");
+      } else {
+        return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
+      }
+    } else {
+      return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
+    }
+
+    await tutor.save();
+
+    return NextResponse.json({
+      success: true,
+      message: `Document status updated to ${status}`,
+      tutor
+    });
+  } catch (error: any) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
+    console.error("Document status update error:", error);
+    return NextResponse.json({ error: "Failed to update document status" }, { status: 500 });
   }
 }

@@ -102,6 +102,33 @@ export interface IStudentProfile extends Document {
   createdAt: Date;
 }
 
+export interface IDegreeDocument {
+  name: string;
+  institution: string;
+  graduationYear: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: Date;
+  status: "pending" | "verified" | "rejected";
+}
+
+export interface ICertificateDocument {
+  id: string;
+  name: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: Date;
+  status: "pending" | "verified" | "rejected";
+}
+
+export interface ITutorAvailabilitySlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+  active?: boolean;
+  slots?: string[];
+}
+
 export interface ITutorProfile extends Document {
   user: mongoose.Types.ObjectId;
   subjects: string[];
@@ -114,10 +141,7 @@ export interface ITutorProfile extends Document {
   languages: string[];
   rating: number;
   totalStudents: number;
-  availability: {
-    day: string;
-    slots: string[];
-  }[];
+  availability: ITutorAvailabilitySlot[];
   isVerified: boolean;
   payoutDetails?: {
     method: "JazzCash" | "Easypaisa" | "Bank Transfer";
@@ -130,10 +154,14 @@ export interface ITutorProfile extends Document {
   teachingLevels: string[];
   teachingLevelsOther?: string;
   experienceLevel: "Less than 1 year" | "1-2 years" | "3-5 years" | "5+ years";
+  maxClassSize?: number;
+  teachingLanguage?: string[];
   hasDegree: boolean;
   degreeName?: string;
   universityName?: string;
   graduationYear?: string;
+  degreeDocument?: IDegreeDocument;
+  certificateDocuments?: ICertificateDocument[];
   certifications: string[];
   createdAt: Date;
 }

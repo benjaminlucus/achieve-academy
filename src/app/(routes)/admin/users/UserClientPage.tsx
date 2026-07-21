@@ -32,6 +32,37 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
   const [blockReasonInput, setBlockReasonInput] = useState<string>("");
   const [showBlockReasonModal, setShowBlockReasonModal] = useState<string | null>(null);
 
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortableHeader = (label: string, field: string) => {
+    const isSorted = sortField === field;
+    return (
+      <th 
+        onClick={() => handleSort(field)} 
+        className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest cursor-pointer hover:bg-gray-100 hover:text-dark-navy transition-all select-none"
+      >
+        <div className="flex items-center gap-1">
+          {label}
+          {isSorted ? (
+            sortDirection === 'asc' ? '▲' : '▼'
+          ) : (
+            <span className="text-[8px] text-gray-300">↕</span>
+          )}
+        </div>
+      </th>
+    );
+  };
+
   // Helper function to get visibility badges for a user
   const getVisibilityBadges = (user: any) => {
     const badges = [];
@@ -162,11 +193,42 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
         return matchesSearch && matchesStatus;
     });
 
+    const sortedUsers = useMemo(() => {
+        if (!sortField) return filteredUsers;
+        
+        return [...filteredUsers].sort((a, b) => {
+            let valA = a[sortField];
+            let valB = b[sortField];
+
+            // Specific sorting overrides
+            if (sortField === 'teachingLevels') {
+                valA = (a.teachingLevels || []).join(', ');
+                valB = (b.teachingLevels || []).join(', ');
+            } else if (sortField === 'degree') {
+                valA = a.degreeStatus || 'none';
+                valB = b.degreeStatus || 'none';
+            }
+
+            if (valA === undefined || valA === null) return sortDirection === 'asc' ? 1 : -1;
+            if (valB === undefined || valB === null) return sortDirection === 'asc' ? -1 : 1;
+
+            if (typeof valA === 'string') {
+                return sortDirection === 'asc' 
+                    ? valA.localeCompare(valB) 
+                    : valB.localeCompare(valA);
+            } else {
+                return sortDirection === 'asc' 
+                    ? (valA > valB ? 1 : -1) 
+                    : (valB > valA ? 1 : -1);
+            }
+        });
+    }, [filteredUsers, sortField, sortDirection]);
+
     const paginatedUsers = useMemo(() => {
         const start = (page - 1) * ITEMS_PER_PAGE;
-        const slicedUsers = filteredUsers.slice(start, start + ITEMS_PER_PAGE);
+        const slicedUsers = sortedUsers.slice(start, start + ITEMS_PER_PAGE);
         return slicedUsers;
-    }, [page, filteredUsers])
+    }, [page, sortedUsers]);
 
     const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
@@ -226,12 +288,19 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50/50">
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Visibility</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Trial</th>
+                                {renderSortableHeader("User", "name")}
+                                {renderSortableHeader("Role", "role")}
+                                {renderSortableHeader("Timezone", "timezone")}
+                                {renderSortableHeader("Teaching Level", "teachingLevels")}
+                                {renderSortableHeader("Degree", "degreeStatus")}
+                                {renderSortableHeader("Certs", "certificatesCount")}
+                                {renderSortableHeader("Visibility", "isPublicProfile")}
+                                {renderSortableHeader("Connections", "connectionsCount")}
+                                {renderSortableHeader("Completion %", "completionPercentage")}
+                                {renderSortableHeader("Joined", "joined")}
+                                {renderSortableHeader("Status", "status")}
+                                {renderSortableHeader("Trial", "latestTrialEndsAt")}
+                                {renderSortableHeader("Last Active", "lastActive")}
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
                             </tr>
                         </thead>
@@ -239,20 +308,20 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                             {paginatedUsers.map((user: any) => {
                                 const visibilityBadges = getVisibilityBadges(user);
                                 return (
-                                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group">
+                                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors group text-xs font-bold text-gray-700">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-dark-navy flex items-center justify-center text-white font-black text-sm">
+                                            <div className="w-8 h-8 rounded-lg bg-dark-navy flex items-center justify-center text-white font-black text-xs">
                                                 {(user.name || "U").charAt(0)}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</p>
-                                                <p className="text-xs font-medium text-gray-400">{user.email}</p>
+                                                <p className="text-[10px] font-medium text-gray-400">{user.email}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
+                                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${user.role.toLocaleLowerCase() === 'tutor'
                                             ? 'bg-blue-50 text-blue-600 border-blue-100'
                                             : user.role.toLocaleLowerCase() === 'admin'
                                                 ? 'bg-orange-50 text-orange-600 border-orange-100'
@@ -261,63 +330,96 @@ const UserClient = ({ users, totalCount }: { users: any[]; totalCount: number })
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-tight">
-                                        {user.joined}
+                                    <td className="px-6 py-4 truncate max-w-[100px]" title={user.timezone}>
+                                        {user.timezone}
+                                    </td>
+                                    <td className="px-6 py-4 truncate max-w-[120px]">
+                                        {user.teachingLevels?.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1">
+                                                {user.teachingLevels.map((lvl: string) => (
+                                                    <span key={lvl} className="px-1.5 py-0.5 bg-gray-50 border border-gray-100 rounded text-[9px] font-black text-gray-500 uppercase">{lvl}</span>
+                                                ))}
+                                            </div>
+                                        ) : "—"}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
+                                        {user.role === 'tutor' ? (
+                                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+                                                user.degreeStatus === 'verified' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                user.degreeStatus === 'rejected' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                user.degreeStatus === 'pending' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                'bg-gray-50 text-gray-400 border border-gray-100'
+                                            }`}>
+                                                {user.degreeStatus}
+                                            </span>
+                                        ) : "—"}
+                                    </td>
+                                    <td className="px-6 py-4 text-center font-black">
+                                        {user.role === 'tutor' ? user.certificatesCount : "—"}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${
+                                            user.isPublicProfile ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-400 border-gray-100'
+                                        }`}>
+                                            {user.isPublicProfile ? "Public" : "Hidden"}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center font-black">
+                                        {user.connectionsCount}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-12 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                                <div className="bg-coral h-full rounded-full" style={{ width: `${user.completionPercentage || 50}%` }} />
+                                            </div>
+                                            <span className="text-[9px] font-black">{user.completionPercentage || 50}%</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                                        {new Date(user.joined).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${user.status.toLocaleLowerCase() === "verified"
                                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                             : user.status.toLocaleLowerCase() === "blocked"
                                                 ? 'bg-rose-50 text-rose-600 border-rose-100'
                                                 : 'bg-yellow-50 text-yellow-600 border-yellow-100'
                                             }`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
-                                            <span className="text-[10px] font-black uppercase">{user.status}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            {visibilityBadges.length > 0 ? (
-                                                visibilityBadges.map((badge, index) => (
-                                                    <span key={index} className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[9px] font-black uppercase ${badge.color}`}>
-                                                        {badge.text}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md border bg-emerald-50 text-emerald-600 border-emerald-100 text-[9px] font-black uppercase">
-                                                    Visible
-                                                </span>
-                                            )}
+                                            <div className={`w-1 h-1 rounded-full ${user.status.toLocaleLowerCase() === 'verified' ? 'bg-emerald-500' : user.status.toLocaleLowerCase() === 'blocked' ? 'bg-rose-500' : 'bg-yellow-500'}`} />
+                                            <span className="text-[9px] font-black uppercase">{user.status}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         {user.latestTrialEndsAt ? (
-                                            <div className={`flex flex-col gap-2 transition-all duration-200 ${modifyingTrialUserId === user.id ? "opacity-70 scale-[0.98]" : "opacity-100 scale-100"}`}>
-                                                <div className="text-xs font-bold text-gray-700 transition-colors duration-200">
+                                            <div className={`flex flex-col gap-1 transition-all duration-200 ${modifyingTrialUserId === user.id ? "opacity-70 scale-[0.98]" : "opacity-100 scale-100"}`}>
+                                                <div className="text-[10px] font-bold text-gray-700">
                                                     Ends: {new Date(user.latestTrialEndsAt).toLocaleDateString()}
                                                 </div>
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => handleModifyTrial(user.id, 'decrease')}
                                                         disabled={modifyingTrialUserId === user.id}
-                                                        className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-all disabled:opacity-60"
+                                                        className="p-1 bg-rose-50 text-rose-600 rounded hover:bg-rose-100 transition-all disabled:opacity-60"
                                                     >
-                                                        {modifyingTrialUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <Minus size={14} />}
+                                                        {modifyingTrialUserId === user.id ? <Loader2 size={12} className="animate-spin" /> : <Minus size={12} />}
                                                     </button>
                                                     <button
                                                         onClick={() => handleModifyTrial(user.id, 'extend')}
                                                         disabled={modifyingTrialUserId === user.id}
-                                                        className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-all disabled:opacity-60"
+                                                        className="p-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-all disabled:opacity-60"
                                                     >
-                                                        {modifyingTrialUserId === user.id ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                                                        {modifyingTrialUserId === user.id ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <span className="text-xs font-medium text-gray-400">
+                                            <span className="text-[10px] font-medium text-gray-400">
                                                 No trial
                                             </span>
                                         )}
+                                    </td>
+                                    <td className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                                        {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : "—"}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

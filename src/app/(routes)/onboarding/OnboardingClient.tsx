@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { completeOnboarding } from "./actions";
 import { allTimezones, allGrades, allCountries } from "@/lib/constants";
+import WeeklyAvailabilityPicker, { getDefaultAvailability, AvailabilityDay } from "@/components/WeeklyAvailabilityPicker";
+import { getTimezoneForCountry } from "@/lib/timezone";
 
 type Step = "role" | "location" | "details" | "teaching-levels" | "availability" | "submitting";
 
@@ -93,7 +95,7 @@ export default function OnboardingClient() {
   const [role, setRole] = useState<"student" | "tutor" | null>(null);
   const [formData, setFormData] = useState<any>({
     country: "",
-    timezone: "GMT+00:00 (Western Europe Time, London, Lisbon, Casablanca)",
+    timezone: "Asia/Karachi",
   });
   
   // New state for teaching levels & qualifications
@@ -104,17 +106,9 @@ export default function OnboardingClient() {
   const [degreeName, setDegreeName] = useState("");
   const [universityName, setUniversityName] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
+  const [degreeFile, setDegreeFile] = useState<any>(null);
   const [certifications, setCertifications] = useState<string>("");
-  
-  const [availability, setAvailability] = useState<any[]>([
-    { day: "Monday", slots: "" },
-    { day: "Tuesday", slots: "" },
-    { day: "Wednesday", slots: "" },
-    { day: "Thursday", slots: "" },
-    { day: "Friday", slots: "" },
-    { day: "Saturday", slots: "" },
-    { day: "Sunday", slots: "" },
-  ]);
+  const [weeklyAvailability, setWeeklyAvailability] = useState<AvailabilityDay[]>(getDefaultAvailability());
   const [isPending, setIsPending] = useState(false);
   const [loadingText, setLoadingText] = useState("Setting up your profile...");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -152,10 +146,6 @@ export default function OnboardingClient() {
     }
   };
 
-  const handleAvailabilityChange = (day: string, value: string) => {
-    setAvailability((prev) => prev.map((a) => (a.day === day ? { ...a, slots: value } : a)));
-  };
-
   const finishOnboarding = async (finalData: any) => {
     setIsPending(true);
     setErrorMessage(null);
@@ -187,17 +177,10 @@ export default function OnboardingClient() {
 
   const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formattedAvailability = availability
-      .filter((a) => a.slots.trim() !== "")
-      .map((a) => ({
-        day: a.day,
-        time: a.slots.split(",").map((s: string) => s.trim()),
-      }));
-
     finishOnboarding({
       ...formData,
       role,
-      availability: formattedAvailability,
+      availability: weeklyAvailability,
       teachingLevels,
       teachingLevelsOther,
       experienceLevel,
@@ -205,6 +188,16 @@ export default function OnboardingClient() {
       degreeName,
       universityName,
       graduationYear,
+      degreeDocument: degreeFile
+        ? {
+            name: degreeName || "Degree",
+            institution: universityName || "University",
+            graduationYear: graduationYear || "",
+            fileUrl: degreeFile.url,
+            fileType: degreeFile.type || "application/pdf",
+            status: "pending",
+          }
+        : undefined,
       certifications,
     });
   };
@@ -355,7 +348,11 @@ export default function OnboardingClient() {
                     </label>
                     <CountrySelect 
                       defaultValue={formData.country} 
-                      onSelect={(country) => setFormData((prev: any) => ({...prev, country}))}
+                      onSelect={(country) => setFormData((prev: any) => ({
+                        ...prev, 
+                        country,
+                        timezone: getTimezoneForCountry(country)
+                      }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -806,38 +803,21 @@ export default function OnboardingClient() {
             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="text-center space-y-3">
                 <span className="text-[10px] font-black text-purple-primary uppercase tracking-[0.2em]">
-                  Step 4 of 4
+                  Step {currentStepIndex + 1} of {totalSteps}
                 </span>
                 <h1 className="text-4xl font-black text-deep-black tracking-tight">
                   Weekly Availability
                 </h1>
                 <p className="text-steel-blue font-medium">
-                  Set your available hours for each day.
+                  Set your available teaching hours for each day of the week.
                 </p>
               </div>
 
               <form onSubmit={handleFinalSubmit} className="space-y-8">
-                <div className="flex flex-row overflow-x-auto gap-4 pb-6 no-scrollbar snap-x">
-                  {availability.map((item) => (
-                    <div
-                      key={item.day}
-                      className="flex-shrink-0 w-[200px] snap-center p-6 bg-gray-50/50 rounded-3xl border-2 border-gray-100 hover:border-purple-primary/10 transition-all space-y-4"
-                    >
-                      <span className="text-xs font-black text-deep-black uppercase tracking-widest">
-                        {item.day}
-                      </span>
-                      <textarea
-                        value={item.slots}
-                        onChange={(e) =>
-                          handleAvailabilityChange(item.day, e.target.value)
-                        }
-                        placeholder="e.g. 10:00-14:00"
-                        className="w-full p-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:border-purple-primary/20 font-bold text-xs text-deep-black"
-                        rows={3}
-                      />
-                    </div>
-                  ))}
-                </div>
+                <WeeklyAvailabilityPicker
+                  value={weeklyAvailability}
+                  onChange={setWeeklyAvailability}
+                />
 
                 <div className="flex items-center justify-between pt-4">
                   <button

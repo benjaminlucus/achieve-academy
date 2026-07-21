@@ -19,7 +19,10 @@ export const onboardingSchema = z.object({
   languages: z.union([z.string(), z.array(z.string())]).optional(),
   availability: z.array(z.object({
     day: z.string(),
-    time: z.array(z.string())
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+    active: z.boolean().optional(),
+    time: z.array(z.string()).optional()
   })).optional(),
   payoutDetails: z.object({
     method: z.enum(["JazzCash", "Easypaisa", "Bank Transfer"]),
@@ -33,10 +36,29 @@ export const onboardingSchema = z.object({
   teachingLevels: z.union([z.string(), z.array(z.string())]).optional(),
   teachingLevelsOther: z.string().optional(),
   experienceLevel: z.enum(["Less than 1 year", "1-2 years", "3-5 years", "5+ years"]).optional(),
+  maxClassSize: z.coerce.number().optional(),
+  teachingLanguage: z.union([z.string(), z.array(z.string())]).optional(),
   hasDegree: z.coerce.boolean().optional(),
   degreeName: z.string().optional(),
   universityName: z.string().optional(),
   graduationYear: z.string().optional(),
+  degreeDocument: z.object({
+    name: z.string(),
+    institution: z.string(),
+    graduationYear: z.string(),
+    fileUrl: z.string(),
+    fileType: z.string(),
+    uploadedAt: z.coerce.date().optional(),
+    status: z.enum(["pending", "verified", "rejected"]).optional()
+  }).optional(),
+  certificateDocuments: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    fileUrl: z.string(),
+    fileType: z.string(),
+    uploadedAt: z.coerce.date().optional(),
+    status: z.enum(["pending", "verified", "rejected"]).optional()
+  })).optional(),
   certifications: z.union([z.string(), z.array(z.string())]).optional(),
 });
 

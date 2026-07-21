@@ -106,10 +106,17 @@ export async function completeOnboarding(rawData: any) {
                 teachingLevels: validatedData.teachingLevels || [],
                 teachingLevelsOther: validatedData.teachingLevelsOther || "",
                 experienceLevel: validatedData.experienceLevel || "Less than 1 year",
+                maxClassSize: validatedData.maxClassSize || 1,
+                teachingLanguage:
+                  typeof validatedData.teachingLanguage === "string"
+                    ? validatedData.teachingLanguage.split(",").map((s: string) => s.trim())
+                    : validatedData.teachingLanguage || [],
                 hasDegree: validatedData.hasDegree || false,
                 degreeName: validatedData.degreeName || "",
                 universityName: validatedData.universityName || "",
                 graduationYear: validatedData.graduationYear || "",
+                degreeDocument: validatedData.degreeDocument,
+                certificateDocuments: validatedData.certificateDocuments || [],
                 certifications:
                   typeof validatedData.certifications === "string"
                     ? validatedData.certifications.split(",").map((s: string) => s.trim())

@@ -20,6 +20,7 @@ import { AchievementsSection } from "@/components/dashboard/AchievementsSection"
 import { WhatsAppCard } from "@/components/dashboard/WhatsAppCard";
 import { PaymentInstructionsCard } from "@/components/dashboard/PaymentInstructionsCard";
 import { WhatsAppOnboarding } from "@/components/dashboard/WhatsAppOnboarding";
+import ConnectionRequestsManager from "@/components/dashboard/ConnectionRequestsManager";
 import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
@@ -266,6 +267,9 @@ function StudentDashboardContent() {
         {/* Trial Status Banner */}
         <TrialBanner userRole="student" myId={id} />
 
+        {/* Two-Way Connection Requests & Dashboard Notification Banner */}
+        <ConnectionRequestsManager currentUserId={id as string} currentUserRole="student" />
+
         {/* Block Reason Banner */}
         {studentData.status === "blocked" && (
           <div className="bg-rose-50 border border-rose-200 p-5 rounded-2xl">
@@ -498,27 +502,9 @@ function StudentDashboardContent() {
                   <div>
                     <p className="text-dark-navy font-bold text-base">Show my profile publicly</p>
                     <p className="text-xs text-steel-blue mt-1">Tutors will be able to find and view your profile</p>
-                    {(() => {
-                      const isDisabled = studentData.connections?.some((c: any) => 
-                        c.status === 'blocked' || c.subscriptionStatus === 'expired'
-                      );
-                      if (isDisabled) {
-                        return (
-                          <p className="text-xs text-rose-500 mt-1 font-medium">
-                            Disabled because your trial has expired or connection is blocked
-                          </p>
-                        );
-                      }
-                      return null;
-                    })()}
                   </div>
                   <button
                     onClick={async () => {
-                      const isDisabled = studentData.connections?.some((c: any) => 
-                        c.status === 'blocked' || c.subscriptionStatus === 'expired'
-                      );
-                      if (isDisabled) return;
-                      
                       setIsTogglingPublicProfile(true);
                       const newVal = !studentData.isPublicProfile;
                       try {
@@ -542,19 +528,9 @@ function StudentDashboardContent() {
                         setIsTogglingPublicProfile(false);
                       }
                     }}
-                    disabled={(() => {
-                      return studentData.connections?.some((c: any) => 
-                        c.status === 'blocked' || c.subscriptionStatus === 'expired'
-                      ) || isTogglingPublicProfile;
-                    })()}
+                    disabled={isTogglingPublicProfile}
                     className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors ${
-                      (() => {
-                        const isDisabled = studentData.connections?.some((c: any) => 
-                          c.status === 'blocked' || c.subscriptionStatus === 'expired'
-                        );
-                        return isDisabled ? 'bg-gray-400 cursor-not-allowed' : 
-                          studentData.isPublicProfile ? 'bg-coral' : 'bg-gray-300';
-                      })()
+                      studentData.isPublicProfile ? 'bg-coral' : 'bg-gray-300'
                     }`}
                   >
                     {isTogglingPublicProfile ? (

@@ -225,13 +225,15 @@ export async function getTotalUserCount() {
 export async function getTotalUsers() {
   try {
     await connectDB();
-    const [users, connections] = await Promise.all([
+    const [users, connections, tutorProfiles, studentProfiles] = await Promise.all([
       User.find({})
-        .select("name email role status createdAt isPublicProfile")
+        .select("name email role status createdAt isPublicProfile timezone country lastLogin")
         .sort({ createdAt: -1 }),
       Connection.find({})
         .select("student tutor subscriptionStatus trialEndsAt")
         .lean(),
+      TutorProfile.find({}).lean(),
+      StudentProfile.find({}).lean(),
     ]);
 
     // Create a map to quickly find connections for a user
@@ -249,9 +251,21 @@ export async function getTotalUsers() {
       }
     });
 
+    const tutorMap = new Map<string, any>();
+    tutorProfiles.forEach(tp => {
+      if (tp.user) tutorMap.set(tp.user.toString(), tp);
+    });
+
+    const studentMap = new Map<string, any>();
+    studentProfiles.forEach(sp => {
+      if (sp.user) studentMap.set(sp.user.toString(), sp);
+    });
+
     const formattedUsers = users.map(u => {
       const userId = u._id.toString();
       const userConnections = userConnectionsMap.get(userId) || [];
+      const tutorProfile = tutorMap.get(userId);
+      const studentProfile = studentMap.get(userId);
       
       // Find the latest trialEndsAt for this user
       let latestTrialEndsAt: Date | null = null;
@@ -274,6 +288,31 @@ export async function getTotalUsers() {
       );
       const isPublicProfile = u.isPublicProfile !== false; // default true
 
+      // Calculate completion %
+      let completionPercentage = 50; // base (name, email, role, etc)
+      let teachingLevels: string[] = [];
+      let degreeStatus = "none";
+      let certificatesCount = 0;
+
+      if (u.role === "tutor" && tutorProfile) {
+        teachingLevels = tutorProfile.teachingLevels || [];
+        degreeStatus = tutorProfile.degreeDocument?.status || (tutorProfile.hasDegree ? "pending" : "none");
+        certificatesCount = tutorProfile.certificateDocuments?.length || 0;
+
+        if (tutorProfile.bio) completionPercentage += 10;
+        if (tutorProfile.hourlyRate) completionPercentage += 10;
+        if (tutorProfile.subjects?.length > 0) completionPercentage += 10;
+        if (tutorProfile.experienceYears) completionPercentage += 10;
+        if (tutorProfile.availability?.length > 0) completionPercentage += 10;
+        if (completionPercentage > 100) completionPercentage = 100;
+      } else if (u.role === "student" && studentProfile) {
+        teachingLevels = studentProfile.whichClass ? [studentProfile.whichClass] : [];
+        if (studentProfile.learningGoals) completionPercentage += 15;
+        if (studentProfile.description) completionPercentage += 15;
+        if (studentProfile.subjects?.length > 0) completionPercentage += 20;
+        if (completionPercentage > 100) completionPercentage = 100;
+      }
+
       return {
         id: userId,
         name: u.name,
@@ -286,6 +325,14 @@ export async function getTotalUsers() {
         hasActiveOrTrialConnection,
         hasExpiredTrial,
         latestTrialEndsAt: latestTrialEndsAt ? (latestTrialEndsAt as Date).toISOString() : null,
+        timezone: u.timezone || "Asia/Karachi",
+        country: u.country || "Pakistan",
+        lastActive: u.lastLogin || u.createdAt,
+        connectionsCount: userConnections.length,
+        teachingLevels,
+        degreeStatus,
+        certificatesCount,
+        completionPercentage,
       };
     });
 
@@ -314,6 +361,8 @@ export async function getAllTutors() {
       experience: t.experienceYears,
       education: t.education,
       isVerified: t.isVerified,
+      degreeDocument: t.degreeDocument,
+      certificateDocuments: t.certificateDocuments || [],
       createdAt: t.createdAt
     }));
 

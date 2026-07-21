@@ -5,6 +5,7 @@ export interface IConnection extends Document {
   tutor: mongoose.Types.ObjectId;
   status: "pending" | "accepted" | "rejected" | "blocked" | "cancelled";
   initiatedBy: mongoose.Types.ObjectId;
+  message?: string;
   acceptedAt?: Date;
   trialEndsAt?: Date;
   subscriptionStatus: "none" | "trial" | "active" | "expired" | "cancelled";
@@ -34,6 +35,10 @@ const ConnectionSchema = new Schema<IConnection>({
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true
+  },
+  message: {
+    type: String,
+    default: ""
   },
   acceptedAt: {
     type: Date

@@ -8,7 +8,12 @@ import {
   Calendar,
   X,
   AlertCircle,
-  Video
+  Video,
+  FileText,
+  Check,
+  XCircle,
+  Eye,
+  Download
 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { useRouter } from "next/navigation";
@@ -27,6 +32,21 @@ interface Tutor {
   experience: string;
   education: string;
   status: string;
+  degreeDocument?: {
+    name: string;
+    institution: string;
+    graduationYear: string;
+    fileUrl: string;
+    fileType: string;
+    status: "pending" | "verified" | "rejected";
+  };
+  certificateDocuments?: Array<{
+    id: string;
+    name: string;
+    fileUrl: string;
+    fileType: string;
+    status: "pending" | "verified" | "rejected";
+  }>;
 }
 
 export default function TutorsTableClient({ initialTutors = [] }: { initialTutors?: Tutor[] }) {
@@ -50,6 +70,21 @@ export default function TutorsTableClient({ initialTutors = [] }: { initialTutor
       normalizeUserStatus(tutor.status || "") === selectedStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
+
+  const handleVerifyDocument = async (tutorId: string, type: "degree" | "certificate", certId?: string, status: "verified" | "rejected" = "verified") => {
+    try {
+      const res = await fetch("/api/admin/tutors", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tutorId, type, certId, status }),
+      });
+      if (!res.ok) throw new Error("Failed to update document status");
+      toast.success(`Document marked as ${status}`);
+      router.refresh();
+    } catch (error) {
+      toast.error("Error updating document status");
+    }
+  };
 
   const updateStatus = async (userId: string, status: string) => {
     try {
@@ -149,7 +184,7 @@ export default function TutorsTableClient({ initialTutors = [] }: { initialTutor
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                 <div className="space-y-2">
                   <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Expertise</p>
                   <div className="flex flex-wrap gap-2">
                     {tutor.subjects.map(sub => (
@@ -159,17 +194,97 @@ export default function TutorsTableClient({ initialTutors = [] }: { initialTutor
                     ))}
                   </div>
                 </div>
+
+                {/* Degree Verification Display */}
+                {tutor.degreeDocument && (
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest flex items-center gap-1.5">
+                        <FileText size={12} className="text-coral" /> Degree Document
+                      </span>
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+                        tutor.degreeDocument.status === "verified" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
+                        tutor.degreeDocument.status === "rejected" ? "bg-rose-50 text-rose-600 border border-rose-100" :
+                        "bg-amber-50 text-amber-600 border border-amber-100"
+                      }`}>
+                        {tutor.degreeDocument.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-bold text-dark-navy">
+                      <span>{tutor.degreeDocument.name} ({tutor.degreeDocument.institution})</span>
+                      <div className="flex items-center gap-2">
+                        <a href={tutor.degreeDocument.fileUrl} target="_blank" rel="noreferrer" className="p-1.5 bg-white border border-gray-200 rounded-lg hover:bg-dark-navy hover:text-white transition-all" title="Preview/Download">
+                          <Eye size={12} />
+                        </a>
+                        <button onClick={() => handleVerifyDocument(tutor.userId || tutor.id, "degree", undefined, "verified")} className="p-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg hover:bg-emerald-500 hover:text-white transition-all" title="Approve">
+                          <Check size={12} />
+                        </button>
+                        <button onClick={() => handleVerifyDocument(tutor.userId || tutor.id, "degree", undefined, "rejected")} className="p-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg hover:bg-rose-500 hover:text-white transition-all" title="Reject">
+                          <XCircle size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Certificate Verification Display */}
+                {tutor.certificateDocuments && tutor.certificateDocuments.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                    <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest flex items-center gap-1.5">
+                      <GraduationCap size={12} className="text-coral" /> Certificate Uploads
+                    </span>
+                    <div className="space-y-2">
+                      {tutor.certificateDocuments.map((cert) => (
+                        <div key={cert.id} className="flex items-center justify-between text-xs font-bold text-dark-navy border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                          <span className="truncate max-w-[140px]">{cert.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
+                              cert.status === "verified" ? "bg-emerald-50 text-emerald-600" :
+                              cert.status === "rejected" ? "bg-rose-50 text-rose-600" :
+                              "bg-amber-50 text-amber-600"
+                            }`}>
+                              {cert.status}
+                            </span>
+                            <a href={cert.fileUrl} target="_blank" rel="noreferrer" className="p-1 bg-white border border-gray-200 rounded-md hover:bg-dark-navy hover:text-white transition-all">
+                              <Eye size={10} />
+                            </a>
+                            <button onClick={() => handleVerifyDocument(tutor.userId || tutor.id, "certificate", cert.id, "verified")} className="p-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md hover:bg-emerald-500 hover:text-white transition-all">
+                              <Check size={10} />
+                            </button>
+                            <button onClick={() => handleVerifyDocument(tutor.userId || tutor.id, "certificate", cert.id, "rejected")} className="p-1 bg-rose-50 text-rose-600 border border-rose-100 rounded-md hover:bg-rose-500 hover:text-white transition-all">
+                              <XCircle size={10} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex flex-wrap gap-2">
               {normalizeUserStatus(tutor.status) === "applied" && (
-                <button
-                  onClick={() => setSelectedTutor(tutor)}
-                  className="flex-grow py-3 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-dark-navy transition-all"
-                >
-                  Schedule Interview
-                </button>
+                <>
+                  <button
+                    onClick={() => setSelectedTutor(tutor)}
+                    className="flex-grow py-3 bg-coral text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-dark-navy transition-all"
+                  >
+                    Schedule Interview
+                  </button>
+                  <button
+                    onClick={() => updateStatus(tutor.userId || tutor.id, "verified")}
+                    className="flex-grow py-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all"
+                  >
+                    Verify Immediately
+                  </button>
+                  <button
+                    onClick={() => updateStatus(tutor.userId || tutor.id, "blocked")}
+                    className="flex-grow py-3 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 transition-all"
+                  >
+                    Reject
+                  </button>
+                </>
               )}
 
               {normalizeUserStatus(tutor.status) === "interview_scheduled" && (

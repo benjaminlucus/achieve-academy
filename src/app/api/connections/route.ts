@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     const bodyValidation = await validateRequest(req, ConnectionRequestSchema);
     if (bodyValidation.error) return bodyValidation.error;
-    const { targetUserId } = bodyValidation.data;
+    const { targetUserId, message } = bodyValidation.data as any;
 
     await connectDB();
     const targetUser = await User.findById(targetUserId);
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
         // Reactivate connection
         existingConnection.status = "pending";
         existingConnection.initiatedBy = sender._id;
+        existingConnection.message = message || "";
         existingConnection.lastActivity = new Date();
         await existingConnection.save();
         logger.info("connection_reactivated", {
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
       tutor: tutorId,
       status: "pending",
       initiatedBy: sender._id,
+      message: message || "",
       lastActivity: new Date(),
     });
 
@@ -110,13 +112,35 @@ export async function GET(req: NextRequest) {
     const query = user.role === "student" ? { student: user._id } : { tutor: user._id };
     
     const connections = await Connection.find(query)
-      .populate("student", "name email profileImage status verificationLevel")
-      .populate("tutor", "name email profileImage status verificationLevel")
+      .populate("student", "name email profileImage status verificationLevel role")
+      .populate("tutor", "name email profileImage status verificationLevel role")
+      .populate("initiatedBy", "name email profileImage role")
       .sort({ lastActivity: -1 });
+
+    const rawConnections = JSON.parse(JSON.stringify(connections));
+    const userIdStr = user._id.toString();
+
+    const receivedRequests = rawConnections.filter(
+      (c: any) => c.status === "pending" && c.initiatedBy?._id !== userIdStr
+    );
+    const sentRequests = rawConnections.filter(
+      (c: any) => c.status === "pending" && c.initiatedBy?._id === userIdStr
+    );
+    const connectedUsers = rawConnections.filter(
+      (c: any) => c.status === "accepted"
+    );
+    const rejectedRequests = rawConnections.filter(
+      (c: any) => c.status === "rejected"
+    );
 
     return NextResponse.json({
       success: true,
-      connections: JSON.parse(JSON.stringify(connections)),
+      connections: rawConnections,
+      receivedRequests,
+      sentRequests,
+      connectedUsers,
+      rejectedRequests,
+      unreadReceivedCount: receivedRequests.length
     });
 
   } catch (error: any) {

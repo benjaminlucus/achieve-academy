@@ -27,9 +27,12 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
   availability: [
     {
       day: String,
+      startTime: String,
+      endTime: String,
+      active: { type: Boolean, default: true },
       time: [String]
     }
-  ], // { day: "Monday", time: ["10AM", "2PM"] }
+  ],
 
   isVerified: { type: Boolean, default: false },
 
@@ -41,7 +44,7 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
     iban: String,
   },
   
-  // New fields for Teaching Levels & Qualifications
+  // Teaching Levels & Qualifications
   teachingLevels: [String],
   teachingLevelsOther: String,
   experienceLevel: { 
@@ -49,10 +52,31 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
     enum: ["Less than 1 year", "1-2 years", "3-5 years", "5+ years"],
     default: "Less than 1 year"
   },
+  maxClassSize: Number,
+  teachingLanguage: [String],
   hasDegree: { type: Boolean, default: false },
   degreeName: String,
   universityName: String,
   graduationYear: String,
+  degreeDocument: {
+    name: String,
+    institution: String,
+    graduationYear: String,
+    fileUrl: String,
+    fileType: String,
+    uploadedAt: { type: Date, default: Date.now },
+    status: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" }
+  },
+  certificateDocuments: [
+    {
+      id: String,
+      name: String,
+      fileUrl: String,
+      fileType: String,
+      uploadedAt: { type: Date, default: Date.now },
+      status: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" }
+    }
+  ],
   certifications: [String]
 }, { timestamps: true });
 

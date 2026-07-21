@@ -31,7 +31,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
   const query = resolvedParams.q || "";
   const classFilter = resolvedParams.class || "Class (All)";
 
-  // Basic fetch - ONLY show APPROVED (verified), public, active subscription/trial users publicly
+  // Fetch ONLY verified, public profile students
   const students = await StudentProfile.find({})
     .populate({
       path: "user",
@@ -41,22 +41,9 @@ export default async function StudentsPage({ searchParams }: PageProps) {
     })
     .lean();
 
-  // Check if user has any active or trial connection
-  const connections = await Connection.find({ 
-    status: "accepted", 
-    subscriptionStatus: { $in: ["trial", "active"] } 
-  }).select("student tutor").lean();
-
-  const activeUserIds = new Set<string>();
-  connections.forEach((conn: any) => {
-    if (conn.student) activeUserIds.add(conn.student.toString());
-    if (conn.tutor) activeUserIds.add(conn.tutor.toString());
-  });
-
   // Filter logic
   const filteredStudents = (students || []).filter((s: any) => {
-    if (!s.user) return false; // This filters out users whose status is not 'approved' or public off
-    if (!activeUserIds.has(s.user._id.toString())) return false; // No active or trial connection
+    if (!s.user) return false; // Filter out non-verified or hidden profiles
     
     const subjects = s.preferredSubjects || s.subjects || [];
     const name = s.user.name || "";
