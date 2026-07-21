@@ -14,9 +14,13 @@ import Image from "next/image";
 export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedExperience, setSelectedExperience] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const allSubjects = Array.from(new Set((initialTutors || []).flatMap(t => t.subjects || []))).sort();
+  const allLevels = Array.from(new Set((initialTutors || []).flatMap(t => t.teachingLevels || []))).sort();
+  const allExperienceLevels = ["Less than 1 year", "1-2 years", "3-5 years", "5+ years"];
 
   const filteredTutors = (initialTutors || []).filter((tutor) => {
     const nameMatch = tutor.user?.name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -24,9 +28,11 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
     const subjectMatch = subjects.some((s: string) => 
       s.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const filterMatch = !selectedSubject || subjects.includes(selectedSubject);
+    const filterMatchSubject = !selectedSubject || subjects.includes(selectedSubject);
+    const filterMatchLevel = !selectedLevel || (tutor.teachingLevels || []).includes(selectedLevel);
+    const filterMatchExperience = !selectedExperience || tutor.experienceLevel === selectedExperience;
 
-    return (nameMatch || subjectMatch) && filterMatch;
+    return (nameMatch || subjectMatch) && filterMatchSubject && filterMatchLevel && filterMatchExperience;
   });
 
   return (
@@ -63,16 +69,68 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
         </button>
       </div>
 
-      {/* Professional Search & Filter */}
-      <SearchBar 
-        placeholder="Type name or subject..."
-        onSearch={(data) => {
-          setSearchTerm(data.search);
-          setSelectedSubject(data.status === "Subject (All)" ? "" : data.status);
-        }}
-        allStatuses={["Subject (All)", ...allSubjects]}
-        initialStatus="Subject (All)"
-      />
+      {/* Professional Search & Filters */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        {/* 🔍 Search Input */}
+        <div className="relative flex-1 w-full">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Type name or subject..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-primary/5 text-sm font-medium transition-all"
+          />
+        </div>
+
+        {/* 🎛 Filters */}
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          {/* Subject Dropdown */}
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            className="px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-600 outline-none hover:bg-gray-50 transition-all"
+          >
+            <option value="">All Subjects</option>
+            {allSubjects.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+
+          {/* Teaching Level Dropdown */}
+          <select
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value)}
+            className="px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-600 outline-none hover:bg-gray-50 transition-all"
+          >
+            <option value="">All Levels</option>
+            {allLevels.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
+
+          {/* Experience Level Dropdown */}
+          <select
+            value={selectedExperience}
+            onChange={(e) => setSelectedExperience(e.target.value)}
+            className="px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-600 outline-none hover:bg-gray-50 transition-all"
+          >
+            <option value="">All Experience</option>
+            {allExperienceLevels.map((e) => (
+              <option key={e} value={e}>
+                {e}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Tutors Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -113,6 +171,14 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
               {/* Bio & Details */}
               <div className="p-8 pt-6 flex-grow">
                 <div className="mb-6">
+                  <p className="text-steel-blue text-xs font-bold uppercase tracking-widest mb-2 underline decoration-coral decoration-2 underline-offset-4">Teaching Levels</p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {(tutor.teachingLevels || []).map((level: string) => (
+                      <span key={level} className="px-3 py-1 bg-purple-primary/10 text-purple-primary text-[9px] font-black uppercase tracking-[0.1em] border border-purple-primary/20 rounded-lg">
+                        {level}
+                      </span>
+                    ))}
+                  </div>
                   <p className="text-steel-blue text-xs font-bold uppercase tracking-widest mb-2 underline decoration-coral decoration-2 underline-offset-4">Biography</p>
                   <p className="text-dark-navy text-sm font-medium leading-relaxed line-clamp-3">
                     {tutor.description || "Highly qualified professional dedicated to delivering academic excellence and practical knowledge to every student."}
@@ -127,7 +193,7 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
                   </div>
                   <div className="bg-off-white p-3 border-2 border-dark-navy/10 flex flex-col">
                     <span className="text-[9px] font-black text-steel-blue uppercase tracking-widest mb-1">Experience</span>
-                    <span className="text-lg font-black text-dark-navy">{tutor.experienceYears || 0}<span className="text-[10px] font-bold"> Yrs</span></span>
+                    <span className="text-lg font-black text-dark-navy">{tutor.experienceLevel || "Less than 1 year"}</span>
                   </div>
                 </div>
 

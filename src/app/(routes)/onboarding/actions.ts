@@ -102,6 +102,18 @@ export async function completeOnboarding(rawData: any) {
                 availability: validatedData.availability || [],
                 payoutDetails: validatedData.payoutDetails,
                 isVerified: false,
+                // New fields
+                teachingLevels: validatedData.teachingLevels || [],
+                teachingLevelsOther: validatedData.teachingLevelsOther || "",
+                experienceLevel: validatedData.experienceLevel || "Less than 1 year",
+                hasDegree: validatedData.hasDegree || false,
+                degreeName: validatedData.degreeName || "",
+                universityName: validatedData.universityName || "",
+                graduationYear: validatedData.graduationYear || "",
+                certifications:
+                  typeof validatedData.certifications === "string"
+                    ? validatedData.certifications.split(",").map((s: string) => s.trim())
+                    : validatedData.certifications || [],
               },
               { upsert: true, new: true }
             );

@@ -40,6 +40,20 @@ const TutorProfileSchema = new Schema<ITutorProfile>({
     bankName: String,
     iban: String,
   },
+  
+  // New fields for Teaching Levels & Qualifications
+  teachingLevels: [String],
+  teachingLevelsOther: String,
+  experienceLevel: { 
+    type: String, 
+    enum: ["Less than 1 year", "1-2 years", "3-5 years", "5+ years"],
+    default: "Less than 1 year"
+  },
+  hasDegree: { type: Boolean, default: false },
+  degreeName: String,
+  universityName: String,
+  graduationYear: String,
+  certifications: [String]
 }, { timestamps: true });
 
 const TutorProfile = models.TutorProfile || mongoose.model<ITutorProfile>("TutorProfile", TutorProfileSchema);

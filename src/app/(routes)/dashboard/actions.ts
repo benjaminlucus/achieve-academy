@@ -122,6 +122,14 @@ export async function updateTutorProfile(userId: string, rawData: any) {
       bio: validatedData.bio || "",
       availability: validatedData.availability || [],
       payoutDetails: validatedData.payoutDetails,
+      teachingLevels: typeof validatedData.teachingLevels === 'string' ? validatedData.teachingLevels.split(",").map((s: string) => s.trim()) : validatedData.teachingLevels || [],
+      teachingLevelsOther: validatedData.teachingLevelsOther || "",
+      experienceLevel: validatedData.experienceLevel || "Less than 1 year",
+      hasDegree: validatedData.hasDegree || false,
+      degreeName: validatedData.degreeName || "",
+      universityName: validatedData.universityName || "",
+      graduationYear: validatedData.graduationYear || "",
+      certifications: typeof validatedData.certifications === 'string' ? validatedData.certifications.split(",").map((s: string) => s.trim()) : validatedData.certifications || [],
     }
   );
 

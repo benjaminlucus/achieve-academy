@@ -140,6 +140,20 @@ export default function TutorProfileView() {
               <p className="text-xs font-bold text-coral uppercase tracking-[0.2em] mb-6">Expert Educator</p>
 
               <div className="flex flex-wrap justify-center gap-2 mb-8">
+                {tutorData.teachingLevels && tutorData.teachingLevels.length > 0 ? (
+                  tutorData.teachingLevels.map((level: string) => (
+                    <span key={level} className="px-4 py-2 bg-purple-primary/10 text-purple-primary text-[10px] font-black uppercase tracking-widest rounded-xl border border-purple-primary/20">
+                      {level}
+                    </span>
+                  ))
+                ) : (
+                  <span className="px-4 py-2 bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl">
+                    Teaching levels not specified
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-2 mb-8">
                 {tutorData.subjects.map((sub: string) => (
                   <span key={sub} className="px-4 py-2 bg-gray-50 text-steel-blue text-[10px] font-black uppercase tracking-widest rounded-xl border border-gray-100">
                     {sub}
@@ -156,7 +170,7 @@ export default function TutorProfileView() {
                   <span className="text-[10px] font-black text-steel-blue uppercase tracking-widest">Rating</span>
                   <div className="flex items-center gap-1">
                     <Star size={14} className="fill-amber-400 text-amber-400" />
-                    <span className="text-lg font-black text-dark-navy>">hi</span>
+                    <span className="text-lg font-black text-dark-navy">{tutorData.stats.rating || 0}</span>
                   </div>
                 </div>
               </div>
@@ -197,7 +211,7 @@ export default function TutorProfileView() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
                 <p className="text-[9px] font-black text-steel-blue uppercase tracking-[0.2em] mb-2">Experience</p>
-                <p className="text-xl font-black text-dark-navy">{tutorData.experienceYears} YRS</p>
+                <p className="text-xl font-black text-dark-navy">{tutorData.experienceLevel}</p>
               </div>
               <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
                 <p className="text-[9px] font-black text-steel-blue uppercase tracking-[0.2em] mb-2">Students</p>
@@ -229,22 +243,53 @@ export default function TutorProfileView() {
                 <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest mb-6 flex items-center gap-3">
                   <GraduationCap size={20} className="text-coral" /> Education
                 </h3>
-                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                  <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-1">Highest Degree</p>
-                  <p className="text-sm font-bold text-dark-navy">{tutorData.education}</p>
-                </div>
+                {tutorData.hasDegree ? (
+                  <div className="space-y-4">
+                    <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                      <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-1">Degree</p>
+                      <p className="text-sm font-bold text-dark-navy">{tutorData.degreeName || "Not specified"}</p>
+                    </div>
+                    <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                      <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-1">Institution</p>
+                      <p className="text-sm font-bold text-dark-navy">{tutorData.universityName || "Not specified"}</p>
+                    </div>
+                    {tutorData.graduationYear && (
+                      <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                        <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-1">Graduation Year</p>
+                        <p className="text-sm font-bold text-dark-navy">{tutorData.graduationYear}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest">Degrees are optional</p>
+                    <p className="text-sm text-gray-500 mt-2">This tutor hasn't shared a degree, but their expertise speaks for itself!</p>
+                  </div>
+                )}
               </div>
               <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest mb-6 flex items-center gap-3">
-                  <Briefcase size={20} className="text-coral" /> Expertise
+                  <Briefcase size={20} className="text-coral" /> Expertise & Certifications
                 </h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {tutorData.subjects.map((s: string) => (
                     <span key={s} className="px-4 py-2 bg-dark-navy text-white text-[9px] font-black uppercase tracking-widest rounded-xl">
                       {s}
                     </span>
                   ))}
                 </div>
+                {tutorData.certifications && tutorData.certifications.length > 0 && (
+                  <div>
+                    <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-3">Certifications</p>
+                    <div className="flex flex-wrap gap-2">
+                      {tutorData.certifications.map((cert: string) => (
+                        <span key={cert} className="px-4 py-2 bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-widest rounded-xl border border-amber-200">
+                          {cert}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

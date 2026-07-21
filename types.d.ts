@@ -126,6 +126,15 @@ export interface ITutorProfile extends Document {
     bankName?: string;
     iban?: string;
   };
+  // New fields for Teaching Levels & Qualifications
+  teachingLevels: string[];
+  teachingLevelsOther?: string;
+  experienceLevel: "Less than 1 year" | "1-2 years" | "3-5 years" | "5+ years";
+  hasDegree: boolean;
+  degreeName?: string;
+  universityName?: string;
+  graduationYear?: string;
+  certifications: string[];
   createdAt: Date;
 }
 

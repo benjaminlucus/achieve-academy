@@ -29,6 +29,15 @@ export const onboardingSchema = z.object({
     iban: z.string().optional(),
   }).optional(),
   secretPin: z.string().optional(),
+  // New fields for Teaching Levels & Qualifications
+  teachingLevels: z.union([z.string(), z.array(z.string())]).optional(),
+  teachingLevelsOther: z.string().optional(),
+  experienceLevel: z.enum(["Less than 1 year", "1-2 years", "3-5 years", "5+ years"]).optional(),
+  hasDegree: z.coerce.boolean().optional(),
+  degreeName: z.string().optional(),
+  universityName: z.string().optional(),
+  graduationYear: z.string().optional(),
+  certifications: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
 export const zoomUrlSchema = z.string().url().refine((url) => {
@@ -81,4 +90,12 @@ export const tutorProfileSchema = z.object({
   }).optional(),
   timezone: z.string().optional(),
   country: z.string().optional(),
+  teachingLevels: z.union([z.string(), z.array(z.string())]).optional(),
+  teachingLevelsOther: z.string().optional(),
+  experienceLevel: z.enum(["Less than 1 year", "1-2 years", "3-5 years", "5+ years"]).optional(),
+  hasDegree: z.coerce.boolean().optional(),
+  degreeName: z.string().optional(),
+  universityName: z.string().optional(),
+  graduationYear: z.string().optional(),
+  certifications: z.union([z.string(), z.array(z.string())]).optional(),
 });

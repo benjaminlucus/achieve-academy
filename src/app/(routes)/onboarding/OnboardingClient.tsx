@@ -20,7 +20,7 @@ import {
 import { completeOnboarding } from "./actions";
 import { allTimezones, allGrades, allCountries } from "@/lib/constants";
 
-type Step = "role" | "location" | "details" | "availability" | "submitting";
+type Step = "role" | "location" | "details" | "teaching-levels" | "availability" | "submitting";
 
 function CountrySelect({ defaultValue, onSelect }: { defaultValue?: string, onSelect: (c: string) => void }) {
   const [search, setSearch] = useState("");
@@ -95,6 +95,17 @@ export default function OnboardingClient() {
     country: "",
     timezone: "GMT+00:00 (Western Europe Time, London, Lisbon, Casablanca)",
   });
+  
+  // New state for teaching levels & qualifications
+  const [teachingLevels, setTeachingLevels] = useState<string[]>([]);
+  const [teachingLevelsOther, setTeachingLevelsOther] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState<string>("Less than 1 year");
+  const [hasDegree, setHasDegree] = useState(false);
+  const [degreeName, setDegreeName] = useState("");
+  const [universityName, setUniversityName] = useState("");
+  const [graduationYear, setGraduationYear] = useState("");
+  const [certifications, setCertifications] = useState<string>("");
+  
   const [availability, setAvailability] = useState<any[]>([
     { day: "Monday", slots: "" },
     { day: "Tuesday", slots: "" },
@@ -131,7 +142,7 @@ export default function OnboardingClient() {
       ...Object.fromEntries(data.entries()),
     }));
     if (role === "tutor") {
-      setStep("availability");
+      setStep("teaching-levels");
     } else {
       finishOnboarding({
         ...formData,
@@ -187,6 +198,14 @@ export default function OnboardingClient() {
       ...formData,
       role,
       availability: formattedAvailability,
+      teachingLevels,
+      teachingLevelsOther,
+      experienceLevel,
+      hasDegree,
+      degreeName,
+      universityName,
+      graduationYear,
+      certifications,
     });
   };
 
@@ -215,12 +234,13 @@ export default function OnboardingClient() {
   };
 
   const handleBack = () => {
-    if (step === "availability") setStep("details");
+    if (step === "availability") setStep("teaching-levels");
+    else if (step === "teaching-levels") setStep("details");
     else if (step === "details") setStep("location");
     else if (step === "location") setStep("role");
   };
 
-  const steps: Step[] = role === "student" ? ["role", "location", "details"] : ["role", "location", "details", "availability"];
+  const steps: Step[] = role === "student" ? ["role", "location", "details"] : ["role", "location", "details", "teaching-levels", "availability"];
   const currentStepIndex = steps.indexOf(step);
   const totalSteps = steps.length;
   const progress = ((currentStepIndex + 1) / totalSteps) * 100;
@@ -563,6 +583,222 @@ export default function OnboardingClient() {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {/* Teaching Levels & Qualifications Step */}
+          {step === "teaching-levels" && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="text-center space-y-3">
+                <span className="text-[10px] font-black text-purple-primary uppercase tracking-[0.2em]">
+                  Step {currentStepIndex + 1} of {totalSteps}
+                </span>
+                <h1 className="text-4xl font-black text-deep-black tracking-tight">
+                  Teaching Levels & Qualifications
+                </h1>
+                <p className="text-steel-blue font-medium">
+                  Tell students the highest level you are confident teaching. This helps us recommend you to the right students. Formal degrees are optional and are not required to become a tutor.
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                {/* Teaching Levels */}
+                <div className="space-y-4">
+                  <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
+                    <GraduationCap size={14} className="text-purple-primary" /> What level(s) can you teach? (Required)
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                      { label: "Primary School", desc: "Grades 1-5 | Ages approx 5-10" },
+                      { label: "Middle School", desc: "Grades 6-8 | Ages approx 11-13" },
+                      { label: "Secondary School", desc: "O Levels, Matric, Grades 9-10" },
+                      { label: "Higher Secondary", desc: "A Levels, FSC, ICS, FA, Grades 11-12" },
+                      { label: "Undergraduate (Bachelor's Level)", desc: "" },
+                      { label: "Graduate / Master's Level", desc: "" },
+                      { label: "Professional Skills", desc: "Programming, Design, Business, Languages, etc." },
+                      { label: "Competitive Exams", desc: "SAT, ECAT, MDCAT, IELTS, GRE, etc." },
+                    ].map((level) => (
+                      <button
+                        key={level.label}
+                        type="button"
+                        onClick={() => {
+                          setTeachingLevels((prev) =>
+                            prev.includes(level.label)
+                              ? prev.filter((l) => l !== level.label)
+                              : [...prev, level.label]
+                          );
+                        }}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                          teachingLevels.includes(level.label)
+                            ? "border-purple-primary bg-purple-primary/10"
+                            : "border-gray-100 hover:border-purple-primary/30"
+                        }`}
+                      >
+                        <div className="font-bold text-deep-black">{level.label}</div>
+                        {level.desc && (
+                          <div className="text-sm text-steel-blue mt-1">{level.desc}</div>
+                        )}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTeachingLevels((prev) =>
+                          prev.includes("Other") ? prev.filter((l) => l !== "Other") : [...prev, "Other"]
+                        );
+                      }}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        teachingLevels.includes("Other")
+                          ? "border-purple-primary bg-purple-primary/10"
+                          : "border-gray-100 hover:border-purple-primary/30"
+                      }`}
+                    >
+                      <div className="font-bold text-deep-black">Other</div>
+                    </button>
+                    {teachingLevels.includes("Other") && (
+                      <div className="md:col-span-2">
+                        <input
+                          placeholder="Please specify"
+                          value={teachingLevelsOther}
+                          onChange={(e) => setTeachingLevelsOther(e.target.value)}
+                          className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 transition-all font-bold text-deep-black"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Experience Level */}
+                <div className="space-y-4">
+                  <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
+                    <Briefcase size={14} className="text-purple-primary" /> Years of teaching experience (Required)
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {["Less than 1 year", "1-2 years", "3-5 years", "5+ years"].map((exp) => (
+                      <button
+                        key={exp}
+                        type="button"
+                        onClick={() => setExperienceLevel(exp)}
+                        className={`p-4 rounded-xl border-2 text-center transition-all ${
+                          experienceLevel === exp
+                            ? "border-purple-primary bg-purple-primary/10"
+                            : "border-gray-100 hover:border-purple-primary/30"
+                        }`}
+                      >
+                        <span className="font-bold text-deep-black">{exp}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Education & Qualifications (Optional) */}
+                <div className="space-y-4 bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                  <h3 className="text-lg font-bold text-deep-black">
+                    Education & Qualifications (Optional)
+                  </h3>
+                  <p className="text-steel-blue text-sm">
+                    Degrees are optional. We welcome tutors with strong subject knowledge and teaching ability, even if they do not hold formal qualifications.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="hasDegree"
+                          value="yes"
+                          checked={hasDegree}
+                          onChange={() => setHasDegree(true)}
+                          className="w-4 h-4 text-purple-primary"
+                        />
+                        <span className="font-bold text-deep-black">Yes, I have a degree</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="hasDegree"
+                          value="no"
+                          checked={!hasDegree}
+                          onChange={() => setHasDegree(false)}
+                          className="w-4 h-4 text-purple-primary"
+                        />
+                        <span className="font-bold text-deep-black">No, I don't have a degree</span>
+                      </label>
+                    </div>
+
+                    {hasDegree && (
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-black text-deep-black uppercase tracking-widest">
+                            Degree Name
+                          </label>
+                          <input
+                            value={degreeName}
+                            onChange={(e) => setDegreeName(e.target.value)}
+                            className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 transition-all font-bold text-deep-black"
+                            placeholder="e.g. Bachelor of Science"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-black text-deep-black uppercase tracking-widest">
+                            University/Institution
+                          </label>
+                          <input
+                            value={universityName}
+                            onChange={(e) => setUniversityName(e.target.value)}
+                            className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 transition-all font-bold text-deep-black"
+                            placeholder="e.g. University of XYZ"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-black text-deep-black uppercase tracking-widest">
+                            Graduation Year
+                          </label>
+                          <input
+                            value={graduationYear}
+                            onChange={(e) => setGraduationYear(e.target.value)}
+                            className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 transition-all font-bold text-deep-black"
+                            placeholder="e.g. 2023"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Certifications (Optional) */}
+                <div className="space-y-4">
+                  <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
+                    <Star size={14} className="text-purple-primary" /> Certifications (Optional)
+                  </label>
+                  <input
+                    value={certifications}
+                    onChange={(e) => setCertifications(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
+                    placeholder="e.g. Teaching Certificate, Professional Certification, Olympiad Medal (Comma separated)"
+                  />
+                </div>
+
+                {/* Navigation Buttons */}
+                <div className="flex items-center justify-between pt-4">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="flex items-center gap-2 text-steel-blue hover:text-deep-black font-black text-[11px] uppercase tracking-widest transition-colors"
+                  >
+                    <ArrowLeft size={18} strokeWidth={2.5} /> Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep("availability")}
+                    disabled={teachingLevels.length === 0}
+                    className="flex items-center gap-3 bg-purple-primary text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-purple-primary/90 hover:scale-105 transition-all shadow-xl shadow-purple-primary/20 disabled:opacity-50"
+                  >
+                    Next Step
+                    <ArrowRight size={18} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

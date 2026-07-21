@@ -21,6 +21,7 @@ export default async function TutorsPage(props: any) {
       match: { status: "verified", isPublicProfile: { $ne: false } }, // isPublicProfile default true
       select: "_id name email profileImage status verificationLevel isPublicProfile",
     })
+    .select("subjects hourlyRate rating experienceYears teachingLevels experienceLevel description")
     .lean();
 
   // Check if user has any active or trial connection

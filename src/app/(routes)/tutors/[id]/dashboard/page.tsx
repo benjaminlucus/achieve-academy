@@ -66,12 +66,20 @@ function TutorDashboardContent() {
             subjects: data.subjects.join(", "),
             education: data.education,
             experienceYears: data.experienceYears,
+            experienceLevel: data.experienceLevel || "Less than 1 year",
             hourlyRate: data.hourlyRate,
             monthlyRate: data.monthlyRate || 0,
             bio: data.bio,
             skills: data.skills?.join(", ") || "",
             languages: data.languages?.join(", ") || "",
             availability: initialAvailability,
+            teachingLevels: data.teachingLevels?.join(", ") || "",
+            teachingLevelsOther: data.teachingLevelsOther || "",
+            hasDegree: data.hasDegree || false,
+            degreeName: data.degreeName || "",
+            universityName: data.universityName || "",
+            graduationYear: data.graduationYear || "",
+            certifications: data.certifications?.join(", ") || "",
             payoutDetails: (data.payoutDetails && Object.keys(data.payoutDetails).length > 0) ? data.payoutDetails : {
               method: 'JazzCash',
               accountTitle: '',
@@ -363,7 +371,7 @@ function TutorDashboardContent() {
                   )}
                   <div className="flex flex-wrap justify-center md:justify-start gap-3">
                     <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-                      <Briefcase size={14} className="text-coral" /> {tutorData.experienceYears} Years Exp
+                      <Briefcase size={14} className="text-coral" /> {tutorData.experienceLevel || "Less than 1 year"}
                     </span>
                     <span className="flex items-center gap-2 text-[10px] font-black text-steel-blue uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
                       <MapPin size={14} className="text-coral" /> {tutorData.location}
@@ -441,21 +449,42 @@ function TutorDashboardContent() {
                 <GraduationCap className="text-coral" size={24} />
               </div>
 
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Teaching Levels (Comma separated)</label>
+                {isEditing ? (
+                  <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.teachingLevels} onChange={(e) => setFormData({...formData, teachingLevels: e.target.value})} placeholder="Primary School, Secondary School, etc." />
+                ) : (
+                  <div className="flex flex-wrap gap-3 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                    {(tutorData.teachingLevels || []).map((s: string, i: number) => (
+                      <span key={i} className="px-5 py-2 bg-purple-50 text-purple-700 text-[10px] font-black uppercase tracking-widest rounded-xl border border-purple-200">{s}</span>
+                    ))}
+                    {(!tutorData.teachingLevels || tutorData.teachingLevels.length === 0) && (
+                      <span className="text-steel-blue text-sm font-medium">No teaching levels specified</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="grid md:grid-cols-2 gap-10">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Experience Level</label>
+                  {isEditing ? (
+                    <select className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all appearance-none" value={formData.experienceLevel} onChange={(e) => setFormData({...formData, experienceLevel: e.target.value})}>
+                      <option value="Less than 1 year">Less than 1 year</option>
+                      <option value="1-2 years">1-2 years</option>
+                      <option value="3-5 years">3-5 years</option>
+                      <option value="5+ years">5+ years</option>
+                    </select>
+                  ) : (
+                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">{tutorData.experienceLevel || "Less than 1 year"}</p>
+                  )}
+                </div>
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Education Background</label>
                   {isEditing ? (
                     <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.education} onChange={(e) => setFormData({...formData, education: e.target.value})} />
                   ) : (
                     <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">{tutorData.education}</p>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Years of Experience</label>
-                  {isEditing ? (
-                    <input type="number" className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.experienceYears} onChange={(e) => setFormData({...formData, experienceYears: e.target.value})} />
-                  ) : (
-                    <p className="text-dark-navy font-bold text-lg bg-gray-50 p-5 rounded-2xl border border-gray-100">{tutorData.experienceYears} Years</p>
                   )}
                 </div>
               </div>
@@ -471,6 +500,71 @@ function TutorDashboardContent() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Certifications (Comma separated, optional)</label>
+                {isEditing ? (
+                  <input className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.certifications} onChange={(e) => setFormData({...formData, certifications: e.target.value})} placeholder="e.g. Teaching Certificate, Olympiad Medal" />
+                ) : (
+                  <div className="flex flex-wrap gap-3 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                    {(tutorData.certifications || []).map((s: string, i: number) => (
+                      <span key={i} className="px-5 py-2 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest rounded-xl border border-amber-200">{s}</span>
+                    ))}
+                    {(!tutorData.certifications || tutorData.certifications.length === 0) && (
+                      <span className="text-steel-blue text-sm font-medium">No certifications specified</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Do you have a degree? (Optional)</label>
+                  {isEditing ? (
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="hasDegree" value="true" checked={formData.hasDegree} onChange={() => setFormData({...formData, hasDegree: true})} className="w-4 h-4 text-purple-primary" />
+                        <span className="font-bold text-dark-navy text-sm">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="hasDegree" value="false" checked={!formData.hasDegree} onChange={() => setFormData({...formData, hasDegree: false})} className="w-4 h-4 text-purple-primary" />
+                        <span className="font-bold text-dark-navy text-sm">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <span className="font-bold text-dark-navy">{tutorData.hasDegree ? "Yes" : "No"}</span>
+                  )}
+                </div>
+
+                {(isEditing && formData.hasDegree) || (!isEditing && tutorData.hasDegree) ? (
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Degree Name</label>
+                      {isEditing ? (
+                        <input className="w-full p-5 bg-white border-2 border-gray-100 focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.degreeName} onChange={(e) => setFormData({...formData, degreeName: e.target.value})} />
+                      ) : (
+                        <p className="text-dark-navy font-bold text-lg bg-white p-5 rounded-2xl border border-gray-100">{tutorData.degreeName || "Not specified"}</p>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">University/Institution</label>
+                      {isEditing ? (
+                        <input className="w-full p-5 bg-white border-2 border-gray-100 focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.universityName} onChange={(e) => setFormData({...formData, universityName: e.target.value})} />
+                      ) : (
+                        <p className="text-dark-navy font-bold text-lg bg-white p-5 rounded-2xl border border-gray-100">{tutorData.universityName || "Not specified"}</p>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em]">Graduation Year</label>
+                      {isEditing ? (
+                        <input className="w-full p-5 bg-white border-2 border-gray-100 focus:border-dark-navy/10 rounded-2xl focus:outline-none font-bold text-dark-navy transition-all" value={formData.graduationYear} onChange={(e) => setFormData({...formData, graduationYear: e.target.value})} />
+                      ) : (
+                        <p className="text-dark-navy font-bold text-lg bg-white p-5 rounded-2xl border border-gray-100">{tutorData.graduationYear || "Not specified"}</p>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="space-y-3">
