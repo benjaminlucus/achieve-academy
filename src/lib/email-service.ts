@@ -492,4 +492,88 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  contractInvitation: (data: {
+    name: string;
+    tutorName: string;
+    contractId: string;
+  }) => ({
+    subject: `New Learning Contract Invitation from ${data.tutorName} - ${APP_NAME}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${data.name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Great news! <strong>${data.tutorName}</strong> has sent you a new learning contract invitation!</p>
+        
+        <div style="background-color: #f8fafc; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #e2e8f0;">
+          <p style="margin: 0 0 16px 0; color: #0f172a; font-size: 16px; font-weight: 600;">What happens next?</p>
+          <p style="margin: 0 0 24px 0; color: #475569; font-size: 14px;">Log in to Ravencrest Academy to review the contract details, terms, and accept or decline the invitation.</p>
+          
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="background-color: #3b82f6; color: #ffffff; padding: 14px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 800; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em;">View Contract</a>
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, feel free to reach out to us or your tutor.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  contractAccepted: (data: {
+    name: string;
+    studentName: string;
+    contractId: string;
+  }) => ({
+    subject: `Learning Contract Accepted by ${data.studentName} - ${APP_NAME}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #10b981; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${data.name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Congratulations! <strong>${data.studentName}</strong> has accepted your learning contract!</p>
+        
+        <div style="background-color: #f0fdf4; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #dcfce7;">
+          <p style="margin: 0 0 16px 0; color: #166534; font-size: 16px; font-weight: 600;">You're all set to start!</p>
+          <p style="margin: 0 0 24px 0; color: #1e293b; font-size: 14px;">Log in to Ravencrest Academy to schedule your first session and begin your learning journey together!</p>
+          
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="background-color: #10b981; color: #ffffff; padding: 14px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 800; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em;">Go to Dashboard</a>
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, feel free to reach out.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  contractDeclined: (data: {
+    name: string;
+    studentName: string;
+    contractId: string;
+  }) => ({
+    subject: `Learning Contract Declined by ${data.studentName} - ${APP_NAME}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #ef4444; padding-bottom: 10px;">${APP_NAME}</h1>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">Hello ${data.name},</p>
+        <p style="font-size: 16px; color: #334155; line-height: 1.6;">We're writing to let you know that <strong>${data.studentName}</strong> has declined your learning contract invitation.</p>
+        
+        <div style="background-color: #fef2f2; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #fee2e2;">
+          <p style="margin: 0; color: #991b1b; font-size: 16px; font-weight: 500;">Don't worry! You can still reach out to other students or send new contract invitations.</p>
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, feel free to reach out to our support team.</p>
+        
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 14px; color: #334155; margin-bottom: 4px;">Best regards,</p>
+          <p style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 0;">The ${APP_NAME} Team</p>
+        </div>
+      </div>
+    `,
+  }),
 };

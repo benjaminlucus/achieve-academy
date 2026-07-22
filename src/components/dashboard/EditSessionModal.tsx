@@ -21,11 +21,15 @@ interface Meeting {
   scheduledStart: string;
   duration: number;
   notes?: string;
-  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "expired";
+  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "expired" | "no_show" | "starting";
   roomId?: string;
   joinUrl: string;
   actualDuration?: number;
   paymentStatus?: string;
+  groupId?: string;
+  partNumber?: number;
+  totalParts?: number;
+  expectedDuration?: number;
 }
 
 interface EditSessionModalProps {

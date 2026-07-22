@@ -175,6 +175,12 @@ export interface IStudentExpertiseNeed {
   subject?: mongoose.Types.ObjectId;
   level?: mongoose.Types.ObjectId;
   goal?: string;
+  targetGrade?: string;
+  weeklyHours?: number;
+  preferredTutorGender?: string;
+  preferredLanguage?: string;
+  budget?: number;
+  timezone?: string;
 }
 
 export interface ITutorProfile extends Document {
@@ -286,11 +292,12 @@ export interface IInvoice extends Document {
 }
 
 // New interfaces for Learning Contract System
-export type LearningContractStatus = "draft" | "active" | "paused" | "completed" | "cancelled";
+export type LearningContractStatus = "draft" | "pending_acceptance" | "active" | "paused" | "completed" | "cancelled" | "expired";
 
 export interface ILearningContract extends Document {
   tutor: mongoose.Types.ObjectId;
   student: mongoose.Types.ObjectId;
+  expertise?: mongoose.Types.ObjectId; // Reference to Tutor's Expertise
   subject: mongoose.Types.ObjectId;
   subjectName?: string; // for display
   teachingLevel: mongoose.Types.ObjectId;
@@ -298,11 +305,17 @@ export interface ILearningContract extends Document {
   courseName?: string;
   hourlyRate: number;
   monthlyRate?: number;
-  billingType: "hourly" | "monthly";
+  billingType: "hourly" | "monthly" | "custom_package";
   weeklySchedule: ITutorAvailabilitySlot[];
   startDate: Date;
   endDate?: Date;
+  expectedDuration?: string; // e.g., "3 months"
+  sessionsPerWeek?: number;
+  estimatedMonthlyHours?: number;
+  cancellationPolicy?: string;
   status: LearningContractStatus;
+  acceptedBy?: mongoose.Types.ObjectId;
+  acceptedAt?: Date;
   totalHoursPurchased?: number;
   hoursUsed: number;
   hoursRemaining: number;

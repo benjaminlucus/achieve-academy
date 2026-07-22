@@ -24,6 +24,7 @@ import ChatInitializer from "@/components/chat/ChatInitializer";
 import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
 import { RealtimeProvider, useRealtime } from "@/lib/realtime-context";
+import { ExpertiseManager } from "@/components/dashboard/ExpertiseManager";
 
 function TutorDashboardContent() {
   const { id } = useParams<{ id: string }>();
@@ -445,6 +446,9 @@ function TutorDashboardContent() {
 
             {/* Study Sessions Section */}
             <SessionSection userRole="tutor" />
+
+            {/* Expertise Manager */}
+            <ExpertiseManager currentUserId={id as string} />
 
             {/* Professional Details */}
             <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-dark-navy/5 space-y-10">

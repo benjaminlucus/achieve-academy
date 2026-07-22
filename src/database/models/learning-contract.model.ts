@@ -13,6 +13,10 @@ const LearningContractSchema = new Schema<ILearningContract>(
       ref: "User",
       required: true,
     },
+    expertise: {
+      type: Schema.Types.ObjectId,
+      ref: "Expertise",
+    },
     subject: {
       type: Schema.Types.ObjectId,
       ref: "ExpertiseSubject",
@@ -31,7 +35,7 @@ const LearningContractSchema = new Schema<ILearningContract>(
     monthlyRate: Number,
     billingType: {
       type: String,
-      enum: ["hourly", "monthly"],
+      enum: ["hourly", "monthly", "custom_package"],
       required: true,
     },
     weeklySchedule: [
@@ -48,11 +52,20 @@ const LearningContractSchema = new Schema<ILearningContract>(
       required: true,
     },
     endDate: Date,
+    expectedDuration: String,
+    sessionsPerWeek: Number,
+    estimatedMonthlyHours: Number,
+    cancellationPolicy: String,
     status: {
       type: String,
-      enum: ["draft", "active", "paused", "completed", "cancelled"],
-      default: "active",
+      enum: ["draft", "pending_acceptance", "active", "paused", "completed", "cancelled", "expired"],
+      default: "draft",
     },
+    acceptedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    acceptedAt: Date,
     totalHoursPurchased: Number,
     hoursUsed: {
       type: Number,

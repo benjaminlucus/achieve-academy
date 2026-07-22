@@ -95,6 +95,17 @@ export async function GET(
         return NextResponse.json({ error: "Forbidden: You are not a participant in this meeting" }, { status: 403 });
       }
 
+      // Enforce part order: if this is part of a group and partNumber > 1, check previous parts are completed
+      if (meeting.groupId && meeting.partNumber && meeting.partNumber > 1) {
+        const previousPart = await ScheduledMeeting.findOne({
+          groupId: meeting.groupId,
+          partNumber: meeting.partNumber - 1
+        });
+        if (previousPart && previousPart.status !== "completed") {
+          return NextResponse.json({ error: "Please complete the previous part first" }, { status: 403 });
+        }
+      }
+
       if (!meeting.roomId) {
         // If student, return waiting state
         if (isStudent) {

@@ -10,6 +10,136 @@ export const PAYMENT_METHODS = {
   JAZZCASH: "JazzCash"
 } as const;
 
+/** Default Expertise Categories, Subjects, and Education Levels */
+export const DEFAULT_EXPERTISE_CATEGORIES = [
+  { name: "Academic", description: "Primary, Secondary, and Higher Education", sortOrder: 1 },
+  { name: "Exam Preparation", description: "SAT, ACT, IELTS, TOEFL, etc.", sortOrder: 2 },
+  { name: "Language Learning", description: "English, Arabic, Urdu, French, etc.", sortOrder: 3 },
+  { name: "Quranic Studies", description: "Nazra, Tajweed, Hifz, etc.", sortOrder: 4 },
+  { name: "Science", description: "Physics, Chemistry, Biology, etc.", sortOrder: 5 },
+  { name: "Mathematics", description: "Algebra, Calculus, Statistics, etc.", sortOrder: 6 },
+  { name: "Technology & Programming", description: "Programming languages, AI, etc.", sortOrder: 7 },
+  { name: "Business", description: "Finance, Marketing, Management, etc.", sortOrder: 8 },
+  { name: "Communication", description: "Public Speaking, Soft Skills, etc.", sortOrder: 9 },
+  { name: "Arts & Humanities", description: "History, Geography, Psychology, etc.", sortOrder: 10 },
+  { name: "Engineering", description: "Mechanical, Electrical, Civil, etc.", sortOrder: 11 },
+  { name: "Medical", description: "Biology, Pre-Med, etc.", sortOrder: 12 },
+  { name: "Commerce", description: "Accounting, Economics, etc.", sortOrder: 13 },
+  { name: "Other", description: "Miscellaneous subjects", sortOrder: 14 },
+];
+
+export const DEFAULT_EXPERTISE_SUBJECTS: Record<string, string[]> = {
+  "Academic": [
+    "Primary School (Grades 1-5)",
+    "Middle School (Grades 6-8)",
+    "High School (Grades 9-12)",
+  ],
+  "Exam Preparation": [
+    "SAT",
+    "ACT",
+    "GRE",
+    "GMAT",
+    "IELTS",
+    "TOEFL",
+    "O Levels",
+    "A Levels",
+    "IGCSE",
+    "IB",
+  ],
+  "Language Learning": [
+    "English",
+    "Urdu",
+    "Arabic",
+    "French",
+    "Spanish",
+    "German",
+    "Chinese",
+    "Japanese",
+  ],
+  "Quranic Studies": [
+    "Nazra Quran",
+    "Tajweed",
+    "Hifz Quran",
+    "Quran Translation",
+    "Tafseer",
+    "Islamic Studies",
+  ],
+  "Science": [
+    "Physics",
+    "Chemistry",
+    "Biology",
+  ],
+  "Mathematics": [
+    "General Math",
+    "Algebra",
+    "Calculus",
+    "Geometry",
+    "Statistics",
+    "Trigonometry",
+  ],
+  "Technology & Programming": [
+    "Python",
+    "JavaScript",
+    "Java",
+    "C++",
+    "C#",
+    "Web Development",
+    "Artificial Intelligence",
+    "Machine Learning",
+  ],
+  "Business": [
+    "Business Studies",
+    "Marketing",
+    "Finance",
+    "Accounting",
+    "Management",
+  ],
+  "Communication": [
+    "Public Speaking",
+    "Soft Skills",
+    "Communication Skills",
+  ],
+  "Arts & Humanities": [
+    "History",
+    "Geography",
+    "Sociology",
+    "Psychology",
+    "Philosophy",
+    "Literature",
+  ],
+  "Engineering": [
+    "Mechanical Engineering",
+    "Electrical Engineering",
+    "Civil Engineering",
+    "Computer Engineering",
+  ],
+  "Medical": [
+    "Biology (Pre-Med)",
+    "Medical Terminology",
+  ],
+  "Commerce": [
+    "Economics",
+    "Accounting",
+    "Business Studies",
+  ],
+};
+
+export const DEFAULT_EDUCATION_LEVELS = [
+  { name: "Pre-School / Kindergarten", description: "Early childhood education", sortOrder: 1 },
+  { name: "Grade 1-5", description: "Primary school", sortOrder: 2 },
+  { name: "Grade 6-8", description: "Middle school", sortOrder: 3 },
+  { name: "Grade 9-10", description: "Secondary school", sortOrder: 4 },
+  { name: "O Levels", description: "Cambridge O Levels", sortOrder: 5 },
+  { name: "Grade 11-12", description: "High school", sortOrder: 6 },
+  { name: "A Levels", description: "Cambridge A Levels", sortOrder: 7 },
+  { name: "IGCSE", description: "International GCSE", sortOrder: 8 },
+  { name: "IB", description: "International Baccalaureate", sortOrder: 9 },
+  { name: "University / Undergraduate", description: "Bachelor's degree", sortOrder: 10 },
+  { name: "Graduate / Masters", description: "Master's degree", sortOrder: 11 },
+  { name: "PhD", description: "Doctorate", sortOrder: 12 },
+  { name: "Professional Development", description: "Career and skill development", sortOrder: 13 },
+];
+
 export type PaymentMethod = typeof PAYMENT_METHODS[keyof typeof PAYMENT_METHODS];
 
 /** Payment statuses for manual payment flow */

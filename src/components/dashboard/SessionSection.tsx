@@ -24,11 +24,15 @@ interface Meeting {
   scheduledStart: string;
   duration: number;
   notes?: string;
-  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "expired";
+  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "expired" | "no_show" | "starting";
   roomId?: string;
   joinUrl: string;
   actualDuration?: number;
   paymentStatus?: string;
+  groupId?: string;
+  partNumber?: number;
+  totalParts?: number;
+  expectedDuration?: number;
 }
 
 type TabType = "in_progress" | "scheduled" | "completed" | "cancelled";
@@ -187,6 +191,37 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
 
   const displayedMeetings = getDisplayedMeetings();
 
+  // Group meetings by groupId, ungrouped remain separate
+  const groupMeetings = (meetings: Meeting[]) => {
+    const grouped: { [key: string]: Meeting[] } = {};
+    const ungrouped: Meeting[] = [];
+    meetings.forEach((meeting) => {
+      if (meeting.groupId) {
+        if (!grouped[meeting.groupId]) {
+          grouped[meeting.groupId] = [];
+        }
+        grouped[meeting.groupId].push(meeting);
+      } else {
+        ungrouped.push(meeting);
+      }
+    });
+
+    // Sort each group by part number
+    Object.keys(grouped).forEach((groupId) => {
+      grouped[groupId].sort((a, b) => (a.partNumber || 0) - (b.partNumber || 0));
+    });
+
+    return { grouped, ungrouped };
+  };
+
+  const { grouped, ungrouped } = groupMeetings(displayedMeetings);
+
+  // Create display items: each group is one item, each ungrouped is one item
+  const displayItems = [
+    ...Object.values(grouped),
+    ...ungrouped.map((m) => [m]),
+  ];
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -272,7 +307,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
         </div>
       </div>
 
-      {displayedMeetings.length === 0 ? (
+      {displayItems.length === 0 ? (
         <div className="bg-white p-10 rounded-[2.5rem] border border-dark-navy/5 text-center space-y-4">
           <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto">
             {activeTab === "in_progress" ? (
@@ -297,33 +332,43 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {displayedMeetings.map((meeting) => {
-            const start = new Date(meeting.scheduledStart);
-            const end = addMinutes(start, meeting.duration);
+          {displayItems.map((item, idx) => {
+            const meetingsInItem = Array.isArray(item) ? item : [item];
+            const primaryMeeting = meetingsInItem[0]; // First meeting in group or single meeting
+            const isGroup = meetingsInItem.length > 1;
+            const totalDuration = meetingsInItem.reduce((sum, m) => sum + m.duration, 0);
+            const firstStart = new Date(primaryMeeting.scheduledStart);
+            const lastEnd = addMinutes(new Date(meetingsInItem[meetingsInItem.length - 1].scheduledStart), meetingsInItem[meetingsInItem.length - 1].duration);
+            
             const partner =
-              userRole === "student" ? meeting.tutorId : meeting.studentId;
+              userRole === "student" ? primaryMeeting.tutorId : primaryMeeting.studentId;
             const isTutor = userRole === "tutor";
-            const canEdit =
-              isTutor &&
-              (meeting.status === "scheduled" || meeting.status === "in_progress");
-            const canDelete =
-              isTutor &&
-              (meeting.status === "scheduled" || meeting.status === "in_progress");
-            const canCancel =
-              isTutor &&
-              (meeting.status === "scheduled" || meeting.status === "in_progress");
+
+            // Determine overall status for group
+            const overallStatus = meetingsInItem.some(m => m.status === "in_progress")
+              ? "in_progress"
+              : meetingsInItem.every(m => m.status === "completed")
+              ? "completed"
+              : meetingsInItem.every(m => m.status === "cancelled")
+              ? "cancelled"
+              : meetingsInItem.some(m => m.status === "in_progress")
+              ? "in_progress"
+              : "scheduled";
+
+            // Find the current active meeting (if any)
+            const activeMeeting = meetingsInItem.find(m => m.status === "in_progress");
 
             return (
               <motion.div
-                key={meeting._id}
+                key={primaryMeeting.groupId || primaryMeeting._id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={`bg-white p-6 rounded-[2rem] border shadow-sm hover:shadow-md transition-all group ${
-                  meeting.status === "in_progress"
+                  overallStatus === "in_progress"
                     ? "border-emerald-200 shadow-emerald-100"
-                    : meeting.status === "cancelled"
+                    : overallStatus === "cancelled"
                     ? "border-rose-200 bg-rose-50/30"
-                    : meeting.status === "completed"
+                    : overallStatus === "completed"
                     ? "border-emerald-200"
                     : "border-dark-navy/5"
                 }`}
@@ -338,86 +383,122 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                         {partner?.name}
                       </p>
                       <p className="text-[10px] font-medium text-steel-blue/60">
-                        {meeting.subject}
+                        {primaryMeeting.subject}
                       </p>
                     </div>
                   </div>
                   <div
                     className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-                      meeting.status === "completed"
+                      overallStatus === "completed"
                         ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                        : meeting.status === "in_progress"
+                        : overallStatus === "in_progress"
                         ? "bg-emerald-50 text-emerald-600 border border-emerald-100 animate-pulse"
-                        : meeting.status === "cancelled"
+                        : overallStatus === "cancelled"
                         ? "bg-rose-50 text-rose-600 border border-rose-100"
                         : "bg-blue-50 text-blue-600 border border-blue-100"
                     }`}
                   >
-                    {meeting.status}
+                    {overallStatus}
                   </div>
                 </div>
 
                 <div className="space-y-3 mb-6">
                   <p className="text-xs text-steel-blue">
                     {`${isTutor ? "You" : "You"} have a session with ${partner.name} at ${format(
-                      start,
+                      firstStart,
                       "MMM do, h:mm a"
                     )}`}
                   </p>
                   <div className="flex items-center gap-2 text-steel-blue">
                     <Clock size={14} className="text-coral" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">
-                      {meeting.duration} Minutes
+                      {totalDuration} Minutes
                     </span>
                   </div>
-                  {meeting.actualDuration && (
-                    <div className="flex items-center gap-2 text-steel-blue">
-                      <CheckCircle size={14} className="text-emerald-500" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">
-                        Actual: {meeting.actualDuration} Minutes
-                      </span>
+
+                  {/* Show parts if it's a group */}
+                  {isGroup && (
+                    <div className="space-y-2 bg-gray-50 p-3 rounded-xl">
+                      {meetingsInItem.map((m, partIdx) => {
+                        const start = new Date(m.scheduledStart);
+                        const end = addMinutes(start, m.duration);
+                        const nextMeeting = meetingsInItem[partIdx + 1];
+                        
+                        return (
+                          <div key={m._id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-dark-navy uppercase">
+                                Part {m.partNumber} of {m.totalParts}
+                              </span>
+                              <span className="text-[10px] text-steel-blue">
+                                {format(start, "h:mm")} – {format(end, "h:mm a")}
+                              </span>
+                            </div>
+                            <div
+                              className={`px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider ${
+                                m.status === "completed"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : m.status === "in_progress"
+                                  ? "bg-emerald-100 text-emerald-700 animate-pulse"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {m.status}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
-                  {meeting.notes && (
+
+                  {primaryMeeting.notes && (
                     <p className="text-[10px] text-steel-blue/70 italic line-clamp-2">
-                      "{meeting.notes}"
+                      "{primaryMeeting.notes}"
                     </p>
-                  )}
-                  {meeting.paymentStatus && (
-                    <div className="flex items-center gap-2 text-steel-blue">
-                      <span
-                        className={`px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider ${
-                          meeting.paymentStatus === "paid"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : meeting.paymentStatus === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {meeting.paymentStatus}
-                      </span>
-                    </div>
                   )}
                 </div>
 
                 {(activeTab === "scheduled" || activeTab === "in_progress") && (
                   <div className="flex flex-col sm:flex-row gap-2">
-                    {isTutor && meeting.status === "scheduled" ? (
+                    {isTutor && primaryMeeting.status === "scheduled" && !isGroup ? (
                       <button
-                        onClick={() => handleStartSession(meeting._id)}
-                        disabled={startingId === meeting._id}
+                        onClick={() => handleStartSession(primaryMeeting._id)}
+                        disabled={startingId === primaryMeeting._id}
                         className="flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white hover:bg-emerald-600 shadow-xl shadow-emerald-100 transition-all"
                       >
-                        {startingId === meeting._id ? (
+                        {startingId === primaryMeeting._id ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
                           <Play size={14} fill="currentColor" />
                         )}
                         Start Session
                       </button>
-                    ) : meeting.status === "in_progress" ? (
+                    ) : isTutor && isGroup ? (
+                      // For groups, find the first unstarted part and start that
+                      (() => {
+                        const firstUnstartedPart = meetingsInItem.find(m => m.status === "scheduled" && (!m.partNumber || m.partNumber === 1));
+                        if (firstUnstartedPart) {
+                          return (
+                            <button
+                              onClick={() => handleStartSession(firstUnstartedPart._id)}
+                              disabled={startingId === firstUnstartedPart._id}
+                              className="flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white hover:bg-emerald-600 shadow-xl shadow-emerald-100 transition-all"
+                            >
+                              {startingId === firstUnstartedPart._id ? (
+                                <Loader2 size={14} className="animate-spin" />
+                              ) : (
+                                <Play size={14} fill="currentColor" />
+                              )}
+                              Start Session
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()
+                    ) : activeMeeting ? (
+                      // If there's an active meeting, join that one
                       <a
-                        href={meeting.joinUrl}
+                        href={activeMeeting.joinUrl}
                         className="flex-grow flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white hover:bg-emerald-600 shadow-xl shadow-emerald-100 transition-all"
                       >
                         <Play size={14} fill="currentColor" />
@@ -426,9 +507,9 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                     ) : null}
 
                     <div className="flex gap-2">
-                      {isTutor && meeting.status === "in_progress" && (
+                      {isTutor && activeMeeting && (
                         <button
-                          onClick={() => handleCompleteSession(meeting._id)}
+                          onClick={() => handleCompleteSession(activeMeeting._id)}
                           className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white hover:bg-blue-600 transition-all"
                         >
                           <CheckCircle size={14} fill="currentColor" />
@@ -437,34 +518,31 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                       )}
 
                       <div className="flex gap-2 flex-grow sm:flex-grow-0">
-                        {canEdit && meeting.status === "scheduled" && (
-                          <button
-                            onClick={() => handleEditSession(meeting)}
-                            className="flex-grow sm:flex-grow-0 p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all border border-gray-200"
-                            title="Edit Session"
-                          >
-                            <Edit size={16} />
-                          </button>
-                        )}
-
-                        {canCancel && meeting.status === "scheduled" && (
-                          <button
-                            onClick={() => handleCancelSession(meeting._id)}
-                            className="flex-grow sm:flex-grow-0 p-3 bg-rose-100 text-rose-600 rounded-xl hover:bg-rose-200 transition-all border border-rose-200"
-                            title="Cancel Session"
-                          >
-                            <XCircle size={16} />
-                          </button>
-                        )}
-
-                        {canDelete && meeting.status === "scheduled" && (
-                          <button
-                            onClick={() => handleDeleteSession(meeting._id)}
-                            className="flex-grow sm:flex-grow-0 p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all border border-red-200"
-                            title="Delete Session"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                        {/* Only show edit/cancel/delete for single sessions or group leaders */}
+                        {!isGroup && isTutor && primaryMeeting.status === "scheduled" && (
+                          <>
+                            <button
+                              onClick={() => handleEditSession(primaryMeeting)}
+                              className="flex-grow sm:flex-grow-0 p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all border border-gray-200"
+                              title="Edit Session"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleCancelSession(primaryMeeting._id)}
+                              className="flex-grow sm:flex-grow-0 p-3 bg-rose-100 text-rose-600 rounded-xl hover:bg-rose-200 transition-all border border-rose-200"
+                              title="Cancel Session"
+                            >
+                              <XCircle size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSession(primaryMeeting._id)}
+                              className="flex-grow sm:flex-grow-0 p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all border border-red-200"
+                              title="Delete Session"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
