@@ -3,51 +3,53 @@
 import React, { useState, useEffect } from "react";
 import { X, Calendar, Clock, BookOpen, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { format } from "date-fns";
 
-interface ScheduleSessionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  partnerId: string;
-  partnerName: string;
-  partnerRole: "student" | "tutor";
-  myId: string;
-  onSuccess?: () => void;
+interface UserInfo {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  email: string;
 }
 
-export const ScheduleSessionModal = ({
+interface Meeting {
+  _id: string;
+  studentId: UserInfo;
+  tutorId: UserInfo;
+  title: string;
+  subject: string;
+  scheduledStart: string;
+  duration: number;
+  notes?: string;
+  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "expired";
+  roomId?: string;
+  joinUrl: string;
+  actualDuration?: number;
+  paymentStatus?: string;
+}
+
+interface EditSessionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  meeting: Meeting;
+  onSuccess: () => void;
+}
+
+export const EditSessionModal = ({
   isOpen,
   onClose,
-  partnerId,
-  partnerName,
-  partnerRole,
-  myId,
+  meeting,
   onSuccess,
-}: ScheduleSessionModalProps) => {
+}: EditSessionModalProps) => {
   const [formData, setFormData] = useState({
-    title: "",
-    subject: "",
-    date: "",
-    time: "",
-    duration: 40,
-    notes: "",
+    title: meeting.title,
+    subject: meeting.subject,
+    date: format(new Date(meeting.scheduledStart), "yyyy-MM-dd"),
+    time: format(new Date(meeting.scheduledStart), "HH:mm"),
+    duration: meeting.duration,
+    notes: meeting.notes || "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [connections, setConnections] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchConnections = async () => {
-      try {
-        const res = await fetch("/api/connections");
-        if (res.ok) {
-          const data = await res.json();
-          setConnections(data.connections);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    if (isOpen) fetchConnections();
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -56,28 +58,14 @@ export const ScheduleSessionModal = ({
     setIsLoading(true);
 
     try {
-      // Find the connection between current user and partner
-      const connection = connections.find(
-        (conn: any) =>
-          (String(conn.student._id) === String(myId) &&
-            String(conn.tutor._id) === String(partnerId)) ||
-          (String(conn.tutor._id) === String(myId) &&
-            String(conn.student._id) === String(partnerId))
-      );
-
-      if (!connection) {
-        throw new Error("No active connection found");
-      }
-
       const startDateTime = new Date(
         `${formData.date}T${formData.time}`
       );
 
-      const res = await fetch("/api/meetings", {
-        method: "POST",
+      const res = await fetch(`/api/meetings/${meeting._id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          connectionId: connection._id,
           title: formData.title,
           subject: formData.subject,
           scheduledStart: startDateTime.toISOString(),
@@ -88,14 +76,12 @@ export const ScheduleSessionModal = ({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to schedule session");
+        throw new Error(data.error || "Failed to edit session");
       }
 
-      toast.success("Session scheduled successfully!");
+      toast.success("Session edited successfully!");
       onClose();
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccess();
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -109,11 +95,8 @@ export const ScheduleSessionModal = ({
         <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
           <div>
             <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight">
-              Book Session
+              Edit Session
             </h2>
-            <p className="text-[10px] font-black text-steel-blue uppercase tracking-widest mt-1">
-              With {partnerName}
-            </p>
           </div>
           <button
             onClick={onClose}
@@ -213,12 +196,7 @@ export const ScheduleSessionModal = ({
               <option value={20}>20 Minutes</option>
               <option value={30}>30 Minutes</option>
               <option value={40}>40 Minutes</option>
-              <option value={60}>60 Minutes (Split into 2 sessions)</option>
-              <option value={90}>90 Minutes (Split into 3 sessions)</option>
             </select>
-            <p className="text-[8px] text-gray-500">
-              Sessions longer than 40 minutes will be automatically split
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -245,7 +223,7 @@ export const ScheduleSessionModal = ({
             ) : (
               <Calendar size={16} />
             )}
-            Book Session
+            Save Changes
           </button>
         </form>
       </div>
@@ -253,4 +231,4 @@ export const ScheduleSessionModal = ({
   );
 };
 
-export default ScheduleSessionModal;
+export default EditSessionModal;

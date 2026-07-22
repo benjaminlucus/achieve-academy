@@ -4,9 +4,9 @@ import User from "@/database/models/user.model";
 import Connection from "@/database/models/connection.model";
 import ScheduledMeeting from "@/database/models/scheduled-meeting.model";
 import { auth } from "@clerk/nextjs/server";
-import { createJitsiMeeting } from "@/lib/jitsi-service";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,14 +34,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Validate duration is 20, 30, or 40
-    if (![20, 30, 40].includes(duration)) {
-      return NextResponse.json(
-        { error: "Duration must be 20, 30, or 40 minutes" },
-        { status: 400 }
-      );
-    }
-
     // Find the connection and populate student and tutor
     const connection = await Connection.findById(connectionId)
       .populate("student", "name email")
@@ -62,27 +54,52 @@ export async function POST(req: NextRequest) {
     const studentUser = connection.student;
     const tutorUser = connection.tutor;
 
-    // Create scheduled meeting record (host is always tutor)
-    const scheduledMeeting = await ScheduledMeeting.create({
-      connection: connection._id,
-      hostId: tutorUser._id,
-      studentId: studentUser._id,
-      tutorId: tutorUser._id,
-      title,
-      subject,
-      scheduledStart: new Date(scheduledStart),
-      duration,
-      notes,
-    });
+    // Generate groupId if we're splitting sessions
+    const groupId = duration > 40 ? crypto.randomBytes(16).toString("hex") : undefined;
 
-    // Prepare email data
-    const formattedDate = new Date(scheduledStart).toLocaleDateString("en-US", {
+    // Split duration into sessions of max 40 mins each
+    const sessions: any[] = [];
+    let remainingDuration = duration;
+    let currentStart = new Date(scheduledStart);
+    let partNumber = 1;
+    const totalParts = duration > 40 ? Math.ceil(duration / 40) : undefined;
+
+    while (remainingDuration > 0) {
+      const sessionDuration = Math.min(remainingDuration, 40);
+      sessions.push({
+        connection: connection._id,
+        hostId: tutorUser._id,
+        studentId: studentUser._id,
+        tutorId: tutorUser._id,
+        title: groupId ? `${title} (Part ${partNumber} of ${totalParts})` : title,
+        subject,
+        scheduledStart: new Date(currentStart),
+        expectedDuration: duration,
+        duration: sessionDuration,
+        notes,
+        groupId,
+        partNumber: groupId ? partNumber : undefined,
+        totalParts: groupId ? totalParts : undefined,
+        status: "scheduled",
+      });
+
+      remainingDuration -= sessionDuration;
+      currentStart = new Date(currentStart.getTime() + sessionDuration * 60 * 1000);
+      partNumber++;
+    }
+
+    // Insert all sessions
+    const createdMeetings = await ScheduledMeeting.create(sessions);
+
+    // Prepare email data for first session
+    const firstSession = createdMeetings[0];
+    const formattedDate = new Date(firstSession.scheduledStart).toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-    const formattedTime = new Date(scheduledStart).toLocaleTimeString("en-US", {
+    const formattedTime = new Date(firstSession.scheduledStart).toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
     });
@@ -141,7 +158,7 @@ export async function POST(req: NextRequest) {
       }).html,
     });
 
-    return NextResponse.json({ success: true, meeting: scheduledMeeting });
+    return NextResponse.json({ success: true, meetings: createdMeetings });
   } catch (error: any) {
     logger.error("Failed to create meeting:", error);
     return NextResponse.json(
@@ -191,15 +208,21 @@ export async function GET(req: NextRequest) {
       const start = new Date(m.scheduledStart);
       const end = new Date(start.getTime() + m.duration * 60 * 1000);
 
-      let status;
-      if (m.status === "completed") {
+      let status: "scheduled" | "in_progress" | "completed" | "cancelled" | "expired" | "no_show";
+      if (m.status === "cancelled") {
+        status = "cancelled";
+      } else if (m.status === "completed") {
         status = "completed";
+      } else if (m.status === "in_progress") {
+        status = "in_progress";
+      } else if (m.status === "no_show") {
+        status = "no_show";
       } else if (now >= start && now <= end && m.roomId) {
-        status = "live";
-      } else if (now > end) {
+        status = "in_progress";
+      } else if (now > end && m.status !== "in_progress") {
         status = "expired";
       } else {
-        status = "upcoming";
+        status = "scheduled";
       }
 
       return { ...m, status };

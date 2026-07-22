@@ -27,6 +27,8 @@ export interface IUser extends Document {
   blockReason?: string;
   isPublicProfile: boolean;
   hasJoinedWhatsAppCommunity?: boolean;
+  // New fields for student expertise/goals (for matching)
+  studentExpertiseNeeds?: IStudentExpertiseNeed[];
 }
 
 export interface IUserFlag extends Document {
@@ -122,8 +124,62 @@ export interface ITutorAvailabilitySlot {
   slots?: string[];
 }
 
+// New interfaces for Expertise System
+export interface IExpertiseCategory extends Document {
+  name: string;
+  description?: string;
+  icon?: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IExpertiseSubject extends Document {
+  category: mongoose.Types.ObjectId;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IEducationLevel extends Document {
+  name: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IExpertise extends Document {
+  tutor: mongoose.Types.ObjectId;
+  category: mongoose.Types.ObjectId;
+  subject: mongoose.Types.ObjectId;
+  teachingLevels: mongoose.Types.ObjectId[];
+  teachingLanguages: string[];
+  experience: number; // years
+  hourlyRate?: number;
+  certificates?: ICertificateDocument[];
+  specialNotes?: string;
+  isActive: boolean;
+  visibility: "public" | "private" | "connections";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IStudentExpertiseNeed {
+  category?: mongoose.Types.ObjectId;
+  subject?: mongoose.Types.ObjectId;
+  level?: mongoose.Types.ObjectId;
+  goal?: string;
+}
+
 export interface ITutorProfile extends Document {
   user: mongoose.Types.ObjectId;
+  // Deprecated fields - still keep for backward compatibility
   subjects: string[];
   skills: string[];
   experienceYears: number;
@@ -143,7 +199,6 @@ export interface ITutorProfile extends Document {
     bankName?: string;
     iban?: string;
   };
-  // New fields for Teaching Levels & Qualifications
   teachingLevels: string[];
   teachingLevelsOther?: string;
   experienceLevel: "Less than 1 year" | "1-2 years" | "3-5 years" | "5+ years";
@@ -204,20 +259,129 @@ export interface IPayment extends Document {
   updatedAt: Date;
 }
 
+// New interface for Invoice
+export interface IInvoice extends Document {
+  learningContract: mongoose.Types.ObjectId;
+  student: mongoose.Types.ObjectId;
+  tutor: mongoose.Types.ObjectId;
+  invoiceNumber: string;
+  monthYear: string; // e.g., "2026-07"
+  billingType: "hourly" | "monthly";
+  dueDate: Date;
+  paidAt?: Date;
+  paidAmount: number;
+  outstandingAmount: number;
+  status: "draft" | "pending" | "paid" | "overdue" | "cancelled" | "refunded";
+  items: {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+    meetingIds?: mongoose.Types.ObjectId[];
+  }[];
+  notes?: string;
+  receiptUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// New interfaces for Learning Contract System
+export type LearningContractStatus = "draft" | "active" | "paused" | "completed" | "cancelled";
+
+export interface ILearningContract extends Document {
+  tutor: mongoose.Types.ObjectId;
+  student: mongoose.Types.ObjectId;
+  subject: mongoose.Types.ObjectId;
+  subjectName?: string; // for display
+  teachingLevel: mongoose.Types.ObjectId;
+  teachingLevelName?: string;
+  courseName?: string;
+  hourlyRate: number;
+  monthlyRate?: number;
+  billingType: "hourly" | "monthly";
+  weeklySchedule: ITutorAvailabilitySlot[];
+  startDate: Date;
+  endDate?: Date;
+  status: LearningContractStatus;
+  totalHoursPurchased?: number;
+  hoursUsed: number;
+  hoursRemaining: number;
+  totalClasses?: number;
+  classesCompleted: number;
+  classesMissed: number;
+  paymentStatus: "pending" | "paid" | "unpaid" | "overdue";
+  nextBillingDate?: Date;
+  notes?: string;
+  learningGoal?: string;
+  timezone?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// New interface for Course Enrollment
+export type CourseEnrollmentStatus = "enrolled" | "active" | "paused" | "completed" | "cancelled";
+
+export interface ICourseEnrollment extends Document {
+  student: mongoose.Types.ObjectId;
+  tutor: mongoose.Types.ObjectId;
+  learningContract: mongoose.Types.ObjectId;
+  subject: mongoose.Types.ObjectId;
+  teachingLevel: mongoose.Types.ObjectId;
+  currentProgress: number; // 0-100
+  startDate: Date;
+  estimatedCompletionDate?: Date;
+  completedLessons: number;
+  remainingLessons: number;
+  attendance: number; // percentage
+  completionPercentage: number; // 0-100
+  averageSessionDuration: number; // minutes
+  homeworkCompleted: number;
+  status: CourseEnrollmentStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// New interface for Meeting Attendance
+export interface IMeetingAttendance extends Document {
+  meeting: mongoose.Types.ObjectId;
+  user: mongoose.Types.ObjectId;
+  role: "tutor" | "student";
+  joinedAt?: Date;
+  leftAt?: Date;
+  isPresent: boolean;
+  attendancePercentage: number; // for the meeting
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Expanded ScheduledMeeting interface
 export interface IScheduledMeeting extends Document {
   connection: mongoose.Types.ObjectId;
   hostId: mongoose.Types.ObjectId; // Tutor is always host
   studentId: mongoose.Types.ObjectId;
   tutorId: mongoose.Types.ObjectId; // Keep for compatibility
+  learningContract?: mongoose.Types.ObjectId;
+  courseEnrollment?: mongoose.Types.ObjectId;
   title: string;
   subject: string;
   scheduledStart: Date;
-  duration: number; // 20, 30, or 40 minutes
+  expectedDuration: number; // original duration requested
+  duration: number; // actual split duration (20/30/40)
   notes?: string;
   roomId?: string; // Jitsi room name, only set when tutor starts session
-  status: "upcoming" | "live" | "completed" | "expired";
+  status: "draft" | "scheduled" | "starting" | "in_progress" | "completed" | "cancelled" | "expired" | "no_show";
   startedAt?: Date;
   endedAt?: Date;
+  completedAt?: Date;
+  cancelledAt?: Date;
+  actualDuration?: number; // Actual duration in minutes
+  groupId?: string; // For grouping split sessions
+  partNumber?: number; // Part number (1, 2, etc.) for split sessions
+  totalParts?: number; // Total parts in group
+  paymentStatus?: "pending" | "paid" | "unpaid";
+  cancellationReason?: string;
+  noShowReason?: string;
+  attendance?: IMeetingAttendance[];
   createdAt: Date;
   updatedAt: Date;
 }

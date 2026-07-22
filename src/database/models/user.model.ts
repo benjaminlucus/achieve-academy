@@ -62,6 +62,15 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
+    // New fields for student expertise needs
+    studentExpertiseNeeds: [
+      {
+        category: { type: Schema.Types.ObjectId, ref: "ExpertiseCategory" },
+        subject: { type: Schema.Types.ObjectId, ref: "ExpertiseSubject" },
+        level: { type: Schema.Types.ObjectId, ref: "EducationLevel" },
+        goal: String,
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -69,6 +78,7 @@ const UserSchema = new Schema<IUser>(
 // Add explicit indexes to optimize queries
 UserSchema.index({ email: 1 });
 UserSchema.index({ status: 1 });
+UserSchema.index({ role: 1 });
 
 const User = models.User || mongoose.model<IUser>("User", UserSchema);
 
