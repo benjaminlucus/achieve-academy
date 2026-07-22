@@ -209,11 +209,11 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
             <RefreshCw size={16} />
           </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex bg-gray-100 p-1 rounded-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
+          <div className="flex bg-gray-100 p-1 rounded-xl overflow-x-auto w-full sm:w-auto whitespace-nowrap">
             <button
               onClick={() => setActiveTab("in_progress")}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
                 activeTab === "in_progress"
                   ? "bg-emerald-500 text-white shadow-sm"
                   : "text-gray-500 hover:text-dark-navy"
@@ -229,7 +229,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
             </button>
             <button
               onClick={() => setActiveTab("scheduled")}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeTab === "scheduled"
                   ? "bg-dark-navy text-white shadow-sm"
                   : "text-gray-500 hover:text-dark-navy"
@@ -244,7 +244,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
             </button>
             <button
               onClick={() => setActiveTab("completed")}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeTab === "completed"
                   ? "bg-dark-navy text-white shadow-sm"
                   : "text-gray-500 hover:text-dark-navy"
@@ -254,7 +254,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
             </button>
             <button
               onClick={() => setActiveTab("cancelled")}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeTab === "cancelled"
                   ? "bg-dark-navy text-white shadow-sm"
                   : "text-gray-500 hover:text-dark-navy"
@@ -265,7 +265,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
           </div>
           <button
             onClick={handleOpenScheduleModal}
-            className="px-4 py-2 bg-dark-navy text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-coral transition-all"
+            className="flex-shrink-0 w-full sm:w-auto px-4 py-2 bg-dark-navy text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-coral transition-all"
           >
             Book Session
           </button>
@@ -401,7 +401,7 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                 </div>
 
                 {(activeTab === "scheduled" || activeTab === "in_progress") && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     {isTutor && meeting.status === "scheduled" ? (
                       <button
                         onClick={() => handleStartSession(meeting._id)}
@@ -425,45 +425,49 @@ export const SessionSection = ({ userRole }: { userRole: string }) => {
                       </a>
                     ) : null}
 
-                    {isTutor && meeting.status === "in_progress" ? (
-                      <button
-                        onClick={() => handleCompleteSession(meeting._id)}
-                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white hover:bg-blue-600 transition-all"
-                      >
-                        <CheckCircle size={14} fill="currentColor" />
-                        End Session
-                      </button>
-                    ) : null}
+                    <div className="flex gap-2">
+                      {isTutor && meeting.status === "in_progress" && (
+                        <button
+                          onClick={() => handleCompleteSession(meeting._id)}
+                          className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white hover:bg-blue-600 transition-all"
+                        >
+                          <CheckCircle size={14} fill="currentColor" />
+                          End Session
+                        </button>
+                      )}
 
-                    {canEdit && meeting.status === "scheduled" && (
-                      <button
-                        onClick={() => handleEditSession(meeting)}
-                        className="p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all border border-gray-200"
-                        title="Edit Session"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    )}
+                      <div className="flex gap-2 flex-grow sm:flex-grow-0">
+                        {canEdit && meeting.status === "scheduled" && (
+                          <button
+                            onClick={() => handleEditSession(meeting)}
+                            className="flex-grow sm:flex-grow-0 p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all border border-gray-200"
+                            title="Edit Session"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        )}
 
-                    {canCancel && meeting.status === "scheduled" && (
-                      <button
-                        onClick={() => handleCancelSession(meeting._id)}
-                        className="p-3 bg-rose-100 text-rose-600 rounded-xl hover:bg-rose-200 transition-all border border-rose-200"
-                        title="Cancel Session"
-                      >
-                        <XCircle size={16} />
-                      </button>
-                    )}
+                        {canCancel && meeting.status === "scheduled" && (
+                          <button
+                            onClick={() => handleCancelSession(meeting._id)}
+                            className="flex-grow sm:flex-grow-0 p-3 bg-rose-100 text-rose-600 rounded-xl hover:bg-rose-200 transition-all border border-rose-200"
+                            title="Cancel Session"
+                          >
+                            <XCircle size={16} />
+                          </button>
+                        )}
 
-                    {canDelete && meeting.status === "scheduled" && (
-                      <button
-                        onClick={() => handleDeleteSession(meeting._id)}
-                        className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all border border-red-200"
-                        title="Delete Session"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+                        {canDelete && meeting.status === "scheduled" && (
+                          <button
+                            onClick={() => handleDeleteSession(meeting._id)}
+                            className="flex-grow sm:flex-grow-0 p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all border border-red-200"
+                            title="Delete Session"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </motion.div>
