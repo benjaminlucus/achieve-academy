@@ -6,18 +6,18 @@ import ScheduledMeeting from "@/database/models/scheduled-meeting.model";
 import Connection from "@/database/models/connection.model";
 import Interview from "@/database/models/interview.model";
 import { authErrorResponse, requireUser } from "@/lib/auth";
-import { generateClassroomConfig, generateSecureRoomName } from "@/lib/jitsi-service";
+import { generateClassroomConfig } from "@/lib/jitsi-service";
 import { captureException } from "@/lib/monitoring";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ type: string; id: string }> }
+  { params }: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
     const currentUser = await requireUser();
-    const { type, id } = await context.params;
+    const { type, id } = await params;
 
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -29,11 +29,12 @@ export async function GET(
 
     await connectDB();
 
-    let roomName = "";
+    let roomId = "";
     let role: "moderator" | "participant" = "participant";
     let title = "Tutoring Class";
     let startDate: Date;
     let duration: number; // in minutes
+    let meetingStarted = false;
 
     if (type === "session") {
       const session = await Session.findById(id);
@@ -42,8 +43,8 @@ export async function GET(
       }
 
       // Check ownership (is student, tutor, or admin)
-      const isStudent = session.student.toString() === currentUser._id.toString();
-      const isTutor = session.tutor.toString() === currentUser._id.toString();
+      const isStudent = String(session.student) === String(currentUser._id);
+      const isTutor = String(session.tutor) === String(currentUser._id);
       const isAdmin = currentUser.role === "admin";
 
       if (!isStudent && !isTutor && !isAdmin) {
@@ -68,13 +69,12 @@ export async function GET(
       duration = session.duration || 60;
       title = `Tutoring Session: ${session.subject}`;
 
-      // Set roomName
+      // Set roomId
       if (!session.meetingLink || session.meetingLink.trim() === "") {
-        // Generate on-demand if missing
-        session.meetingLink = generateSecureRoomName();
-        await session.save();
+        return NextResponse.json({ error: "Room not ready yet" }, { status: 400 });
       }
-      roomName = session.meetingLink;
+      roomId = session.meetingLink;
+      meetingStarted = true;
 
       // Decide role
       if (isTutor || isAdmin) {
@@ -87,24 +87,29 @@ export async function GET(
       }
 
       // Check ownership
-      const isStudent = meeting.student.toString() === currentUser._id.toString();
-      const isTutor = meeting.tutor.toString() === currentUser._id.toString();
+      const isStudent = String(meeting.studentId) === String(currentUser._id);
+      const isTutor = String(meeting.tutorId) === String(currentUser._id);
       const isAdmin = currentUser.role === "admin";
 
       if (!isStudent && !isTutor && !isAdmin) {
         return NextResponse.json({ error: "Forbidden: You are not a participant in this meeting" }, { status: 403 });
       }
 
-      if (meeting.status !== "scheduled") {
-        return NextResponse.json({ error: `Meeting is not active (current status: ${meeting.status})` }, { status: 403 });
+      if (!meeting.roomId) {
+        // If student, return waiting state
+        if (isStudent) {
+          return NextResponse.json({ error: "Waiting for tutor to start the session", waiting: true }, { status: 200 });
+        }
+        return NextResponse.json({ error: "Room not activated yet" }, { status: 400 });
       }
 
-      startDate = new Date(meeting.date);
+      startDate = new Date(meeting.scheduledStart);
       duration = meeting.duration || 60;
       title = meeting.title;
-      roomName = meeting.meetingId; // Jitsi room name stored here
+      roomId = meeting.roomId;
+      meetingStarted = true;
 
-      // Decide role
+      // Decide role (only tutor is moderator)
       if (isTutor || isAdmin) {
         role = "moderator";
       }
@@ -119,7 +124,7 @@ export async function GET(
         return NextResponse.json({ error: "Interview schedule not found" }, { status: 404 });
       }
 
-      const isInterviewee = interview.userId.toString() === currentUser._id.toString();
+      const isInterviewee = String(interview.userId) === String(currentUser._id);
       const isAdmin = currentUser.role === "admin";
 
       if (!isInterviewee && !isAdmin) {
@@ -133,7 +138,8 @@ export async function GET(
       startDate = new Date(interview.scheduledAt);
       duration = interview.duration || 30;
       title = "User Interview Session";
-      roomName = interview.meetingId; // Jitsi room name stored here
+      roomId = interview.meetingId;
+      meetingStarted = true;
 
       // Decide role
       if (isAdmin) {
@@ -143,33 +149,7 @@ export async function GET(
       return NextResponse.json({ error: "Invalid classroom type" }, { status: 400 });
     }
 
-    // Verify allowed join window: 15 minutes before start until duration ends
-    const now = new Date();
-    const joinWindowStart = new Date(startDate.getTime() - 15 * 60 * 1000);
-    const joinWindowEnd = new Date(startDate.getTime() + duration * 60 * 1000);
-
-    if (now < joinWindowStart) {
-      const minutesToWait = Math.round((joinWindowStart.getTime() - now.getTime()) / 60000);
-      return NextResponse.json(
-        { 
-          error: "Join Window Not Open",
-          message: `This classroom can only be joined starting 15 minutes before the scheduled start time. Please return in ${minutesToWait} minute(s).`
-        }, 
-        { status: 400 }
-      );
-    }
-
-    if (now > joinWindowEnd) {
-      return NextResponse.json(
-        { 
-          error: "Classroom Session Expired",
-          message: "The scheduled time for this classroom has already ended."
-        }, 
-        { status: 400 }
-      );
-    }
-
-    // Generate classroom configuration
+    // Generate classroom config
     const config = generateClassroomConfig(
       {
         _id: currentUser._id.toString(),
@@ -177,11 +157,11 @@ export async function GET(
         email: currentUser.email || "",
         profileImage: currentUser.profileImage,
       },
-      roomName,
+      roomId,
       role
     );
 
-    return NextResponse.json({ success: true, ...config, title });
+    return NextResponse.json({ success: true, ...config, title, duration, startDate });
   } catch (error) {
     const authRes = authErrorResponse(error);
     if (authRes) return authRes;

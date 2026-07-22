@@ -23,6 +23,7 @@ export interface JitsiMeeting {
   joinUrl: string;
   hostUrl: string; // For Jitsi, both are same, but kept for consistency with Zoom
   roomName: string;
+  provider: string;
 }
 
 /**
@@ -102,14 +103,16 @@ export function generateClassroomConfig(
  * Create a secure Jitsi meeting
  */
 export async function createJitsiMeeting(
-  title: string
+  title?: string
 ): Promise<JitsiMeeting> {
   const roomName = generateSecureRoomName();
+  const fullUrl = `${JITSI_SERVER}/${roomName}`;
   
   return {
     meetingId: roomName,
-    joinUrl: roomName,
-    hostUrl: roomName,
+    joinUrl: fullUrl,
+    hostUrl: fullUrl,
     roomName: roomName,
+    provider: "jitsi",
   };
 }

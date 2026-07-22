@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ShieldAlert, LogOut, Video } from "lucide-react";
+import { ArrowLeft, ShieldAlert, LogOut, Video, Clock } from "lucide-react";
 
 export default function ClassroomPage() {
   const params = useParams<{ type: string; id: string }>();
@@ -10,15 +10,25 @@ export default function ClassroomPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ title: string; message: string } | null>(null);
   const [classroomConfig, setClassroomConfig] = useState<any>(null);
+  const [waiting, setWaiting] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<any>(null);
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
     const fetchConfig = async () => {
       try {
         const res = await fetch(`/api/classroom/${params.type}/${params.id}/join`);
         const data = await res.json();
-        
+
+        if (data.waiting) {
+          setWaiting(true);
+          // Poll every 2 seconds
+          interval = setInterval(fetchConfig, 2000);
+          return;
+        }
+
         if (!res.ok) {
           setError({
             title: data.error || "Access Denied",
@@ -28,20 +38,44 @@ export default function ClassroomPage() {
           return;
         }
 
+        setWaiting(false);
         setClassroomConfig(data);
-        setLoading(false);
+
+        // Start countdown
+        const start = new Date(data.startDate);
+        const end = new Date(start.getTime() + data.duration * 60 * 1000);
+        const updateCountdown = () => {
+          const now = new Date();
+          const diff = end.getTime() - now.getTime();
+          if (diff <= 0) {
+            setTimeLeft(0);
+            clearInterval(interval);
+          } else {
+            setTimeLeft(Math.floor(diff / 1000));
+          }
+        };
+        updateCountdown();
+        interval = setInterval(updateCountdown, 1000);
       } catch (err) {
         console.error("Failed to load classroom config:", err);
         setError({
           title: "Connection Error",
           message: "Failed to connect to the classroom authorization service. Please check your connection and try again.",
         });
+      } finally {
         setLoading(false);
       }
     };
 
     fetchConfig();
-  }, [params.type, params.id]);
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (jitsiApiRef.current) {
+        jitsiApiRef.current.dispose();
+      }
+    };
+  }, [params]);
 
   useEffect(() => {
     if (!classroomConfig || !jitsiContainerRef.current) return;
@@ -60,7 +94,7 @@ export default function ClassroomPage() {
         return;
       }
 
-      // Cleanup previous instance if any
+      // Clean up previous instance if any
       if (jitsiApiRef.current) {
         jitsiApiRef.current.dispose();
       }
@@ -80,7 +114,7 @@ export default function ClassroomPage() {
           watermarkDisabled: true,
           disableDeepLinking: true,
           logoClickSafeUrl: false,
-          readOnlyNameShare: true, // Prevent renaming inside Jitsi if using signed JWT
+          readOnlyNameShare: true,
         },
         interfaceConfigOverwrite: {
           TOOLBAR_BUTTONS: [
@@ -153,6 +187,12 @@ export default function ClassroomPage() {
     };
   }, [classroomConfig, router]);
 
+  const formatTimeLeft = () => {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
   // Loading Screen
   if (loading) {
     return (
@@ -160,8 +200,14 @@ export default function ClassroomPage() {
         <div className="space-y-6 text-center">
           <div className="w-16 h-16 border-4 border-[#8B5CF6] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black text-white uppercase tracking-wider">Verifying Permissions</h2>
-            <p className="text-sm text-slate-400 font-medium">Securing connection to Ravencrest Academy Classroom...</p>
+            <h2 className="text-xl font-black text-white uppercase tracking-wider">
+              {waiting ? "Waiting for Tutor" : "Verifying Permissions"}
+            </h2>
+            <p className="text-sm text-slate-400 font-medium">
+              {waiting
+                ? "Your tutor hasn't started the session yet. Please wait..."
+                : "Securing connection to Ravencrest Academy Classroom..."}
+            </p>
           </div>
         </div>
       </div>
@@ -174,11 +220,11 @@ export default function ClassroomPage() {
       <div className="fixed inset-0 z-50 bg-[#020617] flex items-center justify-center p-4 font-sans">
         <div className="w-full max-w-lg bg-[#0F172A] border border-[#8B5CF6]/10 p-8 sm:p-10 rounded-[2.5rem] shadow-2xl space-y-8 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-500 to-[#8B5CF6]"></div>
-          
+
           <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-[1.25rem] flex items-center justify-center mx-auto shadow-inner">
             <ShieldAlert size={32} />
           </div>
-          
+
           <div className="space-y-3">
             <h2 className="text-xl font-black text-white uppercase tracking-tight leading-tight">
               {error.title}
@@ -212,18 +258,24 @@ export default function ClassroomPage() {
             {classroomConfig?.title || "Tutoring Classroom"}
           </span>
         </div>
-        <button
-          onClick={() => {
-            if (jitsiApiRef.current) {
-              jitsiApiRef.current.executeCommand("hangup");
-            } else {
-              router.push("/dashboard");
-            }
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] uppercase tracking-widest transition-all rounded-xl shadow-lg"
-        >
-          <LogOut size={12} /> Leave Class
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-white text-sm font-bold">
+            <Clock size={16} className="text-coral" />
+            <span>{formatTimeLeft()}</span>
+          </div>
+          <button
+            onClick={() => {
+              if (jitsiApiRef.current) {
+                jitsiApiRef.current.executeCommand("hangup");
+              } else {
+                router.push("/dashboard");
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] uppercase tracking-widest transition-all rounded-xl shadow-lg"
+          >
+            <LogOut size={12} /> Leave Class
+          </button>
+        </div>
       </header>
 
       {/* Classroom Video Container */}

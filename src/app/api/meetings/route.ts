@@ -4,7 +4,7 @@ import User from "@/database/models/user.model";
 import Connection from "@/database/models/connection.model";
 import ScheduledMeeting from "@/database/models/scheduled-meeting.model";
 import { auth } from "@clerk/nextjs/server";
-import { createZoomMeeting } from "@/lib/zoom-service";
+import { createJitsiMeeting } from "@/lib/jitsi-service";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
 
@@ -21,10 +21,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const { connectionId, title, date, time, duration = 40, notes } = await req.json();
+    const {
+      connectionId,
+      title,
+      subject,
+      scheduledStart,
+      duration,
+      notes,
+    } = await req.json();
 
-    if (!connectionId || !title || !date || !time) {
+    if (!connectionId || !title || !subject || !scheduledStart || !duration) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Validate duration is 20, 30, or 40
+    if (![20, 30, 40].includes(duration)) {
+      return NextResponse.json(
+        { error: "Duration must be 20, 30, or 40 minutes" },
+        { status: 400 }
+      );
     }
 
     // Find the connection and populate student and tutor
@@ -37,8 +52,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if current user is part of this connection
-    const isTutor = connection.tutor._id.toString() === currentUser._id.toString();
-    const isStudent = connection.student._id.toString() === currentUser._id.toString();
+    const isTutor = String(connection.tutor._id) === String(currentUser._id);
+    const isStudent = String(connection.student._id) === String(currentUser._id);
     if (!isTutor && !isStudent) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
@@ -47,37 +62,29 @@ export async function POST(req: NextRequest) {
     const studentUser = connection.student;
     const tutorUser = connection.tutor;
 
-    // Combine date and time into a Date object
-    const [hours, minutes] = time.split(":").map(Number);
-    const meetingDate = new Date(date);
-    meetingDate.setHours(hours, minutes, 0, 0);
-
-    // Create Zoom meeting
-    const zoomMeeting = await createZoomMeeting(title, meetingDate, duration);
-
-    // Create scheduled meeting record
+    // Create scheduled meeting record (host is always tutor)
     const scheduledMeeting = await ScheduledMeeting.create({
       connection: connection._id,
-      student: studentUser._id,
-      tutor: tutorUser._id,
+      hostId: tutorUser._id,
+      studentId: studentUser._id,
+      tutorId: tutorUser._id,
       title,
-      date: meetingDate,
-      time,
+      subject,
+      scheduledStart: new Date(scheduledStart),
       duration,
       notes,
-      meetingId: zoomMeeting.meetingId,
-      joinUrl: zoomMeeting.joinUrl,
-      hostUrl: zoomMeeting.hostUrl,
-      provider: zoomMeeting.provider,
-      status: "scheduled",
     });
 
     // Prepare email data
-    const formattedDate = meetingDate.toLocaleDateString("en-US", {
+    const formattedDate = new Date(scheduledStart).toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
+    });
+    const formattedTime = new Date(scheduledStart).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
     });
 
     // Send email to student
@@ -88,10 +95,10 @@ export async function POST(req: NextRequest) {
         otherUserName: tutorUser.name,
         title,
         date: formattedDate,
-        time,
+        time: formattedTime,
         duration,
-        joinLink: zoomMeeting.joinUrl,
-        meetingId: zoomMeeting.meetingId,
+        joinLink: "",
+        meetingId: "",
         notes,
       }).subject,
       html: emailTemplates.meetingScheduled({
@@ -99,10 +106,10 @@ export async function POST(req: NextRequest) {
         otherUserName: tutorUser.name,
         title,
         date: formattedDate,
-        time,
+        time: formattedTime,
         duration,
-        joinLink: zoomMeeting.joinUrl,
-        meetingId: zoomMeeting.meetingId,
+        joinLink: "",
+        meetingId: "",
         notes,
       }).html,
     });
@@ -115,10 +122,10 @@ export async function POST(req: NextRequest) {
         otherUserName: studentUser.name,
         title,
         date: formattedDate,
-        time,
+        time: formattedTime,
         duration,
-        joinLink: zoomMeeting.joinUrl,
-        meetingId: zoomMeeting.meetingId,
+        joinLink: "",
+        meetingId: "",
         notes,
       }).subject,
       html: emailTemplates.meetingScheduled({
@@ -126,10 +133,10 @@ export async function POST(req: NextRequest) {
         otherUserName: studentUser.name,
         title,
         date: formattedDate,
-        time,
+        time: formattedTime,
         duration,
-        joinLink: zoomMeeting.joinUrl,
-        meetingId: zoomMeeting.meetingId,
+        joinLink: "",
+        meetingId: "",
         notes,
       }).html,
     });
@@ -166,25 +173,42 @@ export async function GET(req: NextRequest) {
       query.connection = connectionId;
     } else {
       if (user.role === "student") {
-      query.student = user._id;
-    } else {
-      query.tutor = user._id;
-    }
+        query.studentId = user._id;
+      } else {
+        query.tutorId = user._id;
+      }
     }
 
     const meetings = await ScheduledMeeting.find(query)
-      .populate("student", "name email")
-      .populate("tutor", "name email")
-      .sort({ date: 1 });
+      .populate("studentId", "name email profileImage")
+      .populate("tutorId", "name email profileImage")
+      .sort({ scheduledStart: 1 });
 
-    const securedMeetings = meetings.map((meeting) => {
-      const mObj = meeting.toObject();
-      if (mObj.provider === "jitsi") {
-        mObj.joinUrl = `/classroom/meeting/${mObj._id}`;
-        mObj.hostUrl = `/classroom/meeting/${mObj._id}`;
+    // Update meeting statuses based on current time
+    const now = new Date();
+    const updatedMeetings = meetings.map((meeting) => {
+      const m = meeting.toObject();
+      const start = new Date(m.scheduledStart);
+      const end = new Date(start.getTime() + m.duration * 60 * 1000);
+
+      let status;
+      if (m.status === "completed") {
+        status = "completed";
+      } else if (now >= start && now <= end && m.roomId) {
+        status = "live";
+      } else if (now > end) {
+        status = "expired";
+      } else {
+        status = "upcoming";
       }
-      return mObj;
+
+      return { ...m, status };
     });
+
+    const securedMeetings = updatedMeetings.map((meeting) => ({
+      ...meeting,
+      joinUrl: `/classroom/meeting/${meeting._id}`,
+    }));
 
     return NextResponse.json({ success: true, meetings: securedMeetings });
   } catch (error: any) {

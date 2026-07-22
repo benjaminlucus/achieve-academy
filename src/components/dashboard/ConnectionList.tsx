@@ -7,7 +7,6 @@ import {
   Clock,
   AlertCircle,
   CreditCard,
-  Video,
   MessageCircle,
   Check,
   X,
@@ -17,7 +16,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { ScheduleSessionModal } from "./ScheduleSessionModal";
-import { ScheduleMeetingModal } from "./ScheduleMeetingModal";
 import { differenceInDays, isAfter } from "date-fns";
 import { toast } from "react-hot-toast";
 import { useChat } from "@/lib/chat-context";
@@ -70,34 +68,23 @@ function PartnerAvatar({ partner, userRole }: { partner: User; userRole: "studen
 
 export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
   const [allConnections, setAllConnections] = useState<Connection[]>([]);
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ConnectionTab>("active");
   const [selectedPartner, setSelectedPartner] = useState<User | null>(null);
-  const [selectedConnectionForMeeting, setSelectedConnectionForMeeting] = useState<{
-    id: string;
-    partnerName: string;
-  } | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { openChat } = useChat();
   const initializedTab = useRef(false);
 
   const fetchConnections = async () => {
-    const [connectionsRes, meetingsRes, meRes] = await Promise.all([
+    const [connectionsRes, meRes] = await Promise.all([
       fetch("/api/connections"),
-      fetch("/api/meetings"),
       fetch("/api/me"),
     ]);
 
     if (connectionsRes.ok) {
       const data = await connectionsRes.json();
       setAllConnections(data.connections);
-    }
-
-    if (meetingsRes.ok) {
-      const data = await meetingsRes.json();
-      setMeetings(data.meetings);
     }
 
     if (meRes.ok) {
@@ -267,37 +254,6 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
         </div>
       )}
 
-      {meetings.length > 0 && (
-        <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-dark-navy/5 shadow-sm">
-          <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest mb-6 flex items-center gap-3">
-            <Video size={20} className="text-coral" /> Upcoming Meetings
-          </h3>
-          <div className="space-y-3 max-h-48 overflow-y-auto">
-            {meetings.map((meeting) => (
-              <a
-                key={meeting._id}
-                href={meeting.joinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-coral/5 hover:border-coral/20 transition-all group"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-black text-dark-navy uppercase tracking-tight truncate">
-                    {meeting.title}
-                  </p>
-                  <p className="text-[10px] text-steel-blue uppercase font-bold tracking-widest">
-                    {new Date(meeting.date).toLocaleDateString()} at {meeting.time}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-coral text-[10px] font-black uppercase tracking-widest flex-shrink-0">
-                  Join <Video size={14} />
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="bg-white rounded-[2.5rem] border border-dark-navy/5 shadow-sm overflow-hidden">
         <div className="p-6 pb-0 border-b border-gray-50">
           <h2 className="text-xl font-black text-dark-navy uppercase tracking-tight mb-4">
@@ -445,7 +401,7 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 mt-4">
+                    <div className="grid grid-cols-2 gap-2 mt-4">
                       <button
                         onClick={() => void openChat({ partnerId: String(partner._id) })}
                         disabled={!!isExpired && !isPaid}
@@ -456,22 +412,6 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
                         }`}
                       >
                         <MessageCircle size={14} /> Chat
-                      </button>
-                      <button
-                        onClick={() =>
-                          setSelectedConnectionForMeeting({
-                            id: conn._id,
-                            partnerName: partner.name,
-                          })
-                        }
-                        disabled={!!isExpired && !isPaid}
-                        className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl border transition-all text-[9px] font-black uppercase tracking-widest ${
-                          isExpired && !isPaid
-                            ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                            : "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white"
-                        }`}
-                      >
-                        <Video size={14} /> Zoom
                       </button>
                       <button
                         onClick={() => setSelectedPartner(partner)}
@@ -542,15 +482,6 @@ export const ConnectionList = ({ userRole, myId }: ConnectionListProps) => {
           partnerName={selectedPartner.name}
           partnerRole={userRole === "student" ? "tutor" : "student"}
           myId={myId}
-        />
-      )}
-
-      {selectedConnectionForMeeting && (
-        <ScheduleMeetingModal
-          isOpen={!!selectedConnectionForMeeting}
-          onClose={() => setSelectedConnectionForMeeting(null)}
-          connectionId={selectedConnectionForMeeting.id}
-          partnerName={selectedConnectionForMeeting.partnerName}
         />
       )}
     </div>

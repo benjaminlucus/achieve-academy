@@ -20,19 +20,12 @@ export interface IUser extends Document {
   interviewLink?: string;
   interviewHostLink?: string;
   meetingId?: string;
-  meetingProvider?: string;
   meetingDuration?: number;
   meetingNotes?: string;
   interviewCompletedAt?: Date;
   createdAt: Date;
   blockReason?: string;
   isPublicProfile: boolean;
-  // Zoom OAuth Fields
-  zoomConnected?: boolean;
-  zoomUserId?: string;
-  zoomEncryptedAccessToken?: string;
-  zoomEncryptedRefreshToken?: string;
-  zoomTokenExpiresAt?: Date;
   hasJoinedWhatsAppCommunity?: boolean;
 }
 
@@ -213,18 +206,18 @@ export interface IPayment extends Document {
 
 export interface IScheduledMeeting extends Document {
   connection: mongoose.Types.ObjectId;
-  student: mongoose.Types.ObjectId;
-  tutor: mongoose.Types.ObjectId;
+  hostId: mongoose.Types.ObjectId; // Tutor is always host
+  studentId: mongoose.Types.ObjectId;
+  tutorId: mongoose.Types.ObjectId; // Keep for compatibility
   title: string;
-  date: Date;
-  time: string;
-  duration: number;
+  subject: string;
+  scheduledStart: Date;
+  duration: number; // 20, 30, or 40 minutes
   notes?: string;
-  meetingId: string;
-  joinUrl: string;
-  hostUrl: string;
-  provider: "zoom" | "jitsi";
-  status: "scheduled" | "completed" | "cancelled";
+  roomId?: string; // Jitsi room name, only set when tutor starts session
+  status: "upcoming" | "live" | "completed" | "expired";
+  startedAt?: Date;
+  endedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

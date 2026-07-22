@@ -38,7 +38,6 @@ const UserSchema = new Schema<IUser>(
     interviewLink: String, // Participant Link
     interviewHostLink: String, // Admin/Host Link
     meetingId: String,
-    meetingProvider: { type: String, default: "zoom" },
     meetingDuration: { type: Number, default: 30 },
     meetingNotes: String,
     interviewCompletedAt: Date,
@@ -54,16 +53,6 @@ const UserSchema = new Schema<IUser>(
     timezone: String,
 
     lastLogin: Date,
-
-    // Zoom OAuth Fields
-    zoomConnected: {
-      type: Boolean,
-      default: false,
-    },
-    zoomUserId: String,
-    zoomEncryptedAccessToken: String,
-    zoomEncryptedRefreshToken: String,
-    zoomTokenExpiresAt: Date,
 
     hasJoinedWhatsAppCommunity: {
       type: Boolean,

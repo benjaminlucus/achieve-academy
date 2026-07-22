@@ -6,7 +6,7 @@ import { authErrorResponse, requireAdmin } from "@/lib/auth";
 import { captureException } from "@/lib/monitoring";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
 import { logger } from "@/lib/logger";
-import { createZoomMeeting } from "@/lib/zoom-service";
+import { createJitsiMeeting } from "@/lib/jitsi-service";
 
 export async function PATCH(
   req: NextRequest,
@@ -38,7 +38,7 @@ export async function PATCH(
       await existingInterview.save();
 
       // Create new interview
-      const meetingDetails = await createZoomMeeting("Ravencrest User Interview Session", newDate, 30);
+      const meetingDetails = await createJitsiMeeting();
 
       const newInterview = new Interview({
         userId: existingInterview.userId,

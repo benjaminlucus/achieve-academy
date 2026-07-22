@@ -5,63 +5,55 @@ const ScheduledMeetingSchema = new Schema<IScheduledMeeting>({
   connection: {
     type: Schema.Types.ObjectId,
     ref: "Connection",
-    required: true
+    required: true,
   },
-  student: {
+  hostId: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
   },
-  tutor: {
+  studentId: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
+  },
+  tutorId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
   title: {
     type: String,
-    required: true
+    required: true,
   },
-  date: {
-    type: Date,
-    required: true
-  },
-  time: {
+  subject: {
     type: String,
-    required: true
+    required: true,
+  },
+  scheduledStart: {
+    type: Date,
+    required: true,
   },
   duration: {
     type: Number,
-    default: 60
+    required: true,
+    enum: [20, 30, 40],
   },
   notes: String,
-  meetingId: {
-    type: String,
-    required: true
-  },
-  joinUrl: {
-    type: String,
-    required: true
-  },
-  hostUrl: {
-    type: String,
-    required: true
-  },
-  provider: {
-    type: String,
-    enum: ["zoom", "jitsi"],
-    default: "jitsi"
-  },
+  roomId: String,
   status: {
     type: String,
-    enum: ["scheduled", "completed", "cancelled"],
-    default: "scheduled"
-  }
+    enum: ["upcoming", "live", "completed", "expired"],
+    default: "upcoming",
+  },
+  startedAt: Date,
+  endedAt: Date,
 }, { timestamps: true });
 
 ScheduledMeetingSchema.index({ connection: 1 });
-ScheduledMeetingSchema.index({ student: 1 });
-ScheduledMeetingSchema.index({ tutor: 1 });
-ScheduledMeetingSchema.index({ date: 1 });
+ScheduledMeetingSchema.index({ studentId: 1 });
+ScheduledMeetingSchema.index({ tutorId: 1 });
+ScheduledMeetingSchema.index({ scheduledStart: 1 });
 
 const ScheduledMeeting = models.ScheduledMeeting || mongoose.model<IScheduledMeeting>("ScheduledMeeting", ScheduledMeetingSchema);
 
