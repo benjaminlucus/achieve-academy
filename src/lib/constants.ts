@@ -140,6 +140,21 @@ export const DEFAULT_EDUCATION_LEVELS = [
   { name: "Professional Development", description: "Career and skill development", sortOrder: 13 },
 ];
 
+export const DEFAULT_TEACHING_LANGUAGES = [
+  "English",
+  "Urdu",
+  "Arabic",
+  "Punjabi",
+  "Hindi",
+  "Pashto",
+  "Persian",
+  "Turkish",
+  "French",
+  "German",
+  "Chinese",
+  "Spanish",
+];
+
 export type PaymentMethod = typeof PAYMENT_METHODS[keyof typeof PAYMENT_METHODS];
 
 /** Payment statuses for manual payment flow */

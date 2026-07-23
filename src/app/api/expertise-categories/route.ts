@@ -8,14 +8,14 @@ import { auth } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
 
 /** Helper function to seed all default data */
-const seedDefaultData = async () => {
+export const seedDefaultData = async () => {
   // Seed categories
   const existingCategories = await ExpertiseCategory.countDocuments({ isActive: true });
   if (existingCategories === 0) {
     const insertedCategories = await ExpertiseCategory.insertMany(
       DEFAULT_EXPERTISE_CATEGORIES.map(c => ({ ...c, isActive: true }))
     );
-    logger.info("Inserted default expertise categories:", { count: insertedCategories.length });
+    logger.info("Inserted default expertise categories", { count: insertedCategories.length });
 
     // Seed subjects using the inserted categories
     for (const category of insertedCategories) {
@@ -38,7 +38,7 @@ const seedDefaultData = async () => {
     await EducationLevel.insertMany(
       DEFAULT_EDUCATION_LEVELS.map(l => ({ ...l, isActive: true }))
     );
-    logger.info("Inserted default education levels.");
+    logger.info("Inserted default education levels");
   }
 };
 

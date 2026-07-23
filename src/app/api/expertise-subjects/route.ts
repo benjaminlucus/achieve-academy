@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import ExpertiseSubject from "@/database/models/expertise-subject.model";
+import { seedDefaultData } from "../expertise-categories/route";
 import { auth } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
+    await seedDefaultData();
+
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
     

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, X, Search } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import { DEFAULT_TEACHING_LANGUAGES } from '@/lib/constants';
 
 export interface IExpertiseCategory {
   _id: string;
@@ -65,6 +66,7 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpertise, setEditingExpertise] = useState<IExpertise | null>(null);
+  const [languageSearch, setLanguageSearch] = useState('');
   const [formData, setFormData] = useState({
     category: '',
     subject: '',
@@ -160,6 +162,29 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
       });
     }
     setIsModalOpen(true);
+    setLanguageSearch('');
+  };
+
+  const toggleLanguage = (lang: string) => {
+    if (formData.teachingLanguages.includes(lang)) {
+      setFormData({
+        ...formData,
+        teachingLanguages: formData.teachingLanguages.filter(l => l !== lang)
+      });
+    } else {
+      setFormData({
+        ...formData,
+        teachingLanguages: [...formData.teachingLanguages, lang]
+      });
+    }
+  };
+
+  const removeLanguage = (e: React.MouseEvent, lang: string) => {
+    e.stopPropagation();
+    setFormData({
+      ...formData,
+      teachingLanguages: formData.teachingLanguages.filter(l => l !== lang)
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -219,6 +244,10 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
       toast.error('Failed to delete expertise');
     }
   };
+
+  const filteredLanguages = DEFAULT_TEACHING_LANGUAGES.filter(lang =>
+    lang.toLowerCase().includes(languageSearch.toLowerCase())
+  );
 
   if (isLoading) {
     return (
@@ -406,18 +435,48 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
                   <label className="block text-xs font-black text-steel-blue uppercase tracking-[0.2em]">
                     Teaching Languages
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. English, Urdu, Arabic (comma-separated)"
-                    className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy"
-                    value={formData.teachingLanguages.join(', ')}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        teachingLanguages: e.target.value.split(',').map(s => s.trim()).filter(Boolean),
-                      })
-                    }
-                  />
+                  {/* Selected languages chips */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {formData.teachingLanguages.map(lang => (
+                      <span
+                        key={lang}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-coral/10 text-coral text-sm font-bold rounded-full"
+                      >
+                        {lang}
+                        <button type="button" onClick={(e) => removeLanguage(e, lang)} className="hover:text-coral/80">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  {/* Search bar */}
+                  <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search languages..."
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy"
+                      value={languageSearch}
+                      onChange={(e) => setLanguageSearch(e.target.value)}
+                    />
+                  </div>
+                  {/* Language options */}
+                  <div className="grid gap-2 md:grid-cols-3">
+                    {filteredLanguages.map(lang => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => toggleLanguage(lang)}
+                        className={`px-3 py-2 text-sm font-bold rounded-lg transition-all text-left ${
+                          formData.teachingLanguages.includes(lang)
+                            ? 'bg-coral text-white'
+                            : 'bg-gray-100 text-dark-navy hover:bg-gray-200'
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
