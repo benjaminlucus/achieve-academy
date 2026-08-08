@@ -4,6 +4,7 @@ import { connectDB } from "@/database/connect";
 import User from "@/database/models/user.model";
 import StudentProfile from "@/database/models/student.model";
 import TutorProfile from "@/database/models/tutor.model";
+import MobileVerification from "@/database/models/mobile-verification.model";
 import { auth, currentUser, createClerkClient } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
 import { onboardingSchema } from "@/lib/validations";
@@ -33,6 +34,23 @@ export async function completeOnboarding(rawData: any) {
       const serverPin = process.env.ADMIN_ONBOARDING_PIN || "123456";
       if (validatedData.secretPin !== serverPin) {
         throw new Error("Invalid admin PIN");
+      }
+    } else {
+      // Step 3b: Phone confirmation required for students/tutors
+      const tempUser = await User.findOne({ clerkId: userId }, { _id: 1 });
+      let dbConfirmed = false;
+      if (tempUser) {
+        const verification = await MobileVerification.findOne({ user: tempUser._id });
+        dbConfirmed =
+          !!verification &&
+          (verification.isVerified === true ||
+            verification.confirmationState === "confirmed" ||
+            verification.confirmationState === "verified");
+      }
+      const pv = validatedData.phoneVerification;
+      const clientConfirmed = !!(pv && (pv.isVerified || pv.isConfirmed));
+      if (!dbConfirmed && !clientConfirmed) {
+        throw new Error("Phone number confirmation is required before onboarding can complete.");
       }
     }
 

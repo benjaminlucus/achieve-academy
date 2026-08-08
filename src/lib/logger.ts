@@ -10,10 +10,13 @@ const SENSITIVE_KEYS = new Set([
   "clerkSecret",
 ]);
 
-function sanitizeMeta(meta?: Record<string, unknown>): Record<string, unknown> | undefined {
+function sanitizeMeta(meta?: unknown): Record<string, unknown> | undefined {
   if (!meta) return undefined;
+  if (typeof meta !== "object" || meta === null) {
+    return { value: meta };
+  }
   const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(meta)) {
+  for (const [key, value] of Object.entries(meta as Record<string, unknown>)) {
     if (SENSITIVE_KEYS.has(key.toLowerCase())) {
       out[key] = "[redacted]";
       continue;
@@ -28,7 +31,7 @@ function sanitizeMeta(meta?: Record<string, unknown>): Record<string, unknown> |
   return out;
 }
 
-function log(level: LogLevel, event: string, meta?: Record<string, unknown>) {
+function log(level: LogLevel, event: string, meta?: unknown) {
   const payload = {
     level,
     event,
@@ -46,7 +49,7 @@ function log(level: LogLevel, event: string, meta?: Record<string, unknown>) {
 }
 
 export const logger = {
-  info: (event: string, meta?: Record<string, unknown>) => log("info", event, meta),
-  warn: (event: string, meta?: Record<string, unknown>) => log("warn", event, meta),
-  error: (event: string, meta?: Record<string, unknown>) => log("error", event, meta),
+  info: (event: string, meta?: unknown) => log("info", event, meta),
+  warn: (event: string, meta?: unknown) => log("warn", event, meta),
+  error: (event: string, meta?: unknown) => log("error", event, meta),
 };

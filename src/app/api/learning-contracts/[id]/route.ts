@@ -46,7 +46,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, contract });
   } catch (error: any) {
-    logger.error("Failed to get learning contract:", error);
+    logger.error("Failed to get learning contract:", { error });
     return NextResponse.json(
       { error: "Failed to get learning contract", details: error.message },
       { status: 500 }
@@ -156,7 +156,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, contract });
   } catch (error: any) {
-    logger.error("Failed to update learning contract:", error);
+    logger.error("Failed to update learning contract:", { error });
     return NextResponse.json(
       { error: "Failed to update learning contract", details: error.message },
       { status: 500 }

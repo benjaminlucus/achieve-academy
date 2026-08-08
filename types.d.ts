@@ -428,3 +428,178 @@ export interface IUserAchievement extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// 1. Phone & Mobile Verification Types
+export type MobileConfirmationState = "none" | "confirmed" | "verified";
+
+export interface IMobileVerification extends Document {
+  user: mongoose.Types.ObjectId;
+  countryCode: string; // e.g., "+92"
+  countryName: string;
+  mobileNumber: string; // full number without country code
+  whatsappNumber?: string;
+  whatsappSameAsMobile: boolean;
+  otp?: string; // Hashed OTP
+  otpExpiresAt?: Date;
+  otpAttempts: number;
+  lastOtpSentAt?: Date;
+  isVerified: boolean;
+  verifiedAt?: Date;
+  verificationMethod: "otp" | "manual" | "admin";
+  verifiedBy?: mongoose.Types.ObjectId; // Admin who verified manually
+  isDuplicate: boolean;
+  confirmationState: MobileConfirmationState;
+  confirmedAt?: Date;
+  doubleEntryMatched?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 2. User Activity Tracking
+export interface IUserActivity extends Document {
+  user: mongoose.Types.ObjectId;
+  clerkUserId: string;
+  isOnline: boolean;
+  lastSeen: Date;
+  lastLoginAt?: Date;
+  lastLogoutAt?: Date;
+  lastPageVisited?: string;
+  lastRoute?: string;
+  lastActivityAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 3. Connection Request Monitoring & Reminders
+export type ConnectionReminderMethod = "whatsapp" | "email" | "internal_notification";
+export interface IConnectionReminder extends Document {
+  connection: mongoose.Types.ObjectId;
+  tutor: mongoose.Types.ObjectId;
+  student: mongoose.Types.ObjectId;
+  sentAt: Date;
+  method: ConnectionReminderMethod;
+  sentBy?: mongoose.Types.ObjectId; // Admin or system
+  note?: string;
+  createdAt: Date;
+}
+
+// 4. AI Moderation & Trust & Safety
+export type AIFlagLevel = "low" | "medium" | "high" | "critical";
+export type AIFlagCategory =
+  | "contact_sharing"
+  | "payment_bypass"
+  | "profanity"
+  | "spam"
+  | "toxicity"
+  | "harassment"
+  | "scam"
+  | "grooming"
+  | "fraud"
+  | "suspicious"
+  | "tutor_extra_fee"
+  | "student_abuse"
+  | "unknown";
+
+export interface IAIConversationFlag extends Document {
+  conversationId: mongoose.Types.ObjectId;
+  messageId?: mongoose.Types.ObjectId;
+  flaggedBy: "rule_engine" | "ai_analysis" | "user_report" | "admin";
+  ruleMatched?: string; // Which rule in Layer 1
+  summary?: string; // Layer 2 AI summary
+  sentiment?: string;
+  riskScore: number; // 0-100
+  confidenceScore?: number; // 0-100
+  level: AIFlagLevel;
+  category: AIFlagCategory;
+  categories?: AIFlagCategory[];
+  recommendedAction?: string;
+  explanation?: string;
+  flaggedContent?: string;
+  participants: mongoose.Types.ObjectId[];
+  handled: boolean;
+  handledAt?: Date;
+  handledBy?: mongoose.Types.ObjectId;
+  adminNote?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IAIRiskProfile extends Document {
+  user: mongoose.Types.ObjectId;
+  overallRiskScore: number; // 0-100
+  riskLevel: AIFlagLevel;
+  flagsCount: number;
+  criticalFlagsCount: number;
+  recentCategories: AIFlagCategory[];
+  lastAnalyzedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 5. Reports System
+export type ReportType = "daily_ceo" | "weekly";
+export interface IPlatformReport extends Document {
+  type: ReportType;
+  date: Date;
+  startDate: Date;
+  endDate: Date;
+  reportNumber: string;
+  generatedAt: Date;
+  data: {
+    newUsers?: number;
+    activeUsers?: number;
+    messagesSent?: number;
+    sessionsScheduled?: number;
+    pendingConnections?: number;
+    highRiskConversations?: number;
+    contactSharingAttempts?: number;
+    paymentBypassAttempts?: number;
+    tutorResponseTime?: number; // Average minutes
+    studentSatisfaction?: number;
+    platformHealthScore?: number;
+    revenue?: number;
+    complaints?: number;
+    userRetention?: number;
+    mostActiveTutors?: mongoose.Types.ObjectId[];
+    mostActiveStudents?: mongoose.Types.ObjectId[];
+    aiRecommendations?: string[];
+    additionalMetrics?: any;
+  };
+  createdAt: Date;
+}
+
+// 6. Payment Details Privacy System
+export interface IPaymentDetailsRequest extends Document {
+  student: mongoose.Types.ObjectId;
+  tutor: mongoose.Types.ObjectId;
+  status: "pending" | "approved" | "rejected" | "contacted";
+  requestNote?: string;
+  adminNote?: string;
+  approvedAt?: Date;
+  rejectedAt?: Date;
+  handledBy?: mongoose.Types.ObjectId; // Admin
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 7. Admin Notification System (for real-time)
+export type AdminNotificationType =
+  | "connection_request"
+  | "payment_details_request"
+  | "ai_flag"
+  | "report_generated"
+  | "tutor_reminder"
+  | "new_user";
+export interface IAdminNotification extends Document {
+  type: AdminNotificationType;
+  title: string;
+  message: string;
+  relatedModel?: string;
+  relatedId?: mongoose.Types.ObjectId;
+  payload?: any;
+  isRead: boolean;
+  readAt?: Date;
+  createdAt: Date;
+}

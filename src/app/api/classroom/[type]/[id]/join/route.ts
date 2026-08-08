@@ -69,6 +69,25 @@ export async function GET(
       duration = session.duration || 60;
       title = `Tutoring Session: ${session.subject}`;
 
+      // Enforce join window (15 minutes before start)
+      const now = new Date();
+      const windowStart = new Date(startDate.getTime() - 15 * 60 * 1000);
+      const windowEnd = new Date(startDate.getTime() + duration * 60 * 1000);
+
+      if (now < windowStart) {
+        const msUntilWindow = windowStart.getTime() - now.getTime();
+        const minutesUntil = Math.ceil(msUntilWindow / (60 * 1000));
+        return NextResponse.json({
+          error: `Classroom opens in ${minutesUntil} minute(s)`,
+          waiting: true,
+        }, { status: 200 });
+      }
+      if (now > windowEnd) {
+        return NextResponse.json({
+          error: "This class has already ended",
+        }, { status: 403 });
+      }
+
       // Set roomId
       if (!session.meetingLink || session.meetingLink.trim() === "") {
         return NextResponse.json({ error: "Room not ready yet" }, { status: 400 });
@@ -117,6 +136,26 @@ export async function GET(
       startDate = new Date(meeting.scheduledStart);
       duration = meeting.duration || 60;
       title = meeting.title;
+
+      // Enforce join window (15 minutes before start)
+      const now = new Date();
+      const windowStart = new Date(startDate.getTime() - 15 * 60 * 1000);
+      const windowEnd = new Date(startDate.getTime() + duration * 60 * 1000);
+
+      if (now < windowStart) {
+        const msUntilWindow = windowStart.getTime() - now.getTime();
+        const minutesUntil = Math.ceil(msUntilWindow / (60 * 1000));
+        return NextResponse.json({
+          error: `Meeting opens in ${minutesUntil} minute(s)`,
+          waiting: true,
+        }, { status: 200 });
+      }
+      if (now > windowEnd) {
+        return NextResponse.json({
+          error: "This meeting has already ended",
+        }, { status: 403 });
+      }
+
       roomId = meeting.roomId;
       meetingStarted = true;
 
@@ -149,6 +188,26 @@ export async function GET(
       startDate = new Date(interview.scheduledAt);
       duration = interview.duration || 30;
       title = "User Interview Session";
+
+      // Enforce join window (15 minutes before start)
+      const now = new Date();
+      const windowStart = new Date(startDate.getTime() - 15 * 60 * 1000);
+      const windowEnd = new Date(startDate.getTime() + duration * 60 * 1000);
+
+      if (now < windowStart) {
+        const msUntilWindow = windowStart.getTime() - now.getTime();
+        const minutesUntil = Math.ceil(msUntilWindow / (60 * 1000));
+        return NextResponse.json({
+          error: `Interview opens in ${minutesUntil} minute(s)`,
+          waiting: true,
+        }, { status: 200 });
+      }
+      if (now > windowEnd) {
+        return NextResponse.json({
+          error: "This interview has already ended",
+        }, { status: 403 });
+      }
+
       roomId = interview.meetingId;
       meetingStarted = true;
 

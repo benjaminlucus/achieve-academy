@@ -75,10 +75,18 @@ export async function PATCH(
         connection.status = "accepted";
         connection.subscriptionStatus = "trial";
         
-        // Send restored emails to both users
+        // Restore student user to verified (no re-interview required)
         const student: any = connection.student;
+        if (student && student.role === "student" && student.status === "blocked") {
+          const user = await User.findById(student._id);
+          if (user) {
+            user.status = "verified";
+            await user.save();
+          }
+        }
         const tutor: any = connection.tutor;
         
+        // Send restored emails to both users
         if (student.email) {
           await sendEmail({
             to: student.email,
@@ -99,14 +107,24 @@ export async function PATCH(
           });
         }
       } else if (!isTrialNowActive && connection.status === "accepted") {
-        // If trial is expired after decrease, block it
+        // If trial is expired after decrease, block it AND student user
         connection.status = "blocked";
         connection.subscriptionStatus = "expired";
         
-        // Send blocked emails
         const student: any = connection.student;
         const tutor: any = connection.tutor;
         
+        // Mark the student user as blocked (no longer considered verified)
+        if (student && student.role === "student" && student.status !== "blocked") {
+          const user = await User.findById(student._id);
+          if (user) {
+            user.status = "blocked";
+            user.blockReason = user.blockReason || "Trial expired";
+            await user.save();
+          }
+        }
+        
+        // Send blocked emails
         if (student.email) {
           await sendEmail({
             to: student.email,

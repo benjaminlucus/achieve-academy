@@ -50,7 +50,7 @@ export async function GET() {
     const categories = await ExpertiseCategory.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
     return NextResponse.json({ success: true, data: categories });
   } catch (error) {
-    logger.error("Failed to get expertise categories", error as Record<string, unknown>);
+    logger.error("Failed to get expertise categories", { error });
     return NextResponse.json(
       { success: false, error: "Failed to get expertise categories" },
       { status: 500 }

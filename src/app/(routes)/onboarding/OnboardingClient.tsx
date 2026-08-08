@@ -21,8 +21,9 @@ import { completeOnboarding } from "./actions";
 import { allTimezones, allGrades, allCountries } from "@/lib/constants";
 import WeeklyAvailabilityPicker, { getDefaultAvailability, AvailabilityDay } from "@/components/WeeklyAvailabilityPicker";
 import { getTimezoneForCountry } from "@/lib/timezone";
+import PhoneVerificationForm, { PhoneVerificationState } from "@/components/shared/PhoneVerificationForm";
 
-type Step = "role" | "location" | "details" | "teaching-levels" | "availability" | "submitting";
+type Step = "role" | "location" | "phone_verification" | "details" | "teaching-levels" | "availability" | "submitting";
 
 function CountrySelect({ defaultValue, onSelect }: { defaultValue?: string, onSelect: (c: string) => void }) {
   const [search, setSearch] = useState("");
@@ -97,6 +98,7 @@ export default function OnboardingClient() {
     country: "",
     timezone: "Asia/Karachi",
   });
+  const [phoneVerification, setPhoneVerification] = useState<PhoneVerificationState | null>(null);
   
   // New state for teaching levels & qualifications
   const [teachingLevels, setTeachingLevels] = useState<string[]>([]);
@@ -125,6 +127,11 @@ export default function OnboardingClient() {
       ...prev,
       ...Object.fromEntries(data.entries()),
     }));
+    setStep("phone_verification");
+  };
+
+  const handlePhoneVerified = (verification: PhoneVerificationState) => {
+    setPhoneVerification(verification);
     setStep("details");
   };
 
@@ -142,6 +149,7 @@ export default function OnboardingClient() {
         ...formData,
         ...Object.fromEntries(data.entries()),
         role,
+        phoneVerification,
       });
     }
   };
@@ -180,6 +188,7 @@ export default function OnboardingClient() {
     finishOnboarding({
       ...formData,
       role,
+      phoneVerification,
       availability: weeklyAvailability,
       teachingLevels,
       teachingLevelsOther,
@@ -229,11 +238,12 @@ export default function OnboardingClient() {
   const handleBack = () => {
     if (step === "availability") setStep("teaching-levels");
     else if (step === "teaching-levels") setStep("details");
-    else if (step === "details") setStep("location");
+    else if (step === "details") setStep("phone_verification");
+    else if (step === "phone_verification") setStep("location");
     else if (step === "location") setStep("role");
   };
 
-  const steps: Step[] = role === "student" ? ["role", "location", "details"] : ["role", "location", "details", "teaching-levels", "availability"];
+  const steps: Step[] = role === "student" ? ["role", "location", "phone_verification", "details"] : ["role", "location", "phone_verification", "details", "teaching-levels", "availability"];
   const currentStepIndex = steps.indexOf(step);
   const totalSteps = steps.length;
   const progress = ((currentStepIndex + 1) / totalSteps) * 100;
@@ -390,6 +400,46 @@ export default function OnboardingClient() {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {step === "phone_verification" && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="text-center space-y-3">
+                <span className="text-[10px] font-black text-purple-primary uppercase tracking-[0.2em]">
+                  Step {currentStepIndex + 1} of {totalSteps}
+                </span>
+                <h1 className="text-4xl font-black text-deep-black tracking-tight">
+                  Phone & WhatsApp Verification
+                </h1>
+                <p className="text-steel-blue font-medium">
+                  Secure your account with verified contact details. Required to complete onboarding.
+                </p>
+              </div>
+
+              <PhoneVerificationForm
+                initialValue={phoneVerification || undefined}
+                onVerified={handlePhoneVerified}
+                required={true}
+              />
+
+              <div className="flex items-center justify-between pt-4">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex items-center gap-2 text-steel-blue hover:text-deep-black font-black text-[11px] uppercase tracking-widest transition-colors"
+                >
+                  <ArrowLeft size={18} strokeWidth={2.5} /> Back
+                </button>
+                <button
+                  type="button"
+                  disabled={!(phoneVerification?.isVerified || phoneVerification?.isConfirmed)}
+                  onClick={() => (phoneVerification?.isVerified || phoneVerification?.isConfirmed) && setStep("details")}
+                  className="flex items-center gap-3 bg-purple-primary text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-purple-primary/90 hover:scale-105 transition-all shadow-xl shadow-purple-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  Next Step <ArrowRight size={18} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
           )}
 

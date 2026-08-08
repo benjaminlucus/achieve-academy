@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const subjects = await ExpertiseSubject.find(query).sort({ sortOrder: 1, name: 1 });
     return NextResponse.json({ success: true, data: subjects });
   } catch (error) {
-    logger.error("Failed to get expertise subjects", error as Record<string, unknown>);
+    logger.error("Failed to get expertise subjects", { error });
     return NextResponse.json(
       { success: false, error: "Failed to get expertise subjects" },
       { status: 500 }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const subject = await ExpertiseSubject.create(data);
     return NextResponse.json({ success: true, data: subject });
   } catch (error) {
-    logger.error("Failed to create expertise subject", error as Record<string, unknown>);
+    logger.error("Failed to create expertise subject", { error });
     return NextResponse.json(
       { success: false, error: "Failed to create expertise subject" },
       { status: 500 }

@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, request: tutorRequest });
   } catch (error: any) {
-    logger.error("Failed to create tutor request:", error);
+    logger.error("Failed to create tutor request:", { error });
     return NextResponse.json(
       { error: "Failed to create tutor request", details: error.message },
       { status: 500 }
@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, requests });
   } catch (error: any) {
-    logger.error("Failed to get tutor requests:", error);
+    logger.error("Failed to get tutor requests:", { error });
     return NextResponse.json(
       { error: "Failed to get tutor requests", details: error.message },
       { status: 500 }
@@ -219,7 +219,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true, request: updatedRequest });
   } catch (error: any) {
-    logger.error("Failed to update tutor request:", error);
+    logger.error("Failed to update tutor request:", { error });
     return NextResponse.json(
       { error: "Failed to update tutor request", details: error.message },
       { status: 500 }

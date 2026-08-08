@@ -60,6 +60,17 @@ export const onboardingSchema = z.object({
     status: z.enum(["pending", "verified", "rejected"]).optional()
   })).optional(),
   certifications: z.union([z.string(), z.array(z.string())]).optional(),
+  phoneVerification: z.object({
+    countryCode: z.string().optional(),
+    countryName: z.string().optional(),
+    mobileNumber: z.string().optional(),
+    whatsappSameAsMobile: z.boolean().optional(),
+    whatsappNumber: z.string().optional(),
+    isConfirmed: z.boolean().optional(),
+    isVerified: z.boolean().optional(),
+    confirmedAt: z.coerce.date().optional(),
+    verifiedAt: z.coerce.date().optional(),
+  }).optional(),
 });
 
 export const zoomUrlSchema = z.string().url().refine((url) => {

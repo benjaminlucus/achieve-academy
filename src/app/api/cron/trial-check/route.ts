@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import Connection from "@/database/models/connection.model";
+import User from "@/database/models/user.model";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
 import { differenceInDays, isAfter } from "date-fns";
 
@@ -44,6 +45,15 @@ export async function GET(req: NextRequest) {
           conn.subscriptionStatus = "trial";
           await conn.save();
           
+          // Restore student user status to verified (no re-interview required)
+          if (student && student.role === "student" && student.status === "blocked") {
+            const user = await User.findById(student._id);
+            if (user) {
+              user.status = "verified";
+              await user.save();
+            }
+          }
+          
           // Send restored emails to both
           if (student.email) {
             await sendEmail({
@@ -65,11 +75,21 @@ export async function GET(req: NextRequest) {
           }
           results.restored++;
         }
-        // Handle active trial that just expired - block connection
+        // Handle active trial that just expired - block connection AND student user
         else if (conn.status === "accepted" && conn.subscriptionStatus === "trial" && isAfter(now, trialEndsAt)) {
           conn.status = "blocked";
           conn.subscriptionStatus = "expired";
           await conn.save();
+          
+          // Mark the student user as blocked (no longer considered verified)
+          if (student && student.role === "student" && student.status !== "blocked") {
+            const user = await User.findById(student._id);
+            if (user) {
+              user.status = "blocked";
+              user.blockReason = user.blockReason || "Trial expired";
+              await user.save();
+            }
+          }
           
           // Send blocked emails to both
           if (student.email) {

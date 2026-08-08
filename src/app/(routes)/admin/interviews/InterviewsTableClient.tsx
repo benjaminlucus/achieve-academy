@@ -390,8 +390,11 @@ export default function InterviewsTableClient({ initialInterviews }: { initialIn
 
   const filteredInterviews = useMemo(() => {
     return interviews.filter(i => {
-      const matchesSearch = i.user.name.toLowerCase().includes(filters.search.toLowerCase()) || 
-                            i.user.email.toLowerCase().includes(filters.search.toLowerCase());
+      const name = i.user?.name ?? "";
+      const email = i.user?.email ?? "";
+      const searchTerm = filters.search ?? "";
+      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            email.toLowerCase().includes(searchTerm.toLowerCase());
       
       const now = new Date();
       const sched = new Date(i.scheduledAt);

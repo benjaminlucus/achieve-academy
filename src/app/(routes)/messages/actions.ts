@@ -20,6 +20,7 @@ import {
 import { getChatChannelName, getUserChannelName } from "@/lib/chat-channels";
 import { triggerDashboardUpdate } from "@/lib/realtime-events";
 import { sendEmail, emailTemplates } from "@/lib/email-service";
+import { processMessageForModeration } from "@/lib/ai-moderation-service";
 
 // --- Connection Actions ---
 
@@ -219,6 +220,18 @@ export async function sendMessage(data: {
       lastMessage: message
     });
 
+    // AI Moderation - Fire & Forget (never slow down the user)
+    if (data.content && (data.messageType || "text") === "text") {
+      const participants = conversation.participants.map((p: mongoose.Types.ObjectId) => p.toString());
+      void processMessageForModeration({
+        messageId: message._id.toString(),
+        conversationId: conversation._id.toString(),
+        senderId: currentUser._id.toString(),
+        participants,
+        messageContent: data.content,
+      });
+    }
+
     return { success: true, message: JSON.parse(JSON.stringify(message)) };
   } catch (error: any) {
     console.error("Send Message Error:", error);
@@ -277,6 +290,21 @@ export async function editMessage(messageId: string, newContent: string) {
       content: newContent,
       isEdited: true
     });
+
+    // AI Moderation - Fire & Forget for edited content
+    if (newContent) {
+      const conversation = await Conversation.findById(message.conversation);
+      if (conversation) {
+        const participants = conversation.participants.map((p: mongoose.Types.ObjectId) => p.toString());
+        void processMessageForModeration({
+          messageId: message._id.toString(),
+          conversationId: conversation._id.toString(),
+          senderId: currentUser._id.toString(),
+          participants,
+          messageContent: newContent,
+        });
+      }
+    }
 
     return { success: true, message: JSON.parse(JSON.stringify(message)) };
   } catch (error: any) {

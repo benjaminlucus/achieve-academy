@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, contract: newContract });
   } catch (error: any) {
-    logger.error("Failed to create learning contract:", error);
+    logger.error("Failed to create learning contract:", { error });
     return NextResponse.json(
       { error: "Failed to create learning contract", details: error.message },
       { status: 500 }
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, contracts });
   } catch (error: any) {
-    logger.error("Failed to get learning contracts:", error);
+    logger.error("Failed to get learning contracts:", { error });
     return NextResponse.json(
       { error: "Failed to get learning contracts", details: error.message },
       { status: 500 }
