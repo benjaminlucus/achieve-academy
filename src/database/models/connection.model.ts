@@ -7,6 +7,9 @@ export interface IConnection extends Document {
   initiatedBy: mongoose.Types.ObjectId;
   message?: string;
   acceptedAt?: Date;
+  acceptedBy?: mongoose.Types.ObjectId;
+  acceptedByRole?: "student" | "tutor" | "admin";
+  acceptedOnBehalfOfRecipient?: boolean;
   trialEndsAt?: Date;
   subscriptionStatus: "none" | "trial" | "active" | "expired" | "cancelled";
   paymentStatus: "pending" | "paid" | "overdue";
@@ -42,6 +45,18 @@ const ConnectionSchema = new Schema<IConnection>({
   },
   acceptedAt: {
     type: Date
+  },
+  acceptedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User"
+  },
+  acceptedByRole: {
+    type: String,
+    enum: ["student", "tutor", "admin"]
+  },
+  acceptedOnBehalfOfRecipient: {
+    type: Boolean,
+    default: false
   },
   trialEndsAt: {
     type: Date

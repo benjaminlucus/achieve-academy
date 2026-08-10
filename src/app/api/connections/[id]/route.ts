@@ -52,6 +52,9 @@ export async function PATCH(
         return NextResponse.json({ error: "You cannot accept your own request" }, { status: 400 });
       }
       connection.acceptedAt = new Date();
+      connection.acceptedBy = user._id;
+      connection.acceptedByRole = user.role;
+      connection.acceptedOnBehalfOfRecipient = false;
       connection.trialEndsAt = addDays(new Date(), 7);
       connection.subscriptionStatus = "trial";
     }

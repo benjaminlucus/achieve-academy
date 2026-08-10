@@ -23,7 +23,7 @@ import WeeklyAvailabilityPicker, { getDefaultAvailability, AvailabilityDay } fro
 import { getTimezoneForCountry } from "@/lib/timezone";
 import PhoneVerificationForm, { PhoneVerificationState } from "@/components/shared/PhoneVerificationForm";
 
-type Step = "role" | "location" | "phone_verification" | "details" | "teaching-levels" | "availability" | "submitting";
+type Step = "role" | "location" | "phone_verification" | "details" | "teaching-levels" | "expertise" | "availability" | "submitting";
 
 function CountrySelect({ defaultValue, onSelect }: { defaultValue?: string, onSelect: (c: string) => void }) {
   const [search, setSearch] = useState("");
@@ -110,6 +110,7 @@ export default function OnboardingClient() {
   const [graduationYear, setGraduationYear] = useState("");
   const [degreeFile, setDegreeFile] = useState<any>(null);
   const [certifications, setCertifications] = useState<string>("");
+  const [onboardingExpertise, setOnboardingExpertise] = useState<string>("");
   const [weeklyAvailability, setWeeklyAvailability] = useState<AvailabilityDay[]>(getDefaultAvailability());
   const [isPending, setIsPending] = useState(false);
   const [loadingText, setLoadingText] = useState("Setting up your profile...");
@@ -208,6 +209,7 @@ export default function OnboardingClient() {
           }
         : undefined,
       certifications,
+      onboardingExpertise,
     });
   };
 
@@ -236,14 +238,15 @@ export default function OnboardingClient() {
   };
 
   const handleBack = () => {
-    if (step === "availability") setStep("teaching-levels");
+    if (step === "availability") setStep("expertise");
+    else if (step === "expertise") setStep("teaching-levels");
     else if (step === "teaching-levels") setStep("details");
     else if (step === "details") setStep("phone_verification");
     else if (step === "phone_verification") setStep("location");
     else if (step === "location") setStep("role");
   };
 
-  const steps: Step[] = role === "student" ? ["role", "location", "phone_verification", "details"] : ["role", "location", "phone_verification", "details", "teaching-levels", "availability"];
+  const steps: Step[] = role === "student" ? ["role", "location", "phone_verification", "details"] : ["role", "location", "phone_verification", "details", "teaching-levels", "expertise", "availability"];
   const currentStepIndex = steps.indexOf(step);
   const totalSteps = steps.length;
   const progress = ((currentStepIndex + 1) / totalSteps) * 100;
@@ -837,8 +840,91 @@ export default function OnboardingClient() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStep("availability")}
+                    onClick={() => setStep("expertise")}
                     disabled={teachingLevels.length === 0}
+                    className="flex items-center gap-3 bg-purple-primary text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-purple-primary/90 hover:scale-105 transition-all shadow-xl shadow-purple-primary/20 disabled:opacity-50"
+                  >
+                    Next Step
+                    <ArrowRight size={18} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Expertise / What I Can Teach Step */}
+          {step === "expertise" && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="text-center space-y-3">
+                <span className="text-[10px] font-black text-purple-primary uppercase tracking-[0.2em]">
+                  Step {currentStepIndex + 1} of {totalSteps}
+                </span>
+                <h1 className="text-4xl font-black text-deep-black tracking-tight">
+                  What Can You Teach?
+                </h1>
+                <p className="text-steel-blue font-medium max-w-2xl mx-auto">
+                  List all subjects, languages, skills, or areas of knowledge you can teach — <strong>even if you do not have a formal degree in them</strong>. These will appear on your profile so students can find you.
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                <div className="bg-coral/5 border-2 border-coral/15 p-6 rounded-2xl">
+                  <h3 className="text-sm font-black text-coral uppercase tracking-widest mb-3">Examples of what to add</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {["Chinese", "French", "Quran", "Tajweed", "Urdu", "Public Speaking", "Coding", "Exam Preparation", "IELTS", "Graphic Design", "Mathematics", "English Grammar"].map((ex) => (
+                      <span key={ex} className="px-3 py-1.5 bg-white border border-coral/20 text-coral text-[10px] font-black uppercase tracking-widest rounded-lg">
+                        {ex}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-steel-blue mt-4 leading-relaxed">
+                    💡 You do not need a degree, diploma, or certificate to teach something. Life experience, native language ability, personal study, and practice all count as valid expertise. You can manage these in more detail (with specific teaching levels) from your dashboard later.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
+                    <Book size={14} className="text-purple-primary" /> Your Expertise / Teaching Subjects (Required)
+                  </label>
+                  <textarea
+                    value={onboardingExpertise}
+                    onChange={(e) => setOnboardingExpertise(e.target.value)}
+                    rows={6}
+                    required
+                    placeholder="Example: Chinese, Quran, Tajweed, Urdu, Public Speaking, Coding, Exam Preparation (Type as many as you like, separated by commas)"
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black resize-none"
+                  />
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-steel-blue">
+                    <span className="font-bold text-purple-primary uppercase tracking-widest">Tip:</span>
+                    <span>Separate each item with a comma. Your currently selected teaching levels will apply to all of these. You can customize levels per subject from your tutor dashboard after onboarding.</span>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                  <h4 className="text-[11px] font-black text-deep-black uppercase tracking-widest mb-3">Currently selected teaching levels (apply to all above):</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {teachingLevels.length > 0 ? teachingLevels.map((lv) => (
+                      <span key={lv} className="px-3 py-1.5 bg-purple-primary/10 text-purple-primary text-[9px] font-black uppercase tracking-widest rounded-lg border border-purple-primary/20">
+                        {lv}
+                      </span>
+                    )) : (
+                      <span className="text-xs text-gray-400 italic">No teaching levels selected</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="flex items-center gap-2 text-steel-blue hover:text-deep-black font-black text-[11px] uppercase tracking-widest transition-colors"
+                  >
+                    <ArrowLeft size={18} strokeWidth={2.5} /> Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep("availability")}
+                    disabled={!onboardingExpertise.trim()}
                     className="flex items-center gap-3 bg-purple-primary text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-purple-primary/90 hover:scale-105 transition-all shadow-xl shadow-purple-primary/20 disabled:opacity-50"
                   >
                     Next Step

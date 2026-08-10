@@ -169,17 +169,17 @@ export const PAYMENT_STATUSES = {
 /** Payment method details (can be configured via environment variables later) */
 export const PAYMENT_METHOD_DETAILS = {
   [PAYMENT_METHODS.BANK_TRANSFER]: {
-    accountName: "Encrusted Academy",
+    accountName: "Ravencrest Academy",
     accountNumber: "0123456789",
     bankName: "Habib Bank Limited"
   },
   [PAYMENT_METHODS.EASYPAISA]: {
-    accountName: "Encrusted Academy",
+    accountName: "Ravencrest Academy",
     accountNumber: "03001234567",
     walletName: "Easypaisa"
   },
   [PAYMENT_METHODS.JAZZCASH]: {
-    accountName: "Encrusted Academy",
+    accountName: "Ravencrest Academy",
     accountNumber: "03101234567",
     walletName: "JazzCash"
   }

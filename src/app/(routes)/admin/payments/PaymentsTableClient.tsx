@@ -67,10 +67,10 @@ We have successfully received and verified your payment.
 
 Your booking with ${tutorName} has now been confirmed.
 
-Thank you for choosing Encrusted Academy.
+Thank you for choosing Ravencrest Academy.
 
 Best Regards,
-Encrusted Academy Team
+Ravencrest Academy Team
 `
   },
   {
@@ -85,12 +85,12 @@ Your payment has been verified successfully.
 
 Your tutoring session has now been confirmed.
 
-Thank you for learning with Encrusted Academy.
+Thank you for learning with Ravencrest Academy.
 
 We wish you a wonderful learning experience.
 
 Regards,
-Encrusted Academy Team
+Ravencrest Academy Team
 `
   }
 ];

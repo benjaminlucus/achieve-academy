@@ -18,22 +18,51 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
   const [selectedExperience, setSelectedExperience] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const allSubjects = Array.from(new Set((initialTutors || []).flatMap(t => t.subjects || []))).sort();
+  const allSubjects = Array.from(new Set((initialTutors || []).flatMap((t: any) => t.allSearchableSubjects || t.subjects || []))).sort();
   const allLevels = Array.from(new Set((initialTutors || []).flatMap(t => t.teachingLevels || []))).sort();
   const allExperienceLevels = ["Less than 1 year", "1-2 years", "3-5 years", "5+ years"];
 
   const filteredTutors = (initialTutors || []).filter((tutor) => {
     const nameMatch = tutor.user?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const subjects = tutor.subjects || [];
-    const subjectMatch = subjects.some((s: string) => 
+    const searchableSubjects: string[] = tutor.allSearchableSubjects || tutor.subjects || [];
+    const subjectMatch = searchableSubjects.some((s: string) =>
       s.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const filterMatchSubject = !selectedSubject || subjects.includes(selectedSubject);
+    const filterMatchSubject = !selectedSubject || searchableSubjects.includes(selectedSubject);
     const filterMatchLevel = !selectedLevel || (tutor.teachingLevels || []).includes(selectedLevel);
     const filterMatchExperience = !selectedExperience || tutor.experienceLevel === selectedExperience;
 
     return (nameMatch || subjectMatch) && filterMatchSubject && filterMatchLevel && filterMatchExperience;
   });
+
+  function buildCanTeachEntries(tutor: any): { name: string; levelsText: string }[] {
+    const results: { name: string; levelsText: string }[] = [];
+    const seen = new Set<string>();
+
+    if (tutor.expertise && Array.isArray(tutor.expertise)) {
+      for (const e of tutor.expertise) {
+        if (!e || !e.name) continue;
+        const key = e.name.trim().toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        let levelsText = "";
+        if (e.levels && e.levels.length > 0) {
+          levelsText = e.levels.join(" & ");
+        }
+        results.push({ name: e.name, levelsText });
+      }
+    }
+
+    for (const s of tutor.subjects || []) {
+      if (!s) continue;
+      const key = String(s).trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      results.push({ name: s, levelsText: "" });
+    }
+
+    return results;
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -79,7 +108,7 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
           />
           <input
             type="text"
-            placeholder="Type name or subject..."
+            placeholder="Search name, subject, language, or expertise..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-primary/5 text-sm font-medium transition-all"
@@ -197,19 +226,43 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
                   </div>
                 </div>
 
-                {/* Expertise Tags */}
-                <div className="flex flex-wrap gap-2">
-                  {(tutor.subjects || []).slice(0, 3).map((tag: string) => (
-                    <span key={tag} className="px-3 py-1 bg-dark-navy text-off-white text-[9px] font-black uppercase tracking-[0.1em]">
-                      {tag}
-                    </span>
-                  ))}
-                  {tutor.subjects?.length > 3 && (
-                    <span className="px-3 py-1 bg-coral text-off-white text-[9px] font-black uppercase tracking-[0.1em]">
-                      +{tutor.subjects.length - 3} More
-                    </span>
-                  )}
-                </div>
+                {/* CAN TEACH Section */}
+                {(() => {
+                  const canTeach = buildCanTeachEntries(tutor);
+                  const visible = canTeach.slice(0, 4);
+                  const remaining = canTeach.length - visible.length;
+                  return (
+                    <div className="mb-5">
+                      <p className="text-steel-blue text-[10px] font-black uppercase tracking-widest mb-2 underline decoration-coral decoration-2 underline-offset-4">
+                        Can Teach
+                      </p>
+                      <div className="flex flex-col gap-1.5">
+                        {visible.map((entry, i) => (
+                          <div key={i} className="flex flex-wrap items-baseline gap-2">
+                            <span className="text-dark-navy text-[11px] font-black uppercase tracking-[0.08em]">
+                              {entry.name}
+                            </span>
+                            {entry.levelsText && (
+                              <span className="text-coral text-[9px] font-bold uppercase tracking-widest">
+                                — {entry.levelsText}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                        {remaining > 0 && (
+                          <span className="text-dark-navy/60 text-[10px] font-bold uppercase tracking-widest">
+                            +{remaining} more
+                          </span>
+                        )}
+                        {canTeach.length === 0 && (
+                          <span className="text-steel-blue/70 text-[10px] font-medium">
+                            No subjects listed yet
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Footer Action */}

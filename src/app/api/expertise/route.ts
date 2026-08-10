@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import Expertise from "@/database/models/expertise.model";
+import ExpertiseSubject from "@/database/models/expertise-subject.model";
 import User from "@/database/models/user.model";
+import TutorProfile from "@/database/models/tutor.model";
 import { auth } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   try {
@@ -45,6 +48,33 @@ export async function GET(req: NextRequest) {
   }
 }
 
+async function syncExpertiseToTutorSubjects(tutorId: mongoose.Types.ObjectId | string) {
+  try {
+    const activeExpertises = await Expertise.find({
+      tutor: tutorId,
+      isActive: true,
+    }).populate("subject", "name");
+
+    const expertiseSubjectNames: string[] = [];
+    for (const exp of activeExpertises) {
+      const subj: any = exp.subject;
+      if (subj && subj.name) {
+        expertiseSubjectNames.push(subj.name.trim());
+      }
+    }
+
+    if (expertiseSubjectNames.length > 0) {
+      await TutorProfile.findOneAndUpdate(
+        { user: tutorId },
+        { $addToSet: { subjects: { $each: expertiseSubjectNames } } },
+        { upsert: false }
+      );
+    }
+  } catch (err) {
+    logger.error("Failed to sync expertise to tutor subjects", err as Record<string, unknown>);
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
@@ -67,6 +97,8 @@ export async function POST(req: NextRequest) {
     await newExpertise.populate("category");
     await newExpertise.populate("subject");
     await newExpertise.populate("teachingLevels");
+
+    await syncExpertiseToTutorSubjects(currentUser._id);
 
     return NextResponse.json({ success: true, data: newExpertise });
   } catch (error) {

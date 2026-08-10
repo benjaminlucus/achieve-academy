@@ -112,12 +112,55 @@ export function TutorProfileClient({ tutorData, userId }: TutorProfileClientProp
                 )}
               </div>
 
-              <div className="flex flex-wrap justify-center gap-2 mb-6">
-                {tutorData.subjects.map((sub: string) => (
-                  <span key={sub} className="px-4 py-2 bg-gray-50 text-steel-blue text-[10px] font-black uppercase tracking-widest rounded-xl border border-gray-100">
-                    {sub}
-                  </span>
-                ))}
+              <div className="w-full mb-6">
+                <p className="text-[10px] font-black text-steel-blue uppercase tracking-[0.2em] mb-3 text-center">Can Teach</p>
+                <div className="flex flex-col items-stretch gap-2">
+                  {(() => {
+                    const entries: { name: string; levelsText: string }[] = [];
+                    const seen = new Set<string>();
+                    if (tutorData.expertise && Array.isArray(tutorData.expertise)) {
+                      for (const e of tutorData.expertise) {
+                        if (!e || !e.name) continue;
+                        const key = String(e.name).trim().toLowerCase();
+                        if (seen.has(key)) continue;
+                        seen.add(key);
+                        entries.push({
+                          name: e.name,
+                          levelsText: (e.levels && e.levels.length > 0) ? e.levels.join(" & ") : "",
+                        });
+                      }
+                    }
+                    for (const s of tutorData.subjects || []) {
+                      if (!s) continue;
+                      const key = String(s).trim().toLowerCase();
+                      if (seen.has(key)) continue;
+                      seen.add(key);
+                      entries.push({ name: s, levelsText: "" });
+                    }
+                    if (entries.length === 0) {
+                      return (
+                        <span className="px-4 py-2 bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl text-center">
+                          No subjects listed yet
+                        </span>
+                      );
+                    }
+                    return entries.map((entry, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100"
+                      >
+                        <span className="text-steel-blue text-[10px] font-black uppercase tracking-widest">
+                          {entry.name}
+                        </span>
+                        {entry.levelsText && (
+                          <span className="text-coral text-[9px] font-bold uppercase tracking-widest">
+                            {entry.levelsText}
+                          </span>
+                        )}
+                      </div>
+                    ));
+                  })()}
+                </div>
               </div>
 
               <div className="w-full space-y-3 mb-6">
@@ -228,15 +271,66 @@ export function TutorProfileClient({ tutorData, userId }: TutorProfileClientProp
               </div>
               <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest mb-6 flex items-center gap-3">
-                  <Briefcase size={20} className="text-coral" /> Expertise & Certifications
+                  <Briefcase size={20} className="text-coral" /> What This Tutor Can Teach
                 </h3>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {tutorData.subjects.map((s: string) => (
-                    <span key={s} className="px-4 py-2 bg-dark-navy text-white text-[9px] font-black uppercase tracking-widest rounded-xl">
-                      {s}
-                    </span>
-                  ))}
-                </div>
+                {(() => {
+                  const entries: { name: string; levels: string[] }[] = [];
+                  const seen = new Set<string>();
+                  if (tutorData.expertise && Array.isArray(tutorData.expertise)) {
+                    for (const e of tutorData.expertise) {
+                      if (!e || !e.name) continue;
+                      const key = String(e.name).trim().toLowerCase();
+                      if (seen.has(key)) continue;
+                      seen.add(key);
+                      entries.push({
+                        name: e.name,
+                        levels: (e.levels && Array.isArray(e.levels)) ? e.levels : [],
+                      });
+                    }
+                  }
+                  for (const s of tutorData.subjects || []) {
+                    if (!s) continue;
+                    const key = String(s).trim().toLowerCase();
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    entries.push({ name: s, levels: [] });
+                  }
+                  if (entries.length === 0) {
+                    return (
+                      <p className="text-sm text-gray-500">No subjects listed yet.</p>
+                    );
+                  }
+                  return (
+                    <div className="space-y-3 mb-6">
+                      {entries.map((entry, i) => (
+                        <div
+                          key={i}
+                          className="flex flex-wrap items-baseline justify-between gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                        >
+                          <span className="px-3 py-1 bg-dark-navy text-white text-[10px] font-black uppercase tracking-widest rounded-lg">
+                            {entry.name}
+                          </span>
+                          {entry.levels.length > 0 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {entry.levels.map((lv: string, j: number) => (
+                                <span
+                                  key={j}
+                                  className="px-2.5 py-1 bg-purple-primary/10 text-purple-primary text-[9px] font-black uppercase tracking-widest rounded-lg border border-purple-primary/20"
+                                >
+                                  {lv}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                              Teaching levels not specified
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
                 {tutorData.certifications && tutorData.certifications.length > 0 && (
                   <div>
                     <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-3">Certifications</p>

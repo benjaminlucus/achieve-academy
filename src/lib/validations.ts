@@ -60,6 +60,7 @@ export const onboardingSchema = z.object({
     status: z.enum(["pending", "verified", "rejected"]).optional()
   })).optional(),
   certifications: z.union([z.string(), z.array(z.string())]).optional(),
+  onboardingExpertise: z.string().optional(),
   phoneVerification: z.object({
     countryCode: z.string().optional(),
     countryName: z.string().optional(),

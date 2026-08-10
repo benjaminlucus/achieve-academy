@@ -5,6 +5,10 @@ import User from "@/database/models/user.model";
 import StudentProfile from "@/database/models/student.model";
 import TutorProfile from "@/database/models/tutor.model";
 import MobileVerification from "@/database/models/mobile-verification.model";
+import Expertise from "@/database/models/expertise.model";
+import ExpertiseCategory from "@/database/models/expertise-category.model";
+import ExpertiseSubject from "@/database/models/expertise-subject.model";
+import EducationLevel from "@/database/models/education-level.model";
 import { auth, currentUser, createClerkClient } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
 import { onboardingSchema } from "@/lib/validations";
@@ -96,14 +100,38 @@ export async function completeOnboarding(rawData: any) {
           )
         : role === "tutor"
         ? (async () => {
-            return await TutorProfile.findOneAndUpdate(
+            const parsedSubjects: string[] =
+              typeof validatedData.subjects === "string"
+                ? validatedData.subjects.split(",").map((s: string) => s.trim()).filter(Boolean)
+                : (validatedData.subjects || []).map((s: string) => String(s).trim()).filter(Boolean);
+
+            const parsedOnboardingExpertise: string[] = [];
+            if (validatedData.onboardingExpertise) {
+              for (const part of String(validatedData.onboardingExpertise).split(",")) {
+                const trimmed = part.trim();
+                if (trimmed) parsedOnboardingExpertise.push(trimmed);
+              }
+            }
+
+            const mergedSubjects: string[] = [];
+            const seen = new Set<string>();
+            for (const s of [...parsedSubjects, ...parsedOnboardingExpertise]) {
+              const k = s.toLowerCase();
+              if (!seen.has(k)) {
+                seen.add(k);
+                mergedSubjects.push(s);
+              }
+            }
+
+            const teachingLevelsRaw: string[] = Array.isArray(validatedData.teachingLevels)
+              ? validatedData.teachingLevels.map((l) => String(l).trim()).filter(Boolean)
+              : [];
+
+            const profile = await TutorProfile.findOneAndUpdate(
               { user: mongoId },
               {
                 user: mongoId,
-                subjects:
-                  typeof validatedData.subjects === "string"
-                    ? validatedData.subjects.split(",").map((s: string) => s.trim())
-                    : validatedData.subjects || [],
+                subjects: mergedSubjects,
                 skills:
                   typeof validatedData.skills === "string"
                     ? validatedData.skills.split(",").map((s: string) => s.trim())
@@ -120,8 +148,7 @@ export async function completeOnboarding(rawData: any) {
                 availability: validatedData.availability || [],
                 payoutDetails: validatedData.payoutDetails,
                 isVerified: false,
-                // New fields
-                teachingLevels: validatedData.teachingLevels || [],
+                teachingLevels: teachingLevelsRaw,
                 teachingLevelsOther: validatedData.teachingLevelsOther || "",
                 experienceLevel: validatedData.experienceLevel || "Less than 1 year",
                 maxClassSize: validatedData.maxClassSize || 1,
@@ -140,8 +167,74 @@ export async function completeOnboarding(rawData: any) {
                     ? validatedData.certifications.split(",").map((s: string) => s.trim())
                     : validatedData.certifications || [],
               },
-              { upsert: true, new: true }
+              { upsert: true, new: true, lean: false }
             );
+
+            if (parsedOnboardingExpertise.length > 0) {
+              try {
+                let defaultCategory = await ExpertiseCategory.findOne({ isActive: true }).sort({ sortOrder: 1 });
+                if (!defaultCategory) {
+                  defaultCategory = await ExpertiseCategory.findOneAndUpdate(
+                    { name: "General" },
+                    { name: "General", isActive: true, sortOrder: 0 },
+                    { upsert: true, new: true }
+                  );
+                }
+
+                const allEducationLevels = await EducationLevel.find({ isActive: true }).lean();
+                const eduLevelMap = new Map<string, mongoose.Types.ObjectId>();
+                for (const el of allEducationLevels as any[]) {
+                  eduLevelMap.set(String(el.name).toLowerCase(), el._id);
+                }
+
+                const matchedTeachingLevelIds: mongoose.Types.ObjectId[] = [];
+                for (const tl of teachingLevelsRaw) {
+                  const id = eduLevelMap.get(tl.toLowerCase());
+                  if (id) matchedTeachingLevelIds.push(id);
+                }
+
+                for (const expertiseName of parsedOnboardingExpertise) {
+                  const lowerName = expertiseName.toLowerCase();
+                  let expertiseSubjectDoc = await ExpertiseSubject.findOne({
+                    name: { $regex: new RegExp(`^${lowerName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+                  });
+                  if (!expertiseSubjectDoc) {
+                    expertiseSubjectDoc = await ExpertiseSubject.create({
+                      category: defaultCategory._id,
+                      name: expertiseName,
+                      isActive: true,
+                      sortOrder: 0,
+                    });
+                  }
+
+                  const existing = await Expertise.findOne({
+                    tutor: mongoId,
+                    subject: expertiseSubjectDoc._id,
+                  });
+                  if (!existing) {
+                    await Expertise.create({
+                      tutor: mongoId,
+                      category: expertiseSubjectDoc.category,
+                      subject: expertiseSubjectDoc._id,
+                      teachingLevels: matchedTeachingLevelIds,
+                      teachingLanguages:
+                        Array.isArray(profile.teachingLanguage) && profile.teachingLanguage.length > 0
+                          ? profile.teachingLanguage
+                          : ["English"],
+                      experience: Number(validatedData.experienceYears) || 0,
+                      hourlyRate: Number(validatedData.hourlyRate) || undefined,
+                      specialNotes: "",
+                      isActive: true,
+                      visibility: "public",
+                    });
+                  }
+                }
+              } catch (err: any) {
+                console.error("[Onboarding] Failed to create expertise entries (non-fatal):", err?.message || err);
+              }
+            }
+
+            return profile;
           })()
         : Promise.resolve();
 

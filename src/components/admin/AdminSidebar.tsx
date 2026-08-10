@@ -22,7 +22,8 @@ import {
   MessageCircle,
   Video,
   Trophy,
-  Search
+  Search,
+  Clock
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import { useAdminSidebar } from "../../contexts/AdminSidebarContext";
@@ -39,7 +40,8 @@ const sidebarItems: Array<{
   { icon: UserCheck, label: "Tutors Approval", href: "/admin/tutors", countKey: "tutorsPending" },
   { icon: GraduationCap, label: "Students Approval", href: "/admin/students", countKey: "studentsPending" },
   { icon: Calendar, label: "Interviews", href: "/admin/interviews", countKey: "interviewsScheduled" },
-  { icon: LinkIcon, label: "Connections", href: "/admin/connections", countKey: "connectionsPending" },
+  { icon: Clock, label: "Pending Requests", href: "/admin/pending-connections", countKey: "connectionsPending" },
+  { icon: LinkIcon, label: "All Connections", href: "/admin/connections" },
   { icon: MessageSquare, label: "All Messages", href: "/admin/messages" },      
   { icon: Calendar, label: "Sessions", href: "/admin/sessions" },
   { icon: CreditCard, label: "Payments", href: "/admin/payments", countKey: "paymentsPending" },
