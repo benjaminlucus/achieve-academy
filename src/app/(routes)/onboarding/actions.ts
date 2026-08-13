@@ -74,7 +74,9 @@ export async function completeOnboarding(rawData: any) {
         email: clerkUser.emailAddresses[0].emailAddress,
         role,
         profileImage: clerkUser.imageUrl,
-        isOnboarded: true,
+        // Only mark onboarding complete after the role profile and required
+        // availability/expertise writes have succeeded and been verified.
+        isOnboarded: false,
         country: validatedData.country || "",
         timezone: validatedData.timezone || "",
         status: role === "admin" ? "verified" : "applied",
@@ -281,20 +283,44 @@ export async function completeOnboarding(rawData: any) {
           })()
         : Promise.resolve();
 
-    const clerkMetadataPromise = clerk.users.updateUserMetadata(userId, {
-      publicMetadata: {
-        isOnboarded: true,
-        role: role,
-      },
-    });
+    // Step 6: Complete the database writes before finalizing onboarding.
+    // Clerk metadata is a convenience mirror, not the source of truth; a
+    // temporary Clerk network failure must not invalidate a saved profile.
+    await userUpdatePromise;
+    await profilePromise;
 
-    // Step 6: Run all updates in parallel for speed
-    const [updatedUser] = await Promise.all([
-      userUpdatePromise,
-      profilePromise,
-      clerkMetadataPromise,
-    ]);
+    if (role === "tutor" && validatedData.availability) {
+      const savedProfile = await TutorProfile.findOne({ user: mongoId })
+        .select("availability")
+        .lean();
+      const savedAvailability = Array.isArray(savedProfile?.availability)
+        ? (savedProfile.availability as Array<{
+            day?: string;
+            startTime?: string;
+            endTime?: string;
+            active?: boolean;
+            time?: string[];
+          }>)
+        : [];
+      const availabilityMatches =
+        savedAvailability.length === validatedData.availability.length &&
+        validatedData.availability.every((expectedSlot) =>
+          savedAvailability.some(
+            (savedSlot) =>
+              savedSlot.day === expectedSlot.day &&
+              savedSlot.startTime === expectedSlot.startTime &&
+              savedSlot.endTime === expectedSlot.endTime &&
+              savedSlot.active === expectedSlot.active &&
+              JSON.stringify(savedSlot.time || []) === JSON.stringify(expectedSlot.time || [])
+          )
+        );
 
+      if (!availabilityMatches) {
+        throw new Error("Tutor availability could not be verified after saving.");
+      }
+    }
+
+    await User.updateOne({ clerkId: userId }, { $set: { isOnboarded: true } });
 
     // Step 7: VERIFY the user was saved correctly (critical!)
     const verifyUser = await getCurrentUser(userId);
@@ -311,12 +337,27 @@ export async function completeOnboarding(rawData: any) {
       throw new Error("User role was not saved in MongoDB");
     }
 
-    return { success: true };
+    let metadataWarning: string | undefined;
+    try {
+      await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: { isOnboarded: true, role },
+      });
+    } catch (metadataError) {
+      metadataWarning = metadataError instanceof Error ? metadataError.message : String(metadataError);
+      console.error("[Onboarding] Clerk metadata sync failed after MongoDB onboarding completed:", metadataError);
+    }
+
+    return { success: true, metadataWarning };
   } catch (error: any) {
-    console.error("[Onboarding] Error:", error);
+    console.error("[Onboarding] Error:", {
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack,
+      issues: error?.issues,
+    });
     return {
       success: false,
-      error: error.message || "Something went wrong",
+      error: error?.message || "Onboarding failed before completion. Check the server log for [Onboarding] Error details.",
     };
   }
 }
