@@ -3,6 +3,7 @@ import { connectDB } from "@/database/connect";
 import ExpertiseSubject from "@/database/models/expertise-subject.model";
 import { seedDefaultData } from "../expertise-categories/route";
 import { auth } from "@clerk/nextjs/server";
+import { requireAdmin, authErrorResponse } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
@@ -31,16 +32,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectDB();
     const data = await req.json();
     const subject = await ExpertiseSubject.create(data);
     return NextResponse.json({ success: true, data: subject });
   } catch (error) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
     logger.error("Failed to create expertise subject", { error });
     return NextResponse.json(
       { success: false, error: "Failed to create expertise subject" },

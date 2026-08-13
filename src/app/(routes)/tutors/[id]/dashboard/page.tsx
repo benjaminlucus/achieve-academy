@@ -25,6 +25,7 @@ import Image from "next/image";
 import { toast, Toaster } from "react-hot-toast";
 import { RealtimeProvider, useRealtime } from "@/lib/realtime-context";
 import { ExpertiseManager } from "@/components/dashboard/ExpertiseManager";
+import { availabilityTimes } from "@/lib/availability";
 
 function TutorDashboardContent() {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +57,7 @@ function TutorDashboardContent() {
             const existing = data.availability?.find((a: any) => a.day === day);
             return {
               day,
-              time: existing ? existing.time.join(", ") : ""
+               time: existing ? availabilityTimes(existing).join(", ") : ""
             };
           });
 

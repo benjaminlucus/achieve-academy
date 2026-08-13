@@ -5,6 +5,7 @@ import ExpertiseSubject from "@/database/models/expertise-subject.model";
 import EducationLevel from "@/database/models/education-level.model";
 import { DEFAULT_EXPERTISE_CATEGORIES, DEFAULT_EXPERTISE_SUBJECTS, DEFAULT_EDUCATION_LEVELS } from "@/lib/constants";
 import { auth } from "@clerk/nextjs/server";
+import { requireAdmin, authErrorResponse } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
 /** Helper function to seed all default data */
@@ -60,16 +61,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectDB();
     const data = await req.json();
     const category = await ExpertiseCategory.create(data);
     return NextResponse.json({ success: true, data: category });
   } catch (error) {
+    const authRes = authErrorResponse(error);
+    if (authRes) return authRes;
     logger.error("Failed to create expertise category", error as Record<string, unknown>);
     return NextResponse.json(
       { success: false, error: "Failed to create expertise category" },

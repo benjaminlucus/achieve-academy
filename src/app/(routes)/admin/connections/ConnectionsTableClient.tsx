@@ -248,7 +248,7 @@ export default function ConnectionsTableClient({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="space-y-3">
         {filteredConnections.map((conn) => {
           const trialEndsAt = conn.trialEndsAt ? new Date(conn.trialEndsAt) : null;
           const isExpired = trialEndsAt && isAfter(new Date(), trialEndsAt);
@@ -258,9 +258,9 @@ export default function ConnectionsTableClient({
           return (
             <div
               key={conn._id}
-              className="bg-white p-4 sm:p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition-all"
+              className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex-1 flex flex-col items-center text-center space-y-3 min-w-0">
                   <div className="relative">
                     {conn.student?.profileImage ? (
@@ -385,7 +385,7 @@ export default function ConnectionsTableClient({
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-50 space-y-4">
+              <div className="mt-4 pt-4 border-t border-gray-50 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex flex-wrap gap-2">
                     <button

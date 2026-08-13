@@ -81,7 +81,7 @@ export default function ConversationList({
         const displayName = isAdminView
           ? getAdminConversationLabel(conv)
           : otherUser?.name || "Unknown";
-        const displayImage = isAdminView ? null : otherUser?.profileImage;
+        const displayImage = isAdminView ? conv.participants[0]?.profileImage : otherUser?.profileImage;
         const isActive = selectedConversationId === conv._id;
 
         return (
@@ -149,6 +149,11 @@ export default function ConversationList({
                   </span>
                 ) : null}
               </div>
+              {isAdminView && (
+                <p className="text-[9px] text-steel-blue mt-1 truncate">
+                  {conv.participants.map((p) => `${p.role || "user"}: ${p.email || "no email"}`).join(" · ")}
+                </p>
+              )}
             </div>
           </button>
         );

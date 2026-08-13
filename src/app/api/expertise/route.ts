@@ -7,6 +7,19 @@ import TutorProfile from "@/database/models/tutor.model";
 import { auth } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
+import { z } from "zod";
+
+const expertiseInputSchema = z.object({
+  category: z.string().min(1),
+  subject: z.string().min(1),
+  teachingLevels: z.array(z.string().min(1)).min(1),
+  teachingLanguages: z.array(z.string().min(1)).min(1),
+  experience: z.coerce.number().min(0).max(50).optional().default(0),
+  teachingStrength: z.enum(["beginner", "good", "strong", "very_strong"]).optional().default("good"),
+  hourlyRate: z.coerce.number().min(0).optional(),
+  specialNotes: z.string().max(1000).optional(),
+  visibility: z.enum(["public", "private", "connections"]).optional().default("public"),
+});
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,8 +38,11 @@ export async function GET(req: NextRequest) {
     const tutorId = searchParams.get("tutorId");
 
     let query: any = { isActive: true };
-    if (tutorId) {
+    if (tutorId && (currentUser.role === "admin" || String(currentUser._id) === tutorId)) {
       query.tutor = tutorId;
+    } else if (tutorId) {
+      query.tutor = tutorId;
+      query.visibility = "public";
     } else if (currentUser.role === "tutor") {
       query.tutor = currentUser._id;
     }
@@ -88,11 +104,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 
-    const data = await req.json();
-    const newExpertise = await Expertise.create({
-      ...data,
-      tutor: currentUser._id,
-    });
+    const data = expertiseInputSchema.parse(await req.json());
+    const subject = await ExpertiseSubject.findOne({ _id: data.subject, category: data.category, isActive: true });
+    if (!subject) {
+      return NextResponse.json({ success: false, error: "Invalid category or subject" }, { status: 400 });
+    }
+    const newExpertise = await Expertise.findOneAndUpdate(
+      { tutor: currentUser._id, subject: subject._id },
+      {
+        ...data,
+        category: subject.category,
+        tutor: currentUser._id,
+        isActive: true,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     await newExpertise.populate("category");
     await newExpertise.populate("subject");

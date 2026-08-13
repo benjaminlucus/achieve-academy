@@ -161,6 +161,7 @@ export interface IExpertise extends Document {
   teachingLevels: mongoose.Types.ObjectId[];
   teachingLanguages: string[];
   experience: number; // years
+  teachingStrength?: "beginner" | "good" | "strong" | "very_strong";
   hourlyRate?: number;
   certificates?: ICertificateDocument[];
   specialNotes?: string;

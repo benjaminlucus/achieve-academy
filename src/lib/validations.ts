@@ -61,6 +61,17 @@ export const onboardingSchema = z.object({
   })).optional(),
   certifications: z.union([z.string(), z.array(z.string())]).optional(),
   onboardingExpertise: z.string().optional(),
+  expertiseEntries: z.array(z.object({
+    category: z.string().min(1),
+    subjects: z.array(z.string().min(1)).min(1),
+    teachingLevels: z.array(z.string().min(1)).min(1),
+    teachingLanguages: z.array(z.string().min(1)).min(1),
+    experience: z.coerce.number().min(0).max(50).optional(),
+    teachingStrength: z.enum(["beginner", "good", "strong", "very_strong"]).optional(),
+    hourlyRate: z.coerce.number().min(0).optional(),
+    specialNotes: z.string().max(1000).optional(),
+    visibility: z.enum(["public", "private", "connections"]).optional(),
+  })).optional(),
   phoneVerification: z.object({
     countryCode: z.string().optional(),
     countryName: z.string().optional(),

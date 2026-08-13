@@ -13,7 +13,7 @@ async function getPendingConnections() {
   await connectDB();
   const now = new Date();
 
-  const pending = await Connection.find({ status: "requested" })
+  const pending = await Connection.find({ status: "pending" })
     .populate("student tutor")
     .sort({ createdAt: 1 });
 

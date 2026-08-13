@@ -23,17 +23,17 @@ export async function GET() {
     const fortyEight = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     const seventyTwo = new Date(now.getTime() - 72 * 60 * 60 * 1000);
 
-    const pendingAll = await Connection.countDocuments({ status: "requested" });
+    const pendingAll = await Connection.countDocuments({ status: "pending" });
     const pending24 = await Connection.countDocuments({
-      status: "requested",
+      status: "pending",
       createdAt: { $lte: twentyFour },
     });
     const pending48 = await Connection.countDocuments({
-      status: "requested",
+      status: "pending",
       createdAt: { $lte: fortyEight },
     });
     const pending72 = await Connection.countDocuments({
-      status: "requested",
+      status: "pending",
       createdAt: { $lte: seventyTwo },
     });
 

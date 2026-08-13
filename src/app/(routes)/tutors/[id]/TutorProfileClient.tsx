@@ -11,6 +11,7 @@ import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { ConnectButton } from "@/components/ConnectButton";
 import { Toaster } from "react-hot-toast";
+import { availabilityTimes } from "@/lib/availability";
 
 interface TutorData {
   _id: string;
@@ -190,12 +191,12 @@ export function TutorProfileClient({ tutorData, userId }: TutorProfileClientProp
                 <Globe size={18} className="text-coral" /> Availability
               </h3>
               <div className="space-y-3">
-                {tutorData.availability && tutorData.availability.length > 0 ? (
-                  tutorData.availability.map((slot: any) => (
+                {tutorData.availability && tutorData.availability.some((slot: any) => availabilityTimes(slot).length > 0) ? (
+                  tutorData.availability.filter((slot: any) => availabilityTimes(slot).length > 0).map((slot: any) => (
                     <div key={slot.day} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
                       <span className="text-xs font-bold text-steel-blue uppercase">{slot.day}</span>
                       <span className="text-[10px] font-black text-dark-navy uppercase bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg">
-                        {slot.time[0]}
+                        {availabilityTimes(slot).join(" – ")}
                       </span>
                     </div>
                   ))
@@ -239,36 +240,7 @@ export function TutorProfileClient({ tutorData, userId }: TutorProfileClientProp
               </p>
             </div>
 
-            {/* Education & Experience */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
-                <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest mb-6 flex items-center gap-3">
-                  <GraduationCap size={20} className="text-coral" /> Education
-                </h3>
-                {tutorData.hasDegree ? (
-                  <div className="space-y-4">
-                    <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                      <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-1">Degree</p>
-                      <p className="text-sm font-bold text-dark-navy">{tutorData.degreeName || "Not specified"}</p>
-                    </div>
-                    <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                      <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-1">Institution</p>
-                      <p className="text-sm font-bold text-dark-navy">{tutorData.universityName || "Not specified"}</p>
-                    </div>
-                    {tutorData.graduationYear && (
-                      <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                        <p className="text-xs font-black text-steel-blue uppercase tracking-widest mb-1">Graduation Year</p>
-                        <p className="text-sm font-bold text-dark-navy">{tutorData.graduationYear}</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 text-center">
-                    <p className="text-xs font-bold text-steel-blue uppercase tracking-widest">Degrees are optional</p>
-                    <p className="text-sm text-gray-500 mt-2">This tutor hasn't shared a degree, but their expertise speaks for itself!</p>
-                  </div>
-                )}
-              </div>
+            <div className="grid grid-cols-1 gap-8">
               <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-black text-dark-navy uppercase tracking-widest mb-6 flex items-center gap-3">
                   <Briefcase size={20} className="text-coral" /> What This Tutor Can Teach

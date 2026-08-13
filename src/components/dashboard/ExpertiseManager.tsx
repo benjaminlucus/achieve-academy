@@ -45,6 +45,7 @@ interface IExpertise {
   teachingLevels: (string | IEducationLevel)[];
   teachingLanguages: string[];
   experience: number;
+  teachingStrength?: 'beginner' | 'good' | 'strong' | 'very_strong';
   hourlyRate?: number;
   certificates?: any[];
   specialNotes?: string;
@@ -67,6 +68,7 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpertise, setEditingExpertise] = useState<IExpertise | null>(null);
   const [languageSearch, setLanguageSearch] = useState('');
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     category: '',
     subject: '',
@@ -74,6 +76,7 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
     teachingLanguages: ['English'],
     experience: 0,
     hourlyRate: 0,
+    teachingStrength: 'good' as 'beginner' | 'good' | 'strong' | 'very_strong',
     specialNotes: '',
     visibility: 'public' as 'public' | 'private' | 'connections',
   });
@@ -145,9 +148,11 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
         teachingLanguages: expertise.teachingLanguages,
         experience: expertise.experience,
         hourlyRate: expertise.hourlyRate || 0,
+        teachingStrength: expertise.teachingStrength || 'good',
         specialNotes: expertise.specialNotes || '',
         visibility: expertise.visibility,
       });
+      setSelectedSubjectIds([typeof expertise.subject === 'object' ? expertise.subject._id : expertise.subject]);
     } else {
       setEditingExpertise(null);
       setFormData({
@@ -157,9 +162,11 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
         teachingLanguages: ['English'],
         experience: 0,
         hourlyRate: 0,
+        teachingStrength: 'good',
         specialNotes: '',
         visibility: 'public',
       });
+      setSelectedSubjectIds([]);
     }
     setIsModalOpen(true);
     setLanguageSearch('');
@@ -190,30 +197,26 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.category || !formData.subject || formData.teachingLevels.length === 0) {
+    if (!formData.category || selectedSubjectIds.length === 0 || formData.teachingLevels.length === 0) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     try {
-      const res = await fetch(
-        editingExpertise ? `/api/expertise/${editingExpertise._id}` : '/api/expertise',
-        {
-          method: editingExpertise ? 'PATCH' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (res.ok) {
-        const { data } = await res.json();
+      const requests = editingExpertise
+        ? [fetch(`/api/expertise/${editingExpertise._id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...formData, subject: selectedSubjectIds[0] }) })]
+        : selectedSubjectIds.map(subject => fetch('/api/expertise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...formData, subject }) }));
+      const responses = await Promise.all(requests);
+      if (responses.every(res => res.ok)) {
+        const created = await Promise.all(responses.map(res => res.json()));
+        const data = created[0].data;
         // Update the list
         if (editingExpertise) {
           setExpertises(prev =>
             prev.map(e => e._id === data._id ? data : e)
           );
         } else {
-          setExpertises(prev => [...prev, data]);
+          setExpertises(prev => [...prev, ...created.map(item => item.data)]);
         }
         toast.success(
           `Expertise ${editingExpertise ? 'updated' : 'created'} successfully`
@@ -364,9 +367,10 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
                       required
                       className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy"
                       value={formData.category}
-                      onChange={e =>
-                        setFormData({ ...formData, category: e.target.value, subject: '' })
-                      }
+                       onChange={e => {
+                         setFormData({ ...formData, category: e.target.value, subject: '' });
+                         setSelectedSubjectIds([]);
+                       }}
                     >
                       <option value="">Select category</option>
                       {categories.map(cat => (
@@ -377,25 +381,19 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
                     </select>
                   </div>
 
-                  <div className="space-y-2">
+                   <div className="space-y-2">
                     <label className="block text-xs font-black text-steel-blue uppercase tracking-[0.2em]">
                       Subject *
                     </label>
-                    <select
-                      required
-                      disabled={!formData.category}
-                      className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:border-coral/30 font-bold text-dark-navy disabled:opacity-50"
-                      value={formData.subject}
-                      onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                    >
-                      <option value="">Select subject</option>
-                      {subjects.map(subj => (
-                        <option key={subj._id} value={subj._id}>
-                          {subj.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                     <div className="max-h-40 overflow-y-auto rounded-xl bg-gray-50 p-3 space-y-2">
+                       {subjects.map(subj => <label key={subj._id} className="flex items-center gap-2 text-sm font-bold text-dark-navy cursor-pointer">
+                         <input type="checkbox" disabled={!formData.category || !!editingExpertise && subj._id !== selectedSubjectIds[0]} checked={selectedSubjectIds.includes(subj._id)} onChange={() => setSelectedSubjectIds(prev => prev.includes(subj._id) ? prev.filter(id => id !== subj._id) : [...prev, subj._id])} />
+                         {subj.name}
+                       </label>)}
+                       {!formData.category && <span className="text-xs text-gray-400">Choose a category first</span>}
+                     </div>
+                     {!editingExpertise && <p className="text-[10px] text-steel-blue">Select every related subject; each keeps these levels and settings independently.</p>}
+                   </div>
                 </div>
 
                 <div className="space-y-2">
@@ -507,6 +505,13 @@ export const ExpertiseManager: React.FC<ExpertiseManagerProps> = ({ currentUserI
                       }
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-black text-steel-blue uppercase tracking-[0.2em]">Teaching confidence</label>
+                  <select value={formData.teachingStrength} onChange={e => setFormData({ ...formData, teachingStrength: e.target.value as typeof formData.teachingStrength })} className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-dark-navy">
+                    <option value="beginner">Beginner</option><option value="good">Good</option><option value="strong">Strong</option><option value="very_strong">Very Strong</option>
+                  </select>
                 </div>
 
                 <div className="space-y-2">

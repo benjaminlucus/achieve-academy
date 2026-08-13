@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import {
   GraduationCap,
   UserRound,
@@ -22,6 +21,7 @@ import { allTimezones, allGrades, allCountries } from "@/lib/constants";
 import WeeklyAvailabilityPicker, { getDefaultAvailability, AvailabilityDay } from "@/components/WeeklyAvailabilityPicker";
 import { getTimezoneForCountry } from "@/lib/timezone";
 import PhoneVerificationForm, { PhoneVerificationState } from "@/components/shared/PhoneVerificationForm";
+import OnboardingExpertiseBuilder, { OnboardingExpertiseEntry } from "@/components/OnboardingExpertiseBuilder";
 
 type Step = "role" | "location" | "phone_verification" | "details" | "teaching-levels" | "expertise" | "availability" | "submitting";
 
@@ -89,7 +89,6 @@ function CountrySelect({ defaultValue, onSelect }: { defaultValue?: string, onSe
 }
 
 export default function OnboardingClient() {
-  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [step, setStep] = useState<Step>("role");
 
@@ -110,7 +109,7 @@ export default function OnboardingClient() {
   const [graduationYear, setGraduationYear] = useState("");
   const [degreeFile, setDegreeFile] = useState<any>(null);
   const [certifications, setCertifications] = useState<string>("");
-  const [onboardingExpertise, setOnboardingExpertise] = useState<string>("");
+  const [expertiseEntries, setExpertiseEntries] = useState<OnboardingExpertiseEntry[]>([{ category: "", subjects: [], teachingLevels: [], teachingLanguages: ["English"], experience: 0, teachingStrength: "good", visibility: "public" }]);
   const [weeklyAvailability, setWeeklyAvailability] = useState<AvailabilityDay[]>(getDefaultAvailability());
   const [isPending, setIsPending] = useState(false);
   const [loadingText, setLoadingText] = useState("Setting up your profile...");
@@ -209,7 +208,7 @@ export default function OnboardingClient() {
           }
         : undefined,
       certifications,
-      onboardingExpertise,
+      expertiseEntries,
     });
   };
 
@@ -470,7 +469,6 @@ export default function OnboardingClient() {
                       </label>
                       <select
                         name="whichClass"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black appearance-none"
                       >
                         {allGrades.map((grade) => (
@@ -487,7 +485,6 @@ export default function OnboardingClient() {
                       </label>
                       <input
                         name="subjects"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                         placeholder="e.g. Maths, Physics, Chemistry"
                       />
@@ -499,7 +496,6 @@ export default function OnboardingClient() {
                       </label>
                       <textarea
                         name="learningGoals"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                         placeholder="What do you hope to achieve?"
                         rows={3}
@@ -523,12 +519,11 @@ export default function OnboardingClient() {
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
                         <Briefcase size={14} className="text-purple-primary" /> Experience
-                        (Years)
+                        (Years, optional)
                       </label>
                       <input
                         name="experienceYears"
                         type="number"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                       />
                     </div>
@@ -538,7 +533,6 @@ export default function OnboardingClient() {
                       </label>
                       <input
                         name="education"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                         placeholder="e.g. PhD in Mathematics"
                       />
@@ -546,37 +540,23 @@ export default function OnboardingClient() {
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
                         <DollarSign size={14} className="text-purple-primary" /> Hourly
-                        Rate ($)
+                        Rate ($, optional)
                       </label>
                       <input
                         name="hourlyRate"
                         type="number"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
                         <DollarSign size={14} className="text-purple-primary" /> Monthly
-                        Rate ($)
+                        Rate ($, optional)
                       </label>
                       <input
                         name="monthlyRate"
                         type="number"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
-                        <Book size={14} className="text-purple-primary" /> Expertise
-                        Subjects
-                      </label>
-                      <input
-                        name="subjects"
-                        required
-                        className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
-                        placeholder="e.g. Maths, Science (Comma separated)"
                       />
                     </div>
                     <div className="space-y-2">
@@ -585,7 +565,6 @@ export default function OnboardingClient() {
                       </label>
                       <input
                         name="skills"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                         placeholder="e.g. Coding, Design (Comma separated)"
                       />
@@ -596,7 +575,6 @@ export default function OnboardingClient() {
                       </label>
                       <input
                         name="languages"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                         placeholder="e.g. English, French, Urdu"
                       />
@@ -607,7 +585,6 @@ export default function OnboardingClient() {
                       </label>
                       <textarea
                         name="bio"
-                        required
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black"
                         placeholder="Share your teaching journey..."
                         rows={3}
@@ -647,7 +624,7 @@ export default function OnboardingClient() {
                   Teaching Levels & Qualifications
                 </h1>
                 <p className="text-steel-blue font-medium">
-                  Tell students the highest level you are confident teaching. This helps us recommend you to the right students. Formal degrees are optional and are not required to become a tutor.
+                  Add an optional overall profile summary here. You will choose the actual teaching levels separately for each expertise in the next step. Formal degrees are optional and are not required to become a tutor.
                 </p>
               </div>
 
@@ -655,7 +632,7 @@ export default function OnboardingClient() {
                 {/* Teaching Levels */}
                 <div className="space-y-4">
                   <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
-                    <GraduationCap size={14} className="text-purple-primary" /> What level(s) can you teach? (Required)
+                    <GraduationCap size={14} className="text-purple-primary" /> Overall teaching-level summary (Optional)
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {[
@@ -721,7 +698,7 @@ export default function OnboardingClient() {
                 {/* Experience Level */}
                 <div className="space-y-4">
                   <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
-                    <Briefcase size={14} className="text-purple-primary" /> Years of teaching experience (Required)
+                    <Briefcase size={14} className="text-purple-primary" /> Formal teaching experience (Optional)
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {["Less than 1 year", "1-2 years", "3-5 years", "5+ years"].map((exp) => (
@@ -841,7 +818,6 @@ export default function OnboardingClient() {
                   <button
                     type="button"
                     onClick={() => setStep("expertise")}
-                    disabled={teachingLevels.length === 0}
                     className="flex items-center gap-3 bg-purple-primary text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-purple-primary/90 hover:scale-105 transition-all shadow-xl shadow-purple-primary/20 disabled:opacity-50"
                   >
                     Next Step
@@ -882,36 +858,7 @@ export default function OnboardingClient() {
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="text-[11px] font-black text-deep-black uppercase tracking-widest flex items-center gap-2">
-                    <Book size={14} className="text-purple-primary" /> Your Expertise / Teaching Subjects (Required)
-                  </label>
-                  <textarea
-                    value={onboardingExpertise}
-                    onChange={(e) => setOnboardingExpertise(e.target.value)}
-                    rows={6}
-                    required
-                    placeholder="Example: Chinese, Quran, Tajweed, Urdu, Public Speaking, Coding, Exam Preparation (Type as many as you like, separated by commas)"
-                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-purple-primary/20 focus:bg-white bg-gray-50/50 transition-all font-bold text-deep-black resize-none"
-                  />
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-steel-blue">
-                    <span className="font-bold text-purple-primary uppercase tracking-widest">Tip:</span>
-                    <span>Separate each item with a comma. Your currently selected teaching levels will apply to all of these. You can customize levels per subject from your tutor dashboard after onboarding.</span>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                  <h4 className="text-[11px] font-black text-deep-black uppercase tracking-widest mb-3">Currently selected teaching levels (apply to all above):</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {teachingLevels.length > 0 ? teachingLevels.map((lv) => (
-                      <span key={lv} className="px-3 py-1.5 bg-purple-primary/10 text-purple-primary text-[9px] font-black uppercase tracking-widest rounded-lg border border-purple-primary/20">
-                        {lv}
-                      </span>
-                    )) : (
-                      <span className="text-xs text-gray-400 italic">No teaching levels selected</span>
-                    )}
-                  </div>
-                </div>
+                <OnboardingExpertiseBuilder value={expertiseEntries} onChange={setExpertiseEntries} />
 
                 <div className="flex items-center justify-between pt-4">
                   <button
@@ -924,7 +871,7 @@ export default function OnboardingClient() {
                   <button
                     type="button"
                     onClick={() => setStep("availability")}
-                    disabled={!onboardingExpertise.trim()}
+                    disabled={!expertiseEntries.some(entry => entry.subjects.length > 0 && entry.teachingLevels.length > 0)}
                     className="flex items-center gap-3 bg-purple-primary text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-purple-primary/90 hover:scale-105 transition-all shadow-xl shadow-purple-primary/20 disabled:opacity-50"
                   >
                     Next Step

@@ -36,7 +36,7 @@ export default async function TutorsPage(props: any) {
       match: { status: "verified", isPublicProfile: { $ne: false } },
       select: "_id name email profileImage status verificationLevel isPublicProfile",
     })
-    .select("subjects hourlyRate rating experienceYears teachingLevels experienceLevel description bio skills languages")
+    .select("subjects hourlyRate rating experienceYears teachingLevels experienceLevel bio skills languages")
     .lean();
 
   const validTutors = (tutors as any[]).filter((t) => !!t.user);
@@ -77,6 +77,7 @@ export default async function TutorsPage(props: any) {
     }).filter((e: any) => e.name);
 
     const expertiseSubjectNames = expertiseDisplay.map((e: any) => e.name);
+    const expertiseLevelNames = expertiseDisplay.flatMap((e: any) => e.levels);
     const allSearchableSubjects = Array.from(
       new Set([...(t.subjects || []), ...expertiseSubjectNames])
     );
@@ -85,6 +86,7 @@ export default async function TutorsPage(props: any) {
       ...t,
       expertise: expertiseDisplay,
       allSearchableSubjects,
+      allTeachingLevels: Array.from(new Set([...(t.teachingLevels || []), ...expertiseLevelNames])),
     };
   });
 

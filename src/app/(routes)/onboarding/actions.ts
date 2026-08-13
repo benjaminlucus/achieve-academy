@@ -170,7 +170,50 @@ export async function completeOnboarding(rawData: any) {
               { upsert: true, new: true, lean: false }
             );
 
-            if (parsedOnboardingExpertise.length > 0) {
+            if (validatedData.expertiseEntries && validatedData.expertiseEntries.length > 0) {
+              const allEducationLevels = await EducationLevel.find({ isActive: true }).lean();
+              const educationLevelIds = new Set(allEducationLevels.map((level: any) => String(level._id)));
+              const addedSubjects: string[] = [];
+
+              for (const entry of validatedData.expertiseEntries) {
+                const validLevelIds = entry.teachingLevels.filter((id) => educationLevelIds.has(String(id)));
+                const subjectDocs = await ExpertiseSubject.find({
+                  _id: { $in: entry.subjects },
+                  category: entry.category,
+                  isActive: true,
+                }).select("_id name category").lean();
+
+                for (const subject of subjectDocs as any[]) {
+                  await Expertise.findOneAndUpdate(
+                    { tutor: mongoId, subject: subject._id },
+                    {
+                      $setOnInsert: {
+                        tutor: mongoId,
+                        category: subject.category,
+                        subject: subject._id,
+                        teachingLevels: validLevelIds,
+                        teachingLanguages: entry.teachingLanguages,
+                        experience: entry.experience || 0,
+                        teachingStrength: entry.teachingStrength || "good",
+                        hourlyRate: entry.hourlyRate || undefined,
+                        specialNotes: entry.specialNotes || "",
+                        visibility: entry.visibility || "public",
+                        isActive: true,
+                      },
+                    },
+                    { upsert: true }
+                  );
+                  addedSubjects.push(subject.name);
+                }
+              }
+
+              if (addedSubjects.length > 0) {
+                await TutorProfile.updateOne(
+                  { user: mongoId },
+                  { $addToSet: { subjects: { $each: addedSubjects } } }
+                );
+              }
+            } else if (parsedOnboardingExpertise.length > 0) {
               try {
                 let defaultCategory = await ExpertiseCategory.findOne({ isActive: true }).sort({ sortOrder: 1 });
                 if (!defaultCategory) {

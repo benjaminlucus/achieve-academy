@@ -19,7 +19,7 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const allSubjects = Array.from(new Set((initialTutors || []).flatMap((t: any) => t.allSearchableSubjects || t.subjects || []))).sort();
-  const allLevels = Array.from(new Set((initialTutors || []).flatMap(t => t.teachingLevels || []))).sort();
+  const allLevels = Array.from(new Set((initialTutors || []).flatMap(t => t.allTeachingLevels || t.teachingLevels || []))).sort();
   const allExperienceLevels = ["Less than 1 year", "1-2 years", "3-5 years", "5+ years"];
 
   const filteredTutors = (initialTutors || []).filter((tutor) => {
@@ -29,7 +29,7 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
       s.toLowerCase().includes(searchTerm.toLowerCase())
     );
     const filterMatchSubject = !selectedSubject || searchableSubjects.includes(selectedSubject);
-    const filterMatchLevel = !selectedLevel || (tutor.teachingLevels || []).includes(selectedLevel);
+    const filterMatchLevel = !selectedLevel || (tutor.allTeachingLevels || tutor.teachingLevels || []).includes(selectedLevel);
     const filterMatchExperience = !selectedExperience || tutor.experienceLevel === selectedExperience;
 
     return (nameMatch || subjectMatch) && filterMatchSubject && filterMatchLevel && filterMatchExperience;
@@ -210,7 +210,7 @@ export function TutorSearchSection({ initialTutors = [] }: { initialTutors: any[
                   </div>
                   <p className="text-steel-blue text-xs font-bold uppercase tracking-widest mb-2 underline decoration-coral decoration-2 underline-offset-4">Biography</p>
                   <p className="text-dark-navy text-sm font-medium leading-relaxed line-clamp-3">
-                    {tutor.description || "Highly qualified professional dedicated to delivering academic excellence and practical knowledge to every student."}
+                    {tutor.bio || ""}
                   </p>
                 </div>
 

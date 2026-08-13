@@ -62,7 +62,7 @@ async function getTutorData(tutorId: string) {
     expertise: expertiseDisplay,
     allSearchableSubjects,
     hourlyRate: tutorProfile.hourlyRate,
-    bio: tutorProfile.bio || tutorProfile.description,
+    bio: tutorProfile.bio || (tutorProfile as any).description || "",
     experienceLevel: tutorProfile.experienceLevel,
     teachingLevels: tutorProfile.teachingLevels,
     hasDegree: tutorProfile.hasDegree,

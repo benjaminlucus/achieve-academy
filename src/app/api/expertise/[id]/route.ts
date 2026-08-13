@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/database/connect";
 import Expertise from "@/database/models/expertise.model";
+import ExpertiseSubject from "@/database/models/expertise-subject.model";
 import User from "@/database/models/user.model";
 import TutorProfile from "@/database/models/tutor.model";
 import { auth } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
+import { z } from "zod";
+
+const expertiseUpdateSchema = z.object({
+  category: z.string().min(1).optional(),
+  subject: z.string().min(1).optional(),
+  teachingLevels: z.array(z.string().min(1)).min(1).optional(),
+  teachingLanguages: z.array(z.string().min(1)).min(1).optional(),
+  experience: z.coerce.number().min(0).max(50).optional(),
+  teachingStrength: z.enum(["beginner", "good", "strong", "very_strong"]).optional(),
+  hourlyRate: z.coerce.number().min(0).optional(),
+  specialNotes: z.string().max(1000).optional(),
+  visibility: z.enum(["public", "private", "connections"]).optional(),
+  isActive: z.boolean().optional(),
+});
 
 async function syncExpertiseToTutorSubjects(tutorId: mongoose.Types.ObjectId | string) {
   try {
@@ -94,7 +109,13 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const data = await req.json();
+    const data = expertiseUpdateSchema.parse(await req.json());
+    if (data.subject || data.category) {
+      const subjectId = data.subject || String(expertise.subject);
+      const categoryId = data.category || String(expertise.category);
+      const subject = await ExpertiseSubject.findOne({ _id: subjectId, category: categoryId, isActive: true });
+      if (!subject) return NextResponse.json({ success: false, error: "Invalid category or subject" }, { status: 400 });
+    }
     const updated = await Expertise.findByIdAndUpdate(id, data, { new: true })
       .populate("category")
       .populate("subject")

@@ -29,6 +29,11 @@ const ExpertiseSchema = new Schema<IExpertise>(
       type: Number,
       default: 0,
     },
+    teachingStrength: {
+      type: String,
+      enum: ["beginner", "good", "strong", "very_strong"],
+      default: "good",
+    },
     hourlyRate: Number,
     certificates: [
       {

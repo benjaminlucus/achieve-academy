@@ -207,6 +207,15 @@ export default function ChatContainer({
               <p className="text-[10px] font-bold text-steel-blue uppercase tracking-widest">
                 {isAdminView ? "Read-only monitoring" : "Online"}
               </p>
+              {isAdminView && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedConversation.participants.map((participant) => (
+                    <span key={participant._id} className="text-[9px] font-bold text-dark-navy bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg">
+                      {participant.name} · {participant.role || "user"}{participant.email ? ` · ${participant.email}` : ""}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             {!isAdminView && (
               <div className="flex items-center gap-2">
